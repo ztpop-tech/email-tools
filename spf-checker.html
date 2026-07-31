@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPF 记录查询检查工具 — 在线 SPF Lookup · ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="SPF 记录检查器 — 在线查询验证 · ztpop.net">
+<meta property="og:description" content="免费在线 SPF 记录查询工具：输入域名，即时查询并解析其 SPF TXT 记录，逐机制拆解（ip4/ip6/include/mx/a/all 修饰符），校验 10 次 DNS 查询上限，给出合规性与安全建议。">
+<meta name="description" content="免费在线 SPF 记录查询工具：输入域名，即时查询并解析其 SPF TXT 记录，逐机制拆解（ip4/ip6/include/mx/a/all 修饰符），校验 10 次 DNS 查询上限，给出合规性与安全建议。">
+<link rel="canonical" href="https://www.ztpop.net/tools/spf-checker.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"SPF 记录检查器"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "SPF 记录检查器", "url": "https://www.ztpop.net/tools/spf-checker.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "免费在线 SPF 记录查询工具：输入域名，即时查询并解析其 SPF TXT 记录，逐机制拆解（ip4/ip6/include/mx/a/all 修饰符），校验 10 次 DNS 查询上限，给出合规性与安全建议。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "SPF 记录检查器是什么？", "acceptedAnswer": {"@type": "Answer", "text": "SPF 记录检查器是一款浏览器端免费工具，通过 DNS-over-HTTPS（DoH）向公共解析器实时查询域名 DNS 记录，无需安装任何软件。查询在浏览器本地完成，域名记录不会上传到本站服务器。"}}, {"@type": "Question", "name": "如何使用SPF 记录检查器？", "acceptedAnswer": {"@type": "Answer", "text": "在输入框输入域名（如 ztpop.net），点击「查询 SPF」即可。工具通过 DoH 查询该域名的 TXT 记录，自动过滤出 v=spf1 开头的 SPF 记录并逐机制解析。若域名无 SPF 记录，会提示「未发现 SPF 记录」并给出配置建议。查询结果下方会同步展示该记录的 DNS 查询次数估算，帮助判断是否接近 RFC 7208 的 10 次上限。"}}, {"@type": "Question", "name": "查询结果多久生效？", "acceptedAnswer": {"@type": "Answer", "text": "DNS 记录查询依赖公共解析器的缓存。若刚在 DNS 服务商处修改记录，通常需要等待 TTL 时间（一般 5 分钟到数小时）后查询结果才会更新。若提示未发现记录，可稍后重试或先用 dig/nslookup 确认。"}}, {"@type": "Question", "name": "SPF 记录检查器与生成器有什么区别？", "acceptedAnswer": {"@type": "Answer", "text": "生成器（Generator）用于创建 DNS 记录，检查器（Checker/Lookup）用于查询验证已有记录。建议工作流：用生成器生成记录 → 发布到 DNS → 用检查器验证生效。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">SPF 记录检查器</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · DNS-over-HTTPS 实时查询 · 浏览器端运行，不上传数据</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">SPF（Sender Policy Framework，RFC 7208）通过 DNS TXT 记录声明哪些服务器 IP 有权使用您的域名发信。收件方 MTA 收到邮件后查询发件域 SPF 记录，对照连接来源 IP 判定发件是否被授权。SPF 是邮件认证三件套（SPF/DKIM/DMARC）的第一层防线，配置错误（如 include 过多导致查询超限）会直接导致合法邮件被拒收或退信 554。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">域名（Domain）</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    
+                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">查询SPF 记录</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">输入要查询的域名（如 example.com），工具将解析其 TXT 记录并定位 SPF 记录（以 v=spf1 开头）。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">功能说明</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>实时 DNS 查询：通过 DNS-over-HTTPS（DoH）向公共解析器发起 TXT 查询，不依赖本机 DNS 缓存</li>
+<li>逐机制拆解：将 SPF 记录拆分为 ip4/ip6/include/mx/a 机制与 + - ~ ? 修饰符，逐项说明含义</li>
+<li>10 次查询上限校验：按 RFC 7208 §4.6.4 统计 include/mx/a 的 DNS 查询消耗，超限给出 permerror 预警</li>
+<li>记录缺失检测：无 SPF 记录、记录以错误版本号开头、all 修饰符缺失等常见配置问题自动识别</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">在输入框输入域名（如 ztpop.net），点击「查询 SPF」即可。工具通过 DoH 查询该域名的 TXT 记录，自动过滤出 v=spf1 开头的 SPF 记录并逐机制解析。若域名无 SPF 记录，会提示「未发现 SPF 记录」并给出配置建议。查询结果下方会同步展示该记录的 DNS 查询次数估算，帮助判断是否接近 RFC 7208 的 10 次上限。</p>
+            </div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，查询逻辑与解析规则均与标准定义保持一致：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DNS 查询：RFC 8484（DNS Queries over HTTPS）、RFC 1035（DNS 协议）</li>
+                    <li>记录解析：SPF 记录解析：RFC 7208 §4（机制与修饰符）、§4.6.4（DNS 查询上限）</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7208" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7208 — SPF 标准原文</a></li>
+            <li><a href="https://dmarcian.com/spf-survey/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarcian SPF 机制解释器</a></li>
+            <li><a href="https://www.cloudflare.com/learning/email-security/what-is-spf/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Cloudflare Learn：SPF 是什么</a></li>
+        </ul>
+    </div>
+</div>
+
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var btn = document.getElementById('check-btn');
+    var result = document.getElementById('result');
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    function keyValTable(rows) {
+        var h = '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">' +
+            '<tr style="background:#f0f4f8"><th style="padding:8px 12px;border:1px solid #ddd;text-align:left">标签</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">值</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">说明</th></tr>';
+        rows.forEach(function(r) {
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;word-break:break-all">' + esc(r[1]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd">' + r[2] + '</td></tr>';
+        });
+        return h + '</table>';
+    }
+
+    function parseTxtRecords(answers) {
+        var txts = [];
+        (answers || []).forEach(function(a) {
+            if (a.type === 16) txts.push(a.data);
+        });
+        return txts;
+    }
+
+    function dohQuery(qname, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=TXT';
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+
+    btn.addEventListener('click', function() {
+        var domain = document.getElementById('domain-input').value.trim().toLowerCase();
+        var selector = document.getElementById('selector-input') ? document.getElementById('selector-input').value.trim() : '';
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', '请输入有效域名，如 example.com');
+            return;
+        }
+        var qname = domain + '. ';
+        result.innerHTML = '<div style="color:#666;font-size:14px;padding:8px 0">正在查询 <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">' + esc(qname) + '</code> ...</div>';
+        dohQuery(qname, function(err, j) {
+            if (err) {
+                result.innerHTML = statusBox('err', 'DNS 查询失败：' + esc(err.message) + '。请检查网络连接后重试。');
+                return;
+            }
+            var txts = parseTxtRecords(j.Answer);
+            
+            if (txts.length === 0) {
+                result.innerHTML = statusBox('warn', '未发现 SPF 记录（TXT 记录中无 v=spf1 开头项）。') +
+                    statusBox('err', '该域名未部署 SPF，发往此域名的邮件将无法通过 SPF 校验，伪造风险高。建议立即配置 SPF 记录（可用本站 <a href="/tools/spf-generator.html" style="color:#0066cc">SPF 生成器</a>）。');
+                return;
+            }
+            var spf = null;
+            for (var i = 0; i < txts.length; i++) {
+                if (txts[i].indexOf('v=spf1') === 0) { spf = txts[i]; break; }
+            }
+            if (!spf) {
+                result.innerHTML = statusBox('warn', '未发现 SPF 记录。以下为域名全部 TXT 记录：') + txts.map(function(t){return '<pre style="background:#1a1a2e;color:#e0e0e0;padding:12px;border-radius:6px;font-size:13px;overflow-x:auto">' + esc(t) + '</pre>';}).join('');
+                return;
+            }
+            var html = statusBox('ok', '<b>✓ 发现 SPF 记录</b>（<code>v=spf1</code> 开头）');
+            html += '<pre style="background:#1a1a2e;color:#e0e0e0;padding:14px;border-radius:6px;font-size:13.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">' + esc(spf) + '</pre>';
+            // 逐机制解析
+            var parts = spf.split(/\s+/);
+            var rows = [];
+            var dnsQueries = 1; // 初始 TXT 查询
+            var hasAll = false;
+            for (var i = 1; i < parts.length; i++) {
+                var p = parts[i];
+                if (!p) continue;
+                var m = p.match(/^([+\-~?]?)([a-z0-9]+)(?::(.*))?$/i);
+                if (!m) { rows.push([p, '—', '无法识别的机制']); continue; }
+                var qual = m[1] || '+';
+                var mech = m[2].toLowerCase();
+                var arg = m[3] || '';
+                var qmap = { '+': '通过 (Pass)', '-': '失败 (Fail)', '~': '软失败 (SoftFail)', '?': '中立 (Neutral)' };
+                var desc = '';
+                if (mech === 'all') { desc = '匹配所有来源（必须为最后一项）。' + qmap[qual]; hasAll = true; }
+                else if (mech === 'include') { desc = '引入其他域名的 SPF 记录（消耗 1 次 DNS 查询）。'; dnsQueries++; }
+                else if (mech === 'ip4') { desc = '允许的 IPv4 地址/段。'; }
+                else if (mech === 'ip6') { desc = '允许的 IPv6 地址/段。'; }
+                else if (mech === 'mx') { desc = 'MX 记录指向的服务器（若需解析消耗 1 次查询）。'; dnsQueries++; }
+                else if (mech === 'a') { desc = '域名的 A/AAAA 记录（若需解析消耗 1 次查询）。'; dnsQueries++; }
+                else if (mech === 'ptr') { desc = 'PTR 反向解析（RFC 7208 不推荐，性能差）。'; }
+                else if (mech === 'exists') { desc = '按 A 记录存在性匹配（消耗 1 次查询）。'; dnsQueries++; }
+                else if (mech === 'redirect') { desc = '重定向到其他域名的 SPF（消耗 1 次查询）。'; dnsQueries++; }
+                else { desc = '未知机制'; }
+                rows.push([(qual === '+' ? '+' : qual) + mech + (arg ? ':' + arg : ''), arg || '—', desc]);
+            }
+            html += keyValTable(rows);
+            if (!hasAll) html += statusBox('warn', '⚠ 记录缺少 <code>all</code> 终结符（RFC 7208 §4.7 要求）。未匹配的发送方将得到 Neutral 结果，反伪造效果为零。');
+            if (dnsQueries > 10) html += statusBox('err', '⚠ 估算 DNS 查询次数约 ' + dnsQueries + ' 次，超过 RFC 7208 §4.6.4 的 10 次上限，将导致 permerror。建议精简 include/mx 机制。');
+            else html += statusBox('ok', '估算 DNS 查询次数：' + dnsQueries + ' 次（RFC 7208 §4.6.4 上限 10 次）' + (dnsQueries > 7 ? '，接近上限，建议精简' : '，合规'));
+            result.innerHTML = html;
+
+        });
+    });
+})();
+</script>
+</body>
+</html>

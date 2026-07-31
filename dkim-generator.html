@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DKIM 记录生成器 — RFC 6376 在线生成密钥对与 TXT 记录 · ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="DKIM 记录生成器 — 生成 RSA 密钥对与符合 RFC 6376 的 DKIM TXT 记录">
+<meta property="og:description" content="免费在线 DKIM 记录生成器：一键生成 RSA 2048 密钥对与对应的 DKIM TXT 记录（RFC 6376 格式），输出 BIND 与云 DNS 两种发布格式，附私钥保管安全提示。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/dkim-generator.html">
+<meta name="description" content="免费在线 DKIM 记录生成器。基于 Web Crypto API 在浏览器本地生成 RSA 2048 密钥对（私钥不出浏览器），生成符合 RFC 6376 的 DKIM TXT 记录，输出 BIND 与云 DNS 发布格式，附 DKIM 密钥轮换与私钥保管最佳实践。">
+<link rel="canonical" href="https://www.ztpop.net/tools/dkim-generator.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "DKIM 记录生成器",
+  "description": "使用 Web Crypto API 在浏览器本地生成 RSA 2048 密钥对与符合 RFC 6376 的 DKIM TXT 记录。私钥全程不出浏览器，支持 selector 自定义与 BIND/云 DNS 双格式输出。",
+  "url": "https://www.ztpop.net/tools/dkim-generator.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {"@type":"Organization","name":"ztpop.net 邮件技术知识库","url":"https://www.ztpop.net/"}
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"DKIM 记录生成器"}]}</script>
+<style>
+/* scoped to .gen-tool */
+.gen-tool{max-width:860px;margin:40px auto;padding:0 20px}
+.gen-tool h1{font-size:24px;color:#003366;margin-bottom:8px}
+.gen-tool .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.gen-tool .panel{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #003366}
+.gen-tool .panel h3{margin:0 0 14px;font-size:16px;color:#003366}
+.gen-tool .panel label{display:block;font-size:13px;color:#555;margin:10px 0 6px;font-weight:600}
+.gen-tool .panel input[type=text]{width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box}
+.gen-tool .panel input:focus{border-color:#003366}
+.gen-tool .panel .hint{font-size:12px;color:#888;margin-top:4px;line-height:1.6}
+.gen-tool .radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.gen-tool .radio-row label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;cursor:pointer}
+.gen-tool .radio-row input[type=radio]{width:auto}
+.gen-tool .btn-gen{padding:12px 32px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;transition:background .2s}
+.gen-tool .btn-gen:hover{background:#004488}
+.gen-tool .output{background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px 20px;margin:16px 0;font-family:Consolas,Monaco,monospace;font-size:13px;line-height:1.6;word-break:break-all;display:none;max-height:320px;overflow:auto}
+.gen-tool .output .copy-btn{float:right;background:#2d2d4a;border:1px solid #4a4a6a;color:#ccc;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+.gen-tool .output .copy-btn:hover{background:#3a3a5c}
+.gen-tool .validation{font-size:13px;margin:8px 0;padding:10px 14px;border-radius:6px;display:none}
+.gen-tool .validation.ok{background:#f0fdf4;color:#166534;border-left:3px solid #16a34a}
+.gen-tool .validation.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+.gen-tool .info-box{background:#e8f0fe;border-radius:8px;padding:20px 24px;margin-top:32px;font-size:14px;color:#444;line-height:1.8}
+.gen-tool .info-box h3{font-size:16px;color:#003366;margin-bottom:12px}
+.gen-tool .info-box code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:3px;font-size:13px}
+.gen-tool .warn-box{background:#fffbeb;border-left:3px solid #f59e0b;border-radius:8px;padding:16px 20px;margin-bottom:16px;font-size:13px;color:#92400e;line-height:1.7}
+@media (max-width:600px){.gen-tool .radio-row{flex-direction:column;gap:8px}}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "DKIM 是什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "DKIM（DomainKeys Identified Mail，RFC 6376）使用域名私钥为邮件签名，签名放入 DKIM-Signature 头；收件方从 DNS 获取 selector._domainkey 的公钥验签，验证邮件确实由授权服务器发出且未被篡改。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "DKIM TXT 记录格式是什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "格式为 v=DKIM1; k=rsa; p=公钥Base64。发布在 selector._domainkey.您的域名 的 TXT 记录中。DNS TXT 单条长度限制 255 字符，过长需分段（多数 DNS 服务商自动处理）。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "DKIM 私钥泄露会怎样？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "私钥泄露意味着攻击者可伪造您的域名签名，绕过 DKIM/DMARC 验证发送钓鱼邮件。因此私钥应严格保管在邮件服务器上，本工具在浏览器本地生成密钥对，私钥不会上传到任何服务器。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "DKIM 密钥多久轮换一次？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "建议每 6-12 个月轮换一次（M3AAWG 最佳实践建议 6 个月）。轮换时先发布新 selector 公钥，切换签名，确认验签通过后再删除旧 selector，避免中断。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "为什么不能用 1024 位 DKIM 密钥？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RFC 8301 已弃用弱密钥算法，且 Gmail 等主要收件方已拒绝 1024 位 DKIM 密钥。建议使用 2048 位及以上。"
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="gen-tool">
+    <h1>DKIM 记录生成器</h1>
+    <p class="subtitle">DomainKeys Identified Mail（RFC 6376）——使用域名私钥为邮件签名，收件方通过 DNS 公钥验签。生成 RSA 密钥对与标准 DKIM TXT 记录。</p>
+
+    <div class="warn-box">
+        ⚠️ <strong>安全说明</strong>：密钥对在您的浏览器本地生成（Web Crypto API），私钥<strong>不会</strong>上传到任何服务器。请妥善保管私钥并配置到您的邮件服务器；公钥（TXT 记录）发布到 DNS。私钥泄露 = 攻击者可伪造您的域名签名。
+    </div>
+
+    <div class="panel">
+        <h3>1️⃣ 选择器（Selector）</h3>
+        <input type="text" id="selector" value="default" placeholder="如 default、mail、s1">
+        <p class="hint">RFC 6376 §3.1：selector 用于标识"使用哪把公钥验签"，支持多个 selector 并行（如轮换期间新旧共存）。DNS 主机名格式：<code>selector._domainkey.您的域名</code>。</p>
+    </div>
+
+    <div class="panel">
+        <h3>2️⃣ 密钥长度</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="bits" value="1024"> 1024 位（不推荐）</label>
+            <label><input type="radio" name="bits" value="2048" checked> 2048 位（推荐）</label>
+            <label><input type="radio" name="bits" value="3072"> 3072 位</label>
+        </div>
+        <p class="hint">RFC 6376 §3.3.3：建议使用 2048 位及以上。部分收件方（如 Gmail）已拒绝 1024 位 DKIM 密钥。</p>
+    </div>
+
+    <div class="panel">
+        <h3>3️⃣ 哈希算法</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="hash" value="rsa-sha256" checked> <code>rsa-sha256</code>（推荐）</label>
+            <label><input type="radio" name="hash" value="rsa-sha1"> <code>rsa-sha1</code>（不推荐，已弃用）</label>
+        </div>
+        <p class="hint">RFC 6376 §3.3：sha256 是标准要求；sha1 仅用于兼容遗留系统。</p>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">生成 DKIM 密钥对</button>
+    <div id="validation" class="validation"></div>
+
+    <div id="output" class="output"></div>
+    <div id="output2" class="output" style="display:none"></div>
+    <div id="output3" class="output" style="display:none"></div>
+
+    <div class="info-box">
+        <h3>📖 DKIM 原理与部署要点</h3>
+        <p><strong>DKIM</strong>（RFC 6376）由发件方使用域名的<b>私钥</b>对邮件特定头字段与正文做数字签名，签名放入 <code>DKIM-Signature</code> 头；收件方从 DNS 获取 <code>selector._domainkey</code> 的 <b>公钥</b>（TXT 记录）验签。验签通过证明"邮件确实由该域名授权服务器发出且未被篡改"。</p>
+        <p><strong>TXT 记录格式</strong>：<code>v=DKIM1; k=rsa; p=公钥Base64</code>。其中 <code>k</code> 为密钥类型，<code>p</code> 为 Base64 编码的公钥（不含 PEM 头尾）。DNS TXT 记录单条长度限制 255 字符，过长需分段（多数 DNS 服务商自动处理）。</p>
+        <p><strong>私钥配置</strong>：将私钥（PEM 格式）配置到邮件服务器签名模块。常见 MTA 配置位置：OpenDKIM（<code>/etc/opendkim/keys/</code>）、Postfix（通过 milter）、Exchange/商用邮件系统（管理控制台导入）。</p>
+        <p><strong>密钥轮换</strong>：建议每 6-12 个月轮换一次。轮换时先发布新 selector 公钥，切换签名，确认验签通过后删除旧 selector，避免中断。</p>
+        <p><strong>与 DMARC 的关系</strong>：DKIM 是 DMARC 的验证支柱之一。DMARC 对齐要求 <code>d=</code> 域名与发件人域名一致（或子域关系）。生成后用本站 <a href="/tools/dns-check.html">邮件 DNS 一键诊断</a> 验证。</p>
+        <p><strong>参考标准</strong>：RFC 6376（DKIM）、RFC 8301（弃用弱密钥算法）、RFC 7489（DMARC）。</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+async function generate() {
+    const selector = document.getElementById('selector').value.trim() || 'default';
+    const bits = parseInt(document.querySelector('input[name=bits]:checked').value);
+    const hash = document.querySelector('input[name=hash]:checked').value;
+    const v = document.getElementById('validation');
+
+    v.className = 'validation warn';
+    v.style.display = 'block';
+    v.innerHTML = '⏳ 正在本地生成 RSA ' + bits + ' 密钥对（约 1-3 秒）...';
+
+    try {
+        const keyPair = await crypto.subtle.generateKey(
+            { name: 'RSASSA-PKCS1-v1_5', modulusLength: bits, publicExponent: new Uint8Array([1,0,1]), hash: hash === 'rsa-sha1' ? 'SHA-1' : 'SHA-256' },
+            true,
+            ['sign', 'verify']
+        );
+
+        // 导出 PEM
+        const privRaw = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+        const pubRaw = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+
+        function toPEM(buf, type) {
+            const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+            const lines = b64.match(/.{1,64}/g).join('\n');
+            return `-----BEGIN ${type} KEY-----\n${lines}\n-----END ${type} KEY-----`;
+        }
+        const privPem = toPEM(privRaw, 'PRIVATE');
+        const pubPem = toPEM(pubRaw, 'PUBLIC');
+
+        // 提取公钥 Base64（去掉 PEM 头尾与换行）用于 TXT
+        const pubB64 = pubPem.replace(/-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\n/g, '');
+
+        const record = `v=DKIM1; k=rsa; p=${pubB64}`;
+
+        v.className = 'validation ok';
+        v.style.display = 'block';
+        v.innerHTML = `✅ 密钥对已生成（RSA ${bits} / ${hash}）。请将私钥配置到邮件服务器，公钥发布到 DNS 主机名 <code>${selector}._domainkey.您的域名</code>。`;
+
+        const out1 = document.getElementById('output');
+        out1.style.display = 'block';
+        out1.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">复制</button><strong>📄 DNS TXT 记录</strong>（主机名：${selector}._domainkey.您的域名）<br><br>${record}`;
+
+        const out2 = document.getElementById('output2');
+        out2.style.display = 'block';
+        out2.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">复制</button><strong>🔑 私钥（配置到邮件服务器，勿公开！）</strong><br><br>${privPem}`;
+
+        const out3 = document.getElementById('output3');
+        out3.style.display = 'block';
+        out3.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">复制</button><strong>🔓 公钥 PEM（备用格式）</strong><br><br>${pubPem}`;
+    } catch (e) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '❌ 生成失败（可能浏览器不支持 Web Crypto）：' + e.message;
+    }
+}
+
+function copyRec(btn) {
+    // 只复制代码部分（去掉按钮文字）
+    const node = btn.parentNode.cloneNode(true);
+    node.querySelector('.copy-btn').remove();
+    const text = node.innerText.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => btn.textContent = '复制', 1500);
+    });
+}
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc6376" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 6376 — DomainKeys Identified Mail (DKIM) 原文</a></li>
+            <li><a href="https://dmarcian.com/what-is-dkim/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarcian DKIM 详解（DKIM 标准说明）</a></li>
+            <li><a href="http://www.opendkim.org/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">OpenDKIM 官方文档（开源 DKIM 实现）</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

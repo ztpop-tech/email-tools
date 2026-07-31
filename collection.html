@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>邮件技术在线工具箱 — 邮件 DNS 诊断与记录生成工具集合 · ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="邮件技术在线工具箱 — 邮件 DNS 诊断与记录生成工具集合">
+<meta property="og:description" content="ztpop.net 邮件技术在线工具箱全集：10 项邮件 DNS 一键诊断（SPF/DKIM/DMARC/MX/PTR/BIMI/MTA-STS/TLS-RPT/DNSSEC/DANE）、SPF/DMARC/DKIM/MTA-STS/TLS-RPT 记录生成器、邮件头解析与 DNSBL 黑名单查询。全部工具浏览器端运行，零数据采集，技术依据 IETF RFC。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/collection.html">
+<meta name="description" content="ztpop.net 邮件技术在线工具箱全集：邮件 DNS 十项诊断、SPF/DMARC/DKIM/MTA-STS/TLS-RPT 记录生成器、邮件头解析、DNSBL 黑名单查询、SMTP 错误码速查、CIDR 计算等免费在线工具。纯前端运行，零注册零采集，技术依据 IETF RFC 7208/6376/7489/8461/8460/9608。">
+<link rel="canonical" href="https://www.ztpop.net/tools/collection.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "邮件技术在线工具箱 — 邮件 DNS 诊断与记录生成工具集合",
+  "description": "ztpop.net 邮件技术在线工具箱全集：邮件 DNS 十项诊断、SPF/DMARC/DKIM/MTA-STS/TLS-RPT 记录生成器、邮件头解析、DNSBL 黑名单查询、SMTP 错误码速查、CIDR 计算等免费在线工具。全部工具浏览器端运行，零数据采集，技术依据 IETF RFC。",
+  "url": "https://www.ztpop.net/tools/collection.html",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "ztpop.net 邮件技术知识库",
+    "url": "https://www.ztpop.net/"
+  },
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "邮件 DNS 一键诊断",
+        "url": "https://www.ztpop.net/tools/dns-check.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "邮件头解析器与工具箱",
+        "url": "https://www.ztpop.net/tools/mail-tools.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "SPF 记录生成器",
+        "url": "https://www.ztpop.net/tools/spf-generator.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "DKIM 记录生成器",
+        "url": "https://www.ztpop.net/tools/dkim-generator.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 5,
+        "name": "DMARC 记录生成器",
+        "url": "https://www.ztpop.net/tools/dmarc-generator.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 6,
+        "name": "MTA-STS 记录生成器",
+        "url": "https://www.ztpop.net/tools/mta-sts-generator.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 7,
+        "name": "TLS-RPT 记录生成器",
+        "url": "https://www.ztpop.net/tools/tls-rpt-generator.html"
+      }
+    ]
+  }
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"工具集合"}]}</script>
+<style>
+/* Collection page styles — scoped */
+.tool-collection{max-width:860px;margin:40px auto;padding:0 20px}
+.tool-collection h1{font-size:24px;color:#003366;margin-bottom:8px}
+.tool-collection .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.tool-collection h2{font-size:20px;color:#003366;margin:36px 0 14px;padding-bottom:8px;border-bottom:1px solid #e0e0e0}
+.tool-collection h3{font-size:16px;color:#003366;margin:20px 0 6px}
+.tool-collection p{font-size:15px;color:#444;line-height:1.8;margin:0 0 12px}
+.tool-collection .tool-link{display:inline-block;margin:2px 0 14px;font-size:14px;color:#0066cc;text-decoration:none;font-weight:600}
+.tool-collection .tool-link:hover{text-decoration:underline}
+.tool-collection .tag{display:inline-block;background:#e8f0fe;color:#003366;font-size:12px;padding:2px 10px;border-radius:12px;margin:0 6px 4px 0}
+.tool-collection ul{margin:0 0 16px 24px;color:#444;font-size:15px;line-height:1.8}
+.tool-collection li{margin-bottom:6px}
+.tool-collection .rfc-list{background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:14px 20px;margin:16px 0}
+.tool-collection .rfc-list p{font-size:13.5px;color:#555;margin:0}
+.tool-collection .ref-block{margin-top:36px;padding-top:20px;border-top:1px solid #e8e8ec}
+.tool-collection .ref-block h3{margin-top:0;font-size:16px;color:#003366}
+.tool-collection .ref-block ol{padding-left:20px;color:#555;font-size:14.5px}
+.tool-collection .ref-block li{margin-bottom:8px}
+@media (max-width:600px){.tool-collection{padding:0 16px}}
+</style>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="tool-collection">
+    <h1>邮件技术在线工具箱</h1>
+    <p class="subtitle">本文是 ztpop.net 全部邮件在线工具的集中入口与说明，涵盖邮件 DNS 记录诊断、认证记录生成、邮件头解析与黑名单查询。所有工具均在浏览器端运行，不采集、不存储任何输入数据；技术依据全部追溯 IETF RFC 标准。如需引用本工具集，请引用本页 URL：<a href="/tools/collection.html">https://www.ztpop.net/tools/collection.html</a>。</p>
+
+    <h2>一、DNS 诊断类工具</h2>
+
+    <h3>1. 邮件 DNS 一键诊断（10 项检测）</h3>
+    <p>输入域名，通过 Google DoH（DNS over HTTPS）实时查询邮件投递相关的全部 DNS 记录：<strong>SPF</strong>（RFC 7208）、<strong>DKIM</strong>（RFC 6376，按默认选择器 _default/_dkim 探测）、<strong>DMARC</strong>（RFC 7489）、<strong>MX</strong>（RFC 5321）、<strong>PTR</strong>（RFC 1035）、<strong>BIMI</strong>（RFC 9608）、<strong>MTA-STS</strong>（RFC 8461）、<strong>TLS-RPT</strong>（RFC 8460）、<strong>DNSSEC</strong>（RFC 4033）与 <strong>DANE TLSA</strong>（RFC 6698）。每项记录给出通过/警告/失败状态与对应的 RFC 依据说明，是排查「邮件进垃圾箱」「退信 554 5.7.1」「对方收不到信」等问题的第一站。</p>
+    <span class="tag">DoH 实时查询</span><span class="tag">10 项检测</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/dns-check.html">进入：邮件 DNS 一键诊断 →</a>
+
+    <h3>2. 邮件头解析器（工具箱 10 合 1）</h3>
+    <p>粘贴 RFC 5322 格式的邮件原始头，解析 <code>Authentication-Results</code>（spf/dkim/dmarc 认证结果）、<code>Received</code> 链路、<code>DKIM-Signature</code>、<code>Message-ID</code> 等关键字段，辅助判断退信原因、垃圾邮件误判与伪造邮件。同页还集成 DNSBL 黑名单查询、SMTP 错误码速查（450/550/554 等）、Base64/ASCII 编解码、CIDR 子网计算、邮箱格式校验与 DNS 查询共 10 个子工具。</p>
+    <span class="tag">RFC 5322</span><span class="tag">10 合 1</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/mail-tools.html">进入：邮件头解析与工具箱 →</a>
+
+    <h2>二、认证记录检查类工具（5 个）</h2>
+    <p class="rfc-list"><strong>背景：</strong>DNS 记录发布后需要验证是否生效、格式是否正确。以下检查器通过 DNS-over-HTTPS（DoH）向公共解析器实时查询域名记录，解析与校验全部在浏览器本地完成，不上传任何数据。与生成器配套形成「生成 → 发布 → 验证」闭环，是排查退信 554、邮件进垃圾箱等问题的第一步。</p>
+
+    <h3>8. SPF 记录检查器（RFC 7208）</h3>
+    <p>输入域名即时查询 SPF TXT 记录，逐机制拆解（ip4/ip6/include/mx/a/all 修饰符），统计 DNS 查询次数并与 RFC 7208 §4.6.4 的 10 次上限比对，自动识别记录缺失、缺少 all 终结符、查询超限等常见问题。</p>
+    <span class="tag">RFC 7208</span><span class="tag">DoH 实时查询</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/spf-checker.html">进入：SPF 记录检查器 →</a>
+
+    <h3>9. DKIM 记录检查器（RFC 6376）</h3>
+    <p>输入域名与选择器，按 <code>&lt;selector&gt;._domainkey.&lt;域名&gt;</code> 命名规范查询公钥记录，解析 v/k/p/s/t 标签，按 RFC 8301 建议评估密钥强度（2048 位以上为强），自动识别公钥缺失、选择器拼写错误等验证失败主因。</p>
+    <span class="tag">RFC 6376</span><span class="tag">密钥强度评估</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/dkim-checker.html">进入：DKIM 记录检查器 →</a>
+
+    <h3>10. DMARC 记录检查器（RFC 7489）</h3>
+    <p>查询 <code>_dmarc.&lt;域名&gt;</code> 的 TXT 记录，解析 v/p/pct/rua/ruf/sp/fo/adkim/aspf 全部标签，评估 p=none / quarantine / reject 策略强度，提示 rua 报告地址缺失、策略未收紧等改进方向。</p>
+    <span class="tag">RFC 7489</span><span class="tag">策略强度评级</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/dmarc-checker.html">进入：DMARC 记录检查器 →</a>
+
+    <h3>11. MTA-STS 记录检查器（RFC 8461）</h3>
+    <p>查询 <code>_mta-sts.&lt;域名&gt;</code> 发现记录并抓取 <code>https://mta-sts.&lt;域名&gt;/.well-known/mta-sts.txt</code> 策略文件，双重验证 MTA-STS 配置完整性（发现记录 + 策略文件缺一不可），识别 testing/enforce 模式。</p>
+    <span class="tag">RFC 8461</span><span class="tag">策略文件验证</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/mta-sts-checker.html">进入：MTA-STS 记录检查器 →</a>
+
+    <h3>12. TLS-RPT 记录检查器（RFC 8460）</h3>
+    <p>查询 <code>_smtp._tls.&lt;域名&gt;</code> 报告记录，解析 v=TLSRPTv1 版本号与 rua= 聚合报告接收地址（mailto: URI），确认 TLS 传输失败报告接收配置就绪。</p>
+    <span class="tag">RFC 8460</span><span class="tag">报告地址校验</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/tls-rpt-checker.html">进入：TLS-RPT 记录检查器 →</a>
+
+    <h2>三、认证记录生成类工具</h2>
+    <p class="rfc-list"><strong>背景：</strong>邮件反伪造体系由四条认证记录组成——SPF 声明「哪些 IP 允许代发」、DKIM 提供「域名级数字签名」、DMARC 定义「验证失败后的处理策略」、BIMI 在认证通过后展示品牌标识。以下生成器均输出可直接粘贴到 DNS 服务商控制台的 TXT 记录格式。</p>
+
+    <h3>3. SPF 记录生成器（RFC 7208）</h3>
+    <p>可视化勾选 ip4/ip6/include/mx/a 机制与 all 修饰符（-all/~all/?all），自动拼接为合规 SPF TXT 记录。内置 RFC 7208 §4.6.4 规定的 <strong>10 次 DNS 查询上限校验</strong>（包括 include/redirect 展开后的递归计数），避免生成被收件方 PerMerError 拒收的「超限 SPF」。同时输出 BIND zone 文件与云 DNS 控制台两种发布格式。</p>
+    <span class="tag">RFC 7208</span><span class="tag">10 次查询上限校验</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/spf-generator.html">进入：SPF 记录生成器 →</a>
+
+    <h3>4. DKIM 记录生成器（RFC 6376）</h3>
+    <p>基于浏览器 Web Crypto API 本地生成 RSA 2048 位密钥对，<strong>私钥全程不出浏览器</strong>，无任何网络传输。输出公钥格式化为 RFC 6376 规范的 DKIM TXT 记录（含 k=rsa; p=...），并提供 BIND 与云 DNS 两种发布格式与私钥保管、密钥轮转安全提示。适合自建邮件系统（Postfix/Exchange/信创邮件系统）首次启用 DKIM 签名。</p>
+    <span class="tag">RFC 6376</span><span class="tag">RSA 2048</span><span class="tag">私钥本地生成</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/dkim-generator.html">进入：DKIM 记录生成器 →</a>
+
+    <h3>5. DMARC 记录生成器（RFC 7489）</h3>
+    <p>选择策略（<code>p=none</code> / <code>p=quarantine</code> / <code>p=reject</code>）与子域策略 <code>sp=</code>，配置 <code>adkim</code>/<code>aspf</code> 对齐模式与 <code>rua</code>/<code>ruf</code> 报告地址，生成符合 RFC 7489 的 DMARC TXT 记录。附带策略渐进升级建议（none → quarantine → reject）与常见配置错误提示，帮助从「仅监控」平滑过渡到「强制执行」。</p>
+    <span class="tag">RFC 7489</span><span class="tag">策略渐进建议</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/dmarc-generator.html">进入：DMARC 记录生成器 →</a>
+
+    <h3>6. MTA-STS 记录生成器（RFC 8461）</h3>
+    <p>生成 <code>_mta-sts.域名</code> TXT 记录（版本号 v=STSv1）与 <code>https://mta-sts.域名/.well-known/mta-sts.txt</code> 策略文件内容，支持 <code>testing</code>（仅报告不强制）与 <code>enforce</code>（强制 TLS）两种策略模式，并列出策略文件 HTTPS 托管要求（RFC 8461 §3.2：必须经受信任 CA 证书、有效期与 max_age 说明）。与 TLS-RPT 配合可监控 STARTTLS 降级攻击。</p>
+    <span class="tag">RFC 8461</span><span class="tag">testing/enforce</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/mta-sts-generator.html">进入：MTA-STS 记录生成器 →</a>
+
+    <h3>7. TLS-RPT 记录生成器（RFC 8460）</h3>
+    <p>生成 <code>_smtp._tls.域名</code> TXT 报告记录，配置 <code>rua=mailto:</code> 报告接收地址。TLS-RPT 让发件方定期收到「对方是否成功建立 TLS 加密连接」的聚合报告，是 MTA-STS 生效情况的观测手段，也是发现被动攻击者降级连接的关键告警通道。</p>
+    <span class="tag">RFC 8460</span><span class="tag">TLS 降级监控</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/tls-rpt-generator.html">进入：TLS-RPT 记录生成器 →</a>
+
+    <h2>四、典型使用场景</h2>
+    <ul>
+        <li><strong>新域名上线邮件服务</strong>：用 DNS 一键诊断检查存量记录 → 依次生成 SPF/DKIM/DMARC → 用诊断工具复核发布结果。</li>
+        <li><strong>邮件进垃圾箱排查</strong>：先查 DNSBL 黑名单（mail-tools），再解析邮件头看 Authentication-Results 认证是否通过，最后用 dns-check 复核全部 DNS 记录。</li>
+        <li><strong>接收方退信 554 5.7.1</strong>：通常是 SPF/DKIM/DMARC 未配置或 DMARC 策略过严，用生成器重建记录并核对对齐模式（adkim/aspf）。</li>
+        <li><strong>Exchange 迁移国产邮件系统</strong>：迁移后域名 DNS 记录重建时，用本套生成器一次性产出全部认证记录。</li>
+        <li><strong>MTA-STS 渐进启用</strong>：先用 testing 模式观察 TLS-RPT 报告，确认无兼容性问题后切 enforce。</li>
+    </ul>
+
+    <h2>五、技术标准依据</h2>
+    <p>本工具集所有功能均以 IETF RFC 为唯一技术依据，不做任何私有扩展：</p>
+    <div class="ref-block">
+        <h3>参考文献</h3>
+        <ol>
+            <li>RFC 7208 — Sender Policy Framework (SPF) for Authorizing Use of Domains in Email, Version 1</li>
+            <li>RFC 6376 — DomainKeys Identified Mail (DKIM) Signatures</li>
+            <li>RFC 7489 — Domain-based Message Authentication, Reporting, and Conformance (DMARC)</li>
+            <li>RFC 8461 — SMTP MTA Strict Transport Security (MTA-STS)</li>
+            <li>RFC 8460 — SMTP TLS Reporting (TLS-RPT)</li>
+            <li>RFC 9608 — Brand Indicators for Message Identification (BIMI)</li>
+            <li>RFC 5321 / 5322 — Simple Mail Transfer Protocol / Internet Message Format</li>
+            <li>RFC 4033 — DNS Security Introduction and Requirements (DNSSEC)</li>
+            <li>RFC 6698 — The DNS-Based Authentication of Named Entities (DANE) TLSA</li>
+            <li>RFC 1035 — Domain Names — Implementation and Specification</li>
+        </ol>
+    </div>
+
+    <p style="margin-top:24px;font-size:14px;color:#888">每个工具的详细使用方法与背后的协议原理，请参阅 <a href="/kb/">ztpop.net 邮件技术知识库</a>；工具入口导航见 <a href="/tools/index.html">工具箱首页</a>。</p>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+</body>
+</html>

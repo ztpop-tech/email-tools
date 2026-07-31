@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>TLS-RPT 记录生成器 — RFC 8460 在线生成 TLS 报告记录 · ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="TLS-RPT 记录生成器 — 生成 _smtp._tls TXT 报告记录（RFC 8460）">
+<meta property="og:description" content="免费在线 TLS-RPT 记录生成器：生成 _smtp._tls TXT 报告记录（RFC 8460），配置 TLS 报告接收地址，监控 MTA-STS 与 STARTTLS 降级攻击。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/tls-rpt-generator.html">
+<meta name="description" content="免费在线 TLS-RPT 记录生成器。生成符合 RFC 8460 的 _smtp._tls TXT 报告记录，配置 TLS 报告接收地址，输出 BIND 与云 DNS 发布格式。TLS-RPT 用于监控 MTA-STS 策略执行与 STARTTLS 降级攻击。">
+<link rel="canonical" href="https://www.ztpop.net/tools/tls-rpt-generator.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "TLS-RPT 记录生成器",
+  "description": "生成符合 RFC 8460 的 TLS-RPT TXT 记录。配置聚合报告接收地址（rua），监控 MTA-STS 策略执行情况与 STARTTLS 降级攻击，输出 BIND 与云 DNS 发布格式。",
+  "url": "https://www.ztpop.net/tools/tls-rpt-generator.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {"@type":"Organization","name":"ztpop.net 邮件技术知识库","url":"https://www.ztpop.net/"}
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"TLS-RPT 记录生成器"}]}</script>
+<style>
+/* scoped to .gen-tool */
+.gen-tool{max-width:860px;margin:40px auto;padding:0 20px}
+.gen-tool h1{font-size:24px;color:#003366;margin-bottom:8px}
+.gen-tool .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.gen-tool .panel{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #003366}
+.gen-tool .panel h3{margin:0 0 14px;font-size:16px;color:#003366}
+.gen-tool .panel label{display:block;font-size:13px;color:#555;margin:10px 0 6px;font-weight:600}
+.gen-tool .panel input[type=text]{width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box}
+.gen-tool .panel input:focus{border-color:#003366}
+.gen-tool .panel .hint{font-size:12px;color:#888;margin-top:4px;line-height:1.6}
+.gen-tool .radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.gen-tool .radio-row label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;cursor:pointer}
+.gen-tool .radio-row input[type=radio]{width:auto}
+.gen-tool .btn-gen{padding:12px 32px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;transition:background .2s}
+.gen-tool .btn-gen:hover{background:#004488}
+.gen-tool .output{background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px 20px;margin:16px 0;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.7;word-break:break-all;display:none}
+.gen-tool .output .copy-btn{float:right;background:#2d2d4a;border:1px solid #4a4a6a;color:#ccc;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+.gen-tool .output .copy-btn:hover{background:#3a3a5c}
+.gen-tool .validation{font-size:13px;margin:8px 0;padding:10px 14px;border-radius:6px;display:none}
+.gen-tool .validation.ok{background:#f0fdf4;color:#166534;border-left:3px solid #16a34a}
+.gen-tool .validation.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+.gen-tool .info-box{background:#e8f0fe;border-radius:8px;padding:20px 24px;margin-top:32px;font-size:14px;color:#444;line-height:1.8}
+.gen-tool .info-box h3{font-size:16px;color:#003366;margin-bottom:12px}
+.gen-tool .info-box code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:3px;font-size:13px}
+@media (max-width:600px){.gen-tool .radio-row{flex-direction:column;gap:8px}}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "TLS-RPT 是什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "TLS-RPT（SMTP TLS Reporting，RFC 8460）是 MTA-STS 的配套监控机制：收件方 MTA 在 TLS 协商失败、证书错误等情况时生成聚合报告（每日一封 JSON），发送到 rua 指定地址，帮助管理员发现配置错误或降级攻击。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "TLS-RPT 记录发布在哪里？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "发布在 _smtp._tls.您的域名 的 TXT 记录中，格式为 v=TLSRPTv1; rua=mailto:报告邮箱。该记录作用于主域及子域，纯监控通道，无强制行为。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "TLS-RPT 报告里有哪些内容？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "报告包含失败时间、失败类型（如 certificate-expired、starttls-not-supported）、涉及的 IP 与 MX 主机、TLS 版本等信息，采用 JSON 格式每日汇总。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "TLS-RPT 和 MTA-STS 必须一起用吗？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "不是必须，但强烈建议。TLS-RPT 本身不强制任何行为，纯粹是监控通道；配合 MTA-STS 的 testing 模式使用，可在强制前发现并修复 TLS 配置问题。"
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="gen-tool">
+    <h1>TLS-RPT 记录生成器</h1>
+    <p class="subtitle">SMTP TLS Reporting（RFC 8460）——接收方 MTA 将 TLS 连接失败情况（降级攻击、证书错误等）以聚合报告形式发送给域名所有者。生成 _smtp._tls TXT 报告记录。</p>
+
+    <div class="panel">
+        <h3>1️⃣ 报告接收地址（rua）</h3>
+        <input type="text" id="rua" placeholder="如 tls-report@example.com">
+        <p class="hint">RFC 8460 §3：rua 为聚合报告接收邮箱，支持多个地址（逗号分隔），每个地址前缀必须为 <code>mailto:</code>。建议使用专用邮箱并接入自动化处理。</p>
+    </div>
+
+    <div class="panel">
+        <h3>2️⃣ 附加报告接收地址（可选）</h3>
+        <input type="text" id="ruaExtra" placeholder="如 tls-report2@example.com（可选）">
+        <p class="hint">可添加多个报告接收方，格式同上。</p>
+    </div>
+
+    <div class="panel">
+        <h3>3️⃣ 适用范围</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="scope" value="full" checked> 主域 + 所有子域</label>
+            <label><input type="radio" name="scope" value="root"> 仅主域</label>
+        </div>
+        <p class="hint">RFC 8460 §3：TLS-RPT 记录发布在 <code>_smtp._tls.您的域名</code>，作用于该域及其子域（除非子域有自己的记录覆盖）。</p>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">生成 TLS-RPT 记录</button>
+    <div id="validation" class="validation"></div>
+    <div id="output" class="output"></div>
+
+    <div class="info-box">
+        <h3>📖 TLS-RPT 原理与部署要点</h3>
+        <p><strong>TLS-RPT</strong>（RFC 8460）是 MTA-STS 的配套监控机制：当收件方 MTA 尝试连接您的域名 MX 时，若发生 TLS 协商失败、证书校验失败、策略错误等情况，会生成 <strong>聚合报告</strong>（每日一封，JSON 格式）发送到 rua 指定地址。</p>
+        <p><strong>报告内容</strong>：包含失败时间、失败类型（如 <code>certificate-expired</code>、<code>starttls-not-supported</code>）、涉及的 IP 与 MX 主机、TLS 版本等，帮助管理员发现配置错误或主动攻击。</p>
+        <p><strong>记录位置</strong>：主机名 <code>_smtp._tls.您的域名</code> 的 TXT 记录。记录值格式：<code>v=TLSRPTv1; rua=mailto:报告邮箱</code>。</p>
+        <p><strong>部署建议</strong>：与 <a href="/tools/mta-sts-generator.html">MTA-STS</a> 配合使用——先用 <code>testing</code> 模式 + TLS-RPT 观察两周，确认无失败后切换 <code>enforce</code>。TLS-RPT 记录本身不强制任何行为，纯粹是监控通道，无降级风险。</p>
+        <p><strong>参考标准</strong>：RFC 8460（TLS-RPT）、RFC 8461（MTA-STS）、RFC 3207（STARTTLS）。</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+function generate() {
+    const rua = document.getElementById('rua').value.trim();
+    const ruaExtra = document.getElementById('ruaExtra').value.trim();
+    const scope = document.querySelector('input[name=scope]:checked').value;
+    const v = document.getElementById('validation');
+
+    if (!rua) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '❌ 请填写报告接收地址（rua）';
+        return;
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(rua)) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '❌ 邮箱格式不正确: ' + rua;
+        return;
+    }
+
+    const ruaList = ['mailto:' + rua];
+    if (ruaExtra) {
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ruaExtra)) {
+            v.className = 'validation warn';
+            v.style.display = 'block';
+            v.innerHTML = '❌ 附加邮箱格式不正确: ' + ruaExtra;
+            return;
+        }
+        ruaList.push('mailto:' + ruaExtra);
+    }
+
+    const record = 'v=TLSRPTv1; rua=' + ruaList.join(',');
+
+    v.className = 'validation ok';
+    v.style.display = 'block';
+    v.innerHTML = '✅ 记录已生成' + (scope === 'full' ? '（适用于主域及所有子域）' : '（仅主域）') + '。发布后建议同时配置 MTA-STS。';
+
+    const out = document.getElementById('output');
+    out.style.display = 'block';
+    out.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">复制</button><strong>TLS-RPT TXT 记录</strong>（主机名：_smtp._tls.您的域名）<br><br>${record}`;
+}
+
+function copyRec(btn) {
+    const node = btn.parentNode.cloneNode(true);
+    node.querySelector('.copy-btn').remove();
+    const text = node.innerText.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => btn.textContent = '复制', 1500);
+    });
+}
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc8460" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 8460 — SMTP TLS Reporting (TLS-RPT) 原文</a></li>
+            <li><a href="https://datatracker.ietf.org/wg/uta/about/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">IETF 邮件安全工作组（UMA）</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

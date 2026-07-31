@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DMARC 记录生成器 — RFC 7489 在线生成 DMARC TXT 记录 · ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="DMARC 记录生成器 — 可视化生成符合 RFC 7489 的 DMARC TXT 记录">
+<meta property="og:description" content="免费在线 DMARC 记录生成器：选择策略（none/quarantine/reject）、对齐模式、报告地址，生成符合 RFC 7489 的 DMARC TXT 记录，附策略升级路线建议。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/dmarc-generator.html">
+<meta name="description" content="免费在线 DMARC 记录生成器。可视化配置 p 策略（none/quarantine/reject）、sp 子域策略、adkim/aspf 对齐模式、rua/ruf 报告地址，生成符合 RFC 7489 的 DMARC TXT 记录，输出 BIND 与云 DNS 发布格式，附 DMARC 部署最佳实践与策略升级路线。">
+<link rel="canonical" href="https://www.ztpop.net/tools/dmarc-generator.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "DMARC 记录生成器",
+  "description": "可视化生成符合 RFC 7489 的 DMARC TXT 记录。支持 p/sp 策略（none/quarantine/reject）、adkim/aspf 对齐模式、rua/ruf 报告地址、百分比抽样，输出 BIND 与云 DNS 发布格式。",
+  "url": "https://www.ztpop.net/tools/dmarc-generator.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {"@type":"Organization","name":"ztpop.net 邮件技术知识库","url":"https://www.ztpop.net/"}
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"DMARC 记录生成器"}]}</script>
+<style>
+/* scoped to .gen-tool */
+.gen-tool{max-width:860px;margin:40px auto;padding:0 20px}
+.gen-tool h1{font-size:24px;color:#003366;margin-bottom:8px}
+.gen-tool .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.gen-tool .panel{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #003366}
+.gen-tool .panel h3{margin:0 0 14px;font-size:16px;color:#003366}
+.gen-tool .panel label{display:block;font-size:13px;color:#555;margin:10px 0 6px;font-weight:600}
+.gen-tool .panel input[type=text],.gen-tool .panel input[type=number]{width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box}
+.gen-tool .panel input:focus{border-color:#003366}
+.gen-tool .panel .hint{font-size:12px;color:#888;margin-top:4px;line-height:1.6}
+.gen-tool .radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.gen-tool .radio-row label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;cursor:pointer}
+.gen-tool .radio-row input[type=radio]{width:auto}
+.gen-tool .btn-gen{padding:12px 32px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;transition:background .2s}
+.gen-tool .btn-gen:hover{background:#004488}
+.gen-tool .output{background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px 20px;margin:16px 0;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.7;word-break:break-all;display:none}
+.gen-tool .output .copy-btn{float:right;background:#2d2d4a;border:1px solid #4a4a6a;color:#ccc;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+.gen-tool .output .copy-btn:hover{background:#3a3a5c}
+.gen-tool .validation{font-size:13px;margin:8px 0;padding:10px 14px;border-radius:6px;display:none}
+.gen-tool .validation.ok{background:#f0fdf4;color:#166534;border-left:3px solid #16a34a}
+.gen-tool .validation.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+.gen-tool .info-box{background:#e8f0fe;border-radius:8px;padding:20px 24px;margin-top:32px;font-size:14px;color:#444;line-height:1.8}
+.gen-tool .info-box h3{font-size:16px;color:#003366;margin-bottom:12px}
+.gen-tool .info-box code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:3px;font-size:13px}
+@media (max-width:600px){.gen-tool .radio-row{flex-direction:column;gap:8px}}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "DMARC 记录是什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "DMARC（Domain-based Message Authentication, Reporting and Conformance，RFC 7489）在 SPF/DKIM 之上定义域名策略：当邮件未通过 SPF 或 DKIM 认证且域名不对齐时，按 p 策略（none/quarantine/reject）处理，并向 rua 地址发送聚合报告。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "DMARC 记录发布在哪里？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "发布在 _dmarc.您的域名 的 TXT 记录中，记录值以 v=DMARC1 开头，各标记以分号分隔。例如：v=DMARC1; p=reject; rua=mailto:dmarc@example.com; adkim=r; aspf=r。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "DMARC 策略如何渐进升级？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RFC 7489 §6.3 建议先 p=none 监控 2-4 周，确认无合法邮件失败后升级 quarantine，最终升级 reject。升级前务必检查 rua 聚合报告中的 SPF/DKIM 通过率。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "adkim 和 aspf 的对齐模式有什么区别？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "adkim 控制 DKIM 对齐，aspf 控制 SPF 对齐。r（relaxed）宽松模式允许子域与主域互认；s（strict）严格模式要求域名完全一致。子域发信较多时建议用宽松模式。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "DMARC 需要 SPF 或 DKIM 吗？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "需要。DMARC 本身不验证邮件，它依赖 SPF 或 DKIM 至少一项通过且域名对齐。若两者均未配置，DMARC 只能报告而无法提供实际保护。"
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="gen-tool">
+    <h1>DMARC 记录生成器</h1>
+    <p class="subtitle">Domain-based Message Authentication, Reporting &amp; Conformance（RFC 7489）——在 SPF/DKIM 之上定义域名策略与失败报告机制。配置 p 策略、对齐模式与报告地址，生成标准 DMARC TXT 记录。</p>
+
+    <div class="panel">
+        <h3>1️⃣ 策略（p）</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="p" value="none" checked> <code>none</code> 仅监控（不拦截）</label>
+            <label><input type="radio" name="p" value="quarantine"> <code>quarantine</code> 隔离（进垃圾箱）</label>
+            <label><input type="radio" name="p" value="reject"> <code>reject</code> 拒绝（推荐最终态）</label>
+        </div>
+        <p class="hint">建议部署路线：先 <code>none</code> 监控 2-4 周确认无合法邮件失败，再升级 <code>quarantine</code>，最终 <code>reject</code>（RFC 7489 §6.3 建议渐进式部署）。</p>
+    </div>
+
+    <div class="panel">
+        <h3>2️⃣ 子域策略（sp，可选）</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="sp" value="" checked> 不单独设置（继承主域）</label>
+            <label><input type="radio" name="sp" value="none"> <code>none</code></label>
+            <label><input type="radio" name="sp" value="quarantine"> <code>quarantine</code></label>
+            <label><input type="radio" name="sp" value="reject"> <code>reject</code></label>
+        </div>
+        <p class="hint">RFC 7489 §6.3：sp 标记为可选，未设置时子域继承主域策略。</p>
+    </div>
+
+    <div class="panel">
+        <h3>3️⃣ 对齐模式</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="adkim" value="r" checked> <code>adkim=r</code> 宽松（推荐）</label>
+            <label><input type="radio" name="adkim" value="s"> <code>adkim=s</code> 严格</label>
+            <span style="color:#888;font-size:12px;align-self:center">DKIM 对齐</span>
+        </div>
+        <div class="radio-row" style="margin-top:8px">
+            <label><input type="radio" name="aspf" value="r" checked> <code>aspf=r</code> 宽松（推荐）</label>
+            <label><input type="radio" name="aspf" value="s"> <code>aspf=s</code> 严格</label>
+            <span style="color:#888;font-size:12px;align-self:center">SPF 对齐</span>
+        </div>
+        <p class="hint">RFC 7489 §6.1：宽松模式允许子域与主域互认；严格模式要求域名完全一致。子域发信较多时建议宽松。</p>
+    </div>
+
+    <div class="panel">
+        <h3>4️⃣ 报告地址</h3>
+        <label>聚合报告接收（rua）</label>
+        <input type="text" id="rua" placeholder="如 dmarc@example.com（建议用专用邮箱）">
+        <label>取证报告接收（ruf，可选）</label>
+        <input type="text" id="ruf" placeholder="如 forensic@example.com（可选）">
+        <label>抽样百分比（pct，可选）</label>
+        <input type="number" id="pct" min="1" max="100" placeholder="留空 = 100%">
+        <p class="hint">RFC 7489 §7.1：rua 建议必填（否则收不到聚合报告无法监控）；ruf 可选。报告邮箱域名需与 DMARC 记录域名不同或相同均可，但建议使用专用地址避免被攻击者利用。</p>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">生成 DMARC 记录</button>
+    <div id="validation" class="validation"></div>
+    <div id="output" class="output"></div>
+
+    <div class="info-box">
+        <h3>📖 DMARC 原理与部署要点</h3>
+        <p><strong>DMARC</strong>（RFC 7489）建立在 SPF 与 DKIM 之上：当收件方判定 SPF 或 DKIM 之一通过且<b>域名对齐</b>时，DMARC 结果为 pass；否则按 <code>p</code> 策略处理。DMARC 解决的正是 SPF/DKIM 单独无法覆盖的"发件人可见域名"伪造问题（如子域仿冒、显示名欺骗）。</p>
+        <p><strong>记录位置</strong>：<code>_dmarc.yourdomain.com</code> 的 TXT 记录。记录值以 <code>v=DMARC1</code> 开头，各标记以分号分隔。同一域名只能有一条 DMARC 记录。</p>
+        <p><strong>报告机制</strong>：rua 聚合报告（每天一封 XML）由收件方汇总发送；ruf 取证报告包含原始邮件样本。建议用 <a href="/tools/mail-tools.html">DMARC XML 报告解析</a> 类工具分析 rua 报告内容。</p>
+        <p><strong>典型配置示例</strong>：<code>v=DMARC1; p=reject; rua=mailto:dmarc@example.com; adkim=r; aspf=r; pct=100</code></p>
+        <p><strong>注意</strong>：DMARC 策略需 SPF 或 DKIM 至少一项配置正确才能生效。若两者均未配置，DMARC 只能报告而无法保护。生成后用本站 <a href="/tools/dns-check.html">邮件 DNS 一键诊断</a> 验证完整链。</p>
+        <p><strong>参考标准</strong>：RFC 7489（DMARC）、RFC 7208（SPF）、RFC 6376（DKIM）。</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+function generate() {
+    const p = document.querySelector('input[name=p]:checked').value;
+    const sp = document.querySelector('input[name=sp]:checked').value;
+    const adkim = document.querySelector('input[name=adkim]:checked').value;
+    const aspf = document.querySelector('input[name=aspf]:checked').value;
+    const rua = document.getElementById('rua').value.trim();
+    const ruf = document.getElementById('ruf').value.trim();
+    const pct = document.getElementById('pct').value.trim();
+
+    const tags = ['v=DMARC1', 'p=' + p];
+    const warnings = [];
+    if (sp) tags.push('sp=' + sp);
+    if (rua) {
+        tags.push('rua=mailto:' + rua);
+    } else {
+        warnings.push('未配置 rua 报告地址，将无法收到聚合报告');
+    }
+    if (ruf) tags.push('ruf=mailto:' + ruf);
+    if (pct) {
+        const n = parseInt(pct);
+        if (n >= 1 && n <= 100) tags.push('pct=' + n);
+        else warnings.push('pct 应为 1-100，已忽略');
+    }
+    tags.push('adkim=' + adkim, 'aspf=' + aspf);
+
+    const record = tags.join('; ');
+
+    const v = document.getElementById('validation');
+    if (warnings.length) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '⚠️ ' + warnings.join('<br>⚠️ ');
+    } else {
+        v.className = 'validation ok';
+        v.style.display = 'block';
+        v.innerHTML = '✅ 记录结构完整（' + tags.length + ' 个标记），策略 ' + p.toUpperCase() + '。发布后请确认 SPF/DKIM 已正确配置。';
+    }
+
+    const out = document.getElementById('output');
+    out.style.display = 'block';
+    out.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">复制</button><strong>DMARC TXT 记录</strong>（主机名：_dmarc.您的域名）<br><br>${record}`;
+}
+
+function copyRec(btn) {
+    const text = btn.parentNode.innerText.replace('复制', '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => btn.textContent = '复制', 1500);
+    });
+}
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7489" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7489 — Domain-based Message Authentication (DMARC) 原文</a></li>
+            <li><a href="https://dmarc.org/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarc.org 官方说明</a></li>
+            <li><a href="https://support.google.com/a/answer/2466563" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Google Workspace 官方帮助：DMARC 记录与报告</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

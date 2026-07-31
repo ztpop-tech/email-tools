@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>邮件技术工具箱 — 邮件头解析/DNSBL黑名单/SMTP错误码/SPF/DKIM/DMARC 诊断 · 昆仑邮件系统</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="邮件技术工具箱 · 昆仑邮件系统">
+<meta property="og:description" content="免费在线邮件技术工具箱：邮件头解析、DNSBL黑名单查询、SMTP错误码速查、SPF/DKIM/DMARC深度校验、Base64编解码、CIDR计算等。零后端，纯浏览器端运行。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/mail-tools.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="免费在线邮件技术工具箱：邮件头解析、DNSBL黑名单查询、SMTP错误码速查、SPF/DKIM/DMARC深度校验、Base64编解码、CIDR计算。零后端，纯浏览器端运行。">
+<link rel="canonical" href="https://www.ztpop.net/tools/mail-tools.html" />
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "邮件技术工具箱",
+  "description": "免费在线邮件技术工具箱，涵盖邮件头解析、DNSBL黑名单查询、SMTP错误码速查、SPF/DKIM/DMARC深度校验、Base64/QP编解码、CIDR计算和邮箱地址语法验证。纯前端，零后端。",
+  "url": "https://www.ztpop.net/tools/mail-tools.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {
+    "@type": "Organization",
+    "name": "昆仑邮件系统",
+    "sameAs": [
+      "https://www.ztpop.net",
+      "https://ztpop.net"
+    ]
+  }
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术工具箱"}]}</script>
+<style>
+.tool-wrap{max-width:860px;margin:40px auto;padding:0 20px}
+.tool-wrap h1{font-size:24px;color:#003366;margin-bottom:4px}
+.tool-wrap>.subtitle{color:#888;font-size:14px;margin-bottom:24px}
+.tool-tabs{display:flex;gap:2px;overflow-x:auto;margin-bottom:28px;border-bottom:2px solid #e0e0e0;padding-bottom:0;-webkit-overflow-scrolling:touch}
+.tool-tab{flex-shrink:0;padding:10px 14px;white-space:nowrap;cursor:pointer;font-size:13px;color:#666;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-weight:500;transition:color .15s,border-color .15s}
+.tool-tab:hover{color:#003366}
+.tool-tab.active{color:#003366;border-bottom-color:#003366}
+.tool-content{display:none}.tool-content.active{display:block}
+.tool-card{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #d0d5dd}
+.tool-card h3{margin:0 0 12px;font-size:16px;color:#003366}
+.tool-card.pass{border-left-color:#16a34a;background:#f0fdf4}
+.tool-card.warn{border-left-color:#f59e0b;background:#fffbeb}
+.tool-card.fail{border-left-color:#dc2626;background:#fef2f2}
+.tool-card.info{border-left-color:#003366;background:#e8f0fe}
+.tool-input-group{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tool-input-group input,.tool-input-group textarea{flex:1;padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:15px;font-family:inherit;min-width:200px;box-sizing:border-box}
+.tool-input-group textarea{min-height:100px;resize:vertical}
+.tool-input-group button{padding:10px 20px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;transition:background .15s;font-weight:600}
+.tool-input-group button:hover{background:#004488}
+.tool-input-group button:disabled{background:#999;cursor:not-allowed}
+.tool-input-group button.sec{background:#666}
+.tool-input-group button.sec:hover{background:#888}
+.tool-ta{width:100%;min-height:100px;border:2px solid #d0d5dd;border-radius:8px;padding:12px;font-size:13px;font-family:'Courier New',monospace;resize:vertical;margin-bottom:16px;box-sizing:border-box}
+.tool-loading{text-align:center;padding:24px;color:#888;display:none;font-size:15px}
+.tool-result{margin-top:16px}
+.rc-table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+.rc-table th,.rc-table td{padding:8px 12px;border:1px solid #e0e0e0;text-align:left}
+.rc-table th{background:#f0f4f8;font-weight:600;color:#333}
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:700}
+.badge.green{background:#16a34a;color:#fff}
+.badge.red{background:#dc2626;color:#fff}
+.badge.orange{background:#f59e0b;color:#fff}
+.badge.blue{background:#003366;color:#fff}
+.badge.gray{background:#999;color:#fff}
+.hop-card{margin-bottom:12px;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0}
+.hop-card .hop-hdr{padding:10px 16px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f8f9fb}
+.hop-card .hop-hdr:hover{background:#f0f2f5}
+.hop-card .hop-body{padding:12px 16px;font-size:13px;line-height:1.7;color:#555;display:none}
+.hop-card.open .hop-body{display:block}
+.hop-delay{font-size:12px;color:#999;font-weight:400}
+.status-matrix{display:grid;gap:8px;min-width:0}
+.matrix-row{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:6px;font-size:14px}
+.matrix-row .list-name{flex:1;font-weight:500;color:#333}
+.matrix-row .list-status{flex-shrink:0}
+.smtp-search{position:relative;margin-bottom:20px}
+.smtp-filter{display:flex;gap:8px;margin-bottom:16px}
+.smtp-filter button{padding:6px 16px;border:1px solid #d0d5dd;border-radius:16px;background:#fff;cursor:pointer;font-size:13px;transition:all .15s}
+.smtp-filter button.active{background:#003366;color:#fff;border-color:#003366}
+.smtp-item{padding:16px 20px;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:12px}
+.smtp-item .smtp-code{font-size:24px;font-weight:700;font-family:'Courier New',monospace;margin-bottom:4px}
+.smtp-item .smtp-type{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-left:8px;vertical-align:middle;color:#fff}
+.smtp-item .smtp-desc{margin:8px 0;font-size:14px;color:#555;line-height:1.6}
+.smtp-item .smtp-fix{font-size:13px;color:#555;line-height:1.6}
+.smtp-item .smtp-rfc{font-size:12px;color:#999;margin-top:6px}
+.ctrl-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.btn-sm{padding:6px 14px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;transition:background .15s}
+.btn-sm:hover{background:#f0f2f5}
+.btn-sm.active{background:#003366;color:#fff;border-color:#003366}
+@media(max-width:640px){
+  .tool-tab{padding:8px 10px;font-size:12px}
+  .tool-card{padding:16px}
+  .tool-input-group{flex-direction:column}
+  .tool-input-group button{width:100%}
+}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "邮件头解析工具能做什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "粘贴邮件原始头（Received/DKIM-Signature/Authentication-Results 等），解析出邮件路径、认证结果、投递延迟等关键信息，辅助判断邮件被拒收或进垃圾箱的原因。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "DNSBL 黑名单查询怎么用？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "输入发信服务器 IP，查询其在 Spamhaus、Barracuda 等主流 DNSBL 黑名单中的收录状态。IP 被列入黑名单会导致大批量邮件被拒收，需要向对应组织申诉解除。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "SMTP 错误码查询包含什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "涵盖 2xx 成功、4xx 临时失败（如 450/451/452）、5xx 永久失败（如 550/552/553/554）的完整含义与处理建议，帮助快速定位退信原因。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "CIDR 计算器有什么用？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "将 IP 地址与子网掩码转换为 CIDR 表示法，计算可用主机数。常用于 SPF 记录中 ip4: 段的规划与邮件服务器 IP 段划分。"
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header container">
+        <a href="/"><div class="mg-logo"><img src="/images/logo.webp" width="108" height="57" alt="昆仑邮件系统"></div></a>
+        <div class="mg-nav">
+            <ul class="nav-list">
+                <li class="nav-li"><a href="/">首页</a></li>
+                <li class="nav-li"><a href="#">产品和服务</a>
+                    <ul class="sub-nav-list">
+                        <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                    </ul>
+                </li>
+                <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                <li class="nav-li"><a href="/support.html">支持</a></li>
+                <li class="nav-li"><a href="/kb/">知识库</a></li>
+                <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+            </ul>
+        </div>
+    </div>
+</header>
+<nav class="breadcrumb" aria-label="Breadcrumb">
+<ol>
+<li><a href="/">首页</a></li>
+<li><span aria-current="page">邮件技术工具箱</span></li>
+</ol>
+</nav>
+
+<div class="tool-wrap">
+<h1>🔧 邮件技术工具箱</h1>
+<p class="subtitle">纯前端 · 零后端 · 基于 Cloudflare DoH 实时查询</p>
+
+<div class="tool-tabs" role="tablist">
+<button class="tool-tab active" data-tab="headerparser" role="tab">📧 邮件头解析</button>
+<button class="tool-tab" data-tab="dnsbl" role="tab">🚫 黑名单查询</button>
+<button class="tool-tab" data-tab="smtperror" role="tab">🔢 SMTP错误码</button>
+<button class="tool-tab" data-tab="spf" role="tab">📡 SPF校验</button>
+<button class="tool-tab" data-tab="dkim" role="tab">🔑 DKIM检查</button>
+<button class="tool-tab" data-tab="dmarc" role="tab">🛡️ DMARC分析</button>
+<button class="tool-tab" data-tab="base64" role="tab">🔐 Base64/QP</button>
+<button class="tool-tab" data-tab="cidr" role="tab">🌐 CIDR计算</button>
+<button class="tool-tab" data-tab="emailcheck" role="tab">✉️ 语法验证</button>
+<button class="tool-tab" data-tab="dns" role="tab">🩺 DNS诊断</button>
+</div>
+
+<!-- TOOL 1: DNS 诊断 (链接) -->
+<div id="tab-dns" class="tool-content">
+ <div class="tool-card" style="text-align:center;padding:40px;">
+  <h3 style="font-size:20px;">🩺 DNS 综合诊断工具</h3>
+  <p style="color:#666;margin:16px 0;font-size:15px;">MX、SPF、DKIM、DMARC、PTR、BIMI、MTA-STS、TLS-RPT、DNSSEC 一键检测</p>
+  <a href="/tools/dns-check.html" style="display:inline-block;padding:12px 32px;background:#003366;color:#fff;border-radius:8px;text-decoration:none;font-size:16px;font-weight:600;">→ 前往 DNS 诊断工具</a>
+ </div>
+</div>
+
+<!-- TOOL 2: 邮件头解析器 -->
+<div id="tab-headerparser" class="tool-content active">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">📧 邮件头解析器</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">粘贴邮件原始头，解析 Received 跳转链、Authentication-Results、DKIM-Signature 和 ARC 信息</p>
+ <textarea id="hdr-input" class="tool-ta" placeholder="在此粘贴完整的邮件原始头（Received、DKIM-Signature、Authentication-Results 等头字段）..."></textarea>
+ <div class="tool-input-group">
+  <button onclick="parseEmailHeaders()">解析</button>
+  <button class="sec" onclick="document.getElementById('hdr-input').value='';document.getElementById('hdr-result').innerHTML=''">清空</button>
+ </div>
+ <div id="hdr-loading" class="tool-loading">⏳ 正在解析...</div>
+ <div id="hdr-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 3: 黑名单查询 -->
+<div id="tab-dnsbl" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🚫 DNSBL 黑名单查询</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">输入 IP 地址或域名，实时查询主流 DNSBL 黑名单状态</p>
+ <div class="tool-input-group">
+  <input id="dnsbl-input" placeholder="输入 IP 地址（如 1.2.3.4）或域名" onkeydown="if(event.key==='Enter')checkDNSBL()">
+  <button onclick="checkDNSBL()">查询</button>
+ </div>
+ <div id="dnsbl-config" style="margin-bottom:16px;">
+  <div style="font-size:13px;color:#666;margin-bottom:8px;">选择要查询的黑名单：</div>
+  <div id="dnsbl-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:#555;">
+   <label><input type="checkbox" checked data-list="zen.spamhaus.org"> Spamhaus ZEN</label>
+   <label><input type="checkbox" checked data-list="dbl.spamhaus.org"> Spamhaus DBL</label>
+   <label><input type="checkbox" checked data-list="b.barracudacentral.org"> Barracuda</label>
+   <label><input type="checkbox" checked data-list="bl.spamcop.net"> SpamCop</label>
+   <label><input type="checkbox" checked data-list="multi.surbl.org"> SURBL</label>
+   <label><input type="checkbox" checked data-list="dnsbl.sorbs.net"> SORBS</label>
+   <label><input type="checkbox" checked data-list="cbl.abuseat.org"> CBL</label>
+  </div>
+ </div>
+ <div id="dnsbl-loading" class="tool-loading">⏳ 正在查询黑名单...</div>
+ <div id="dnsbl-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 4: SMTP 错误码速查 -->
+<div id="tab-smtperror" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🔢 SMTP 错误码速查</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">常见 SMTP 4xx/5xx 错误码含义、原因和修复步骤</p>
+ <div class="smtp-search">
+  <div class="tool-input-group">
+   <input id="smtp-input" placeholder="输入错误码如 550 5.7.1 或关键字如 relay denied" oninput="filterSMTP()" style="min-width:280px">
+  </div>
+  <div class="smtp-filter">
+   <button class="active" onclick="setSMPTFilter('all',this)">全部</button>
+   <button onclick="setSMPTFilter('4xx',this)">4xx</button>
+   <button onclick="setSMPTFilter('5xx',this)">5xx</button>
+  </div>
+ </div>
+ <div id="smtp-result"></div>
+</div>
+
+<!-- TOOL 5: SPF 深度校验 -->
+<div id="tab-spf" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">📡 SPF 深度校验</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">查询并深度解析 SPF 记录：机制覆盖分析、10-DNS-lookup 限制预警、include 递归跟踪</p>
+ <div class="tool-input-group">
+  <input id="spf-input" placeholder="输入域名如 example.com" onkeydown="if(event.key==='Enter')checkSPF()">
+  <button onclick="checkSPF()">校验</button>
+ </div>
+ <div id="spf-loading" class="tool-loading">⏳ 正在查询 SPF 记录...</div>
+ <div id="spf-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 6: DKIM 记录检查 -->
+<div id="tab-dkim" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🔑 DKIM 记录检查器</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">查询并解析 DKIM 公钥记录：密钥类型、长度、算法审计</p>
+ <div class="tool-input-group">
+  <input id="dkim-selector" placeholder="Selector（如 default、google）" style="min-width:120px;flex:0 0 auto;max-width:160px">
+  <input id="dkim-domain" placeholder="域名如 example.com" onkeydown="if(event.key==='Enter')checkDKIM()">
+  <button onclick="checkDKIM()">查询</button>
+ </div>
+ <div id="dkim-loading" class="tool-loading">⏳ 正在查询 DKIM 记录...</div>
+ <div id="dkim-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 7: DMARC 分析器 -->
+<div id="tab-dmarc" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🛡️ DMARC 分析器</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">查询 _dmarc TXT 记录，解析策略标签，解读当前防护状态</p>
+ <div class="tool-input-group">
+  <input id="dmarc-input" placeholder="输入域名如 example.com" onkeydown="if(event.key==='Enter')checkDMARC()">
+  <button onclick="checkDMARC()">分析</button>
+ </div>
+ <div id="dmarc-loading" class="tool-loading">⏳ 正在查询 DMARC 记录...</div>
+ <div id="dmarc-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 8: Base64/QP 编解码 -->
+<div id="tab-base64" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🔐 Base64 / Quoted-Printable 编解码</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">邮件 MIME 内容编解码工具</p>
+ <textarea id="b64-input" class="tool-ta" placeholder="输入要编码/解码的文本..."></textarea>
+ <div class="ctrl-group">
+  <button class="btn-sm active" id="b64-mode-Base64编码" onclick="setB64Mode('Base64编码',this)">Base64 编码</button>
+  <button class="btn-sm" id="b64-mode-Base64解码" onclick="setB64Mode('Base64解码',this)">Base64 解码</button>
+  <button class="btn-sm" id="b64-mode-QP编码" onclick="setB64Mode('QP编码',this)">QP 编码</button>
+  <button class="btn-sm" id="b64-mode-QP解码" onclick="setB64Mode('QP解码',this)">QP 解码</button>
+  <button class="btn-sm" onclick="copyB64Output()" style="margin-left:8px;background:#003366;color:#fff;border-color:#003366">📋 复制结果</button>
+ </div>
+ <textarea id="b64-output" class="tool-ta" readonly placeholder="结果将显示在这里..." style="background:#f8f9fb;cursor:text"></textarea>
+</div>
+
+<!-- TOOL 9: CIDR 计算器 -->
+<div id="tab-cidr" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🌐 CIDR 计算器</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">IP 段计算、CIDR 聚合、SPF 范围转换</p>
+ <div class="tool-input-group">
+  <input id="cidr-input" placeholder="如 192.168.0.0/24 或 10.0.0.0-10.0.0.255" onkeydown="if(event.key==='Enter')calcCIDR()">
+  <button onclick="calcCIDR()">计算</button>
+ </div>
+ <div class="ctrl-group" style="margin-bottom:16px">
+  <button class="btn-sm" onclick="document.getElementById('cidr-input').value='192.168.1.0-192.168.1.255';calcCIDR()">SPF ip4 范围转 CIDR</button>
+  <button class="btn-sm" onclick="document.getElementById('cidr-input').value='10.0.0.0/24,10.0.0.128/25';calcCIDR()">合并多段</button>
+ </div>
+ <div id="cidr-loading" class="tool-loading" style="display:none;text-align:center;padding:12px;color:#888">⏳ 计算中...</div>
+ <div id="cidr-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 10: Email 语法验证 -->
+<div id="tab-emailcheck" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">✉️ Email 地址语法验证</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">RFC 5321/5322 合规检查，标注不规范项</p>
+ <div class="tool-input-group">
+  <input id="emailcheck-input" placeholder="输入邮箱地址如 user@example.com" onkeydown="if(event.key==='Enter')checkEmailSyntax()">
+  <button onclick="checkEmailSyntax()">验证</button>
+ </div>
+ <div id="emailcheck-result" class="tool-result"></div>
+</div>
+
+</div><!-- .tool-wrap -->
+
+<!--#include virtual="/partials/footer.html" -->
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc5322" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 5322 — Internet Message Format 原文（邮件头）</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc5321" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 5321 — SMTP 原文（SMTP 错误码）</a></li>
+            <li><a href="https://www.iana.org/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">IANA DNSBL 黑名单列表</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

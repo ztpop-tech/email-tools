@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMARC 记录查询检查工具 — 在线 DMARC Lookup · ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="DMARC 记录检查器 — 在线查询验证 · ztpop.net">
+<meta property="og:description" content="免费在线 DMARC 记录查询工具：输入域名，即时查询 _dmarc.<域名> 的 DMARC TXT 记录，解析 v/p/pct/rua/ruf/sp/fo/adkim/aspf 标签，评估策略强度（none/quarantine/reject）并给出安全建议。">
+<meta name="description" content="免费在线 DMARC 记录查询工具：输入域名，即时查询 _dmarc.<域名> 的 DMARC TXT 记录，解析 v/p/pct/rua/ruf/sp/fo/adkim/aspf 标签，评估策略强度（none/quarantine/reject）并给出安全建议。">
+<link rel="canonical" href="https://www.ztpop.net/tools/dmarc-checker.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"DMARC 记录检查器"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "DMARC 记录检查器", "url": "https://www.ztpop.net/tools/dmarc-checker.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "免费在线 DMARC 记录查询工具：输入域名，即时查询 _dmarc.<域名> 的 DMARC TXT 记录，解析 v/p/pct/rua/ruf/sp/fo/adkim/aspf 标签，评估策略强度（none/quarantine/reject）并给出安全建议。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "DMARC 记录检查器是什么？", "acceptedAnswer": {"@type": "Answer", "text": "DMARC 记录检查器是一款浏览器端免费工具，通过 DNS-over-HTTPS（DoH）向公共解析器实时查询域名 DNS 记录，无需安装任何软件。查询在浏览器本地完成，域名记录不会上传到本站服务器。"}}, {"@type": "Question", "name": "如何使用DMARC 记录检查器？", "acceptedAnswer": {"@type": "Answer", "text": "DMARC 记录固定存放于 _dmarc.<域名>。输入域名后点击查询，工具通过 DoH 查询该位置的 TXT 记录并解析全部标签。重点关注 p 标签（策略）与 rua 标签（报告接收地址）。若返回「未发现 DMARC 记录」，说明域名未部署 DMARC——此时任何声称该域名的邮件都不会被 DMARC 校验拦截。若 p=none 说明仅处于监控阶段，建议按渐进式策略逐步收紧到 quarantine/reject。"}}, {"@type": "Question", "name": "查询结果多久生效？", "acceptedAnswer": {"@type": "Answer", "text": "DNS 记录查询依赖公共解析器的缓存。若刚在 DNS 服务商处修改记录，通常需要等待 TTL 时间（一般 5 分钟到数小时）后查询结果才会更新。若提示未发现记录，可稍后重试或先用 dig/nslookup 确认。"}}, {"@type": "Question", "name": "DMARC 记录检查器与生成器有什么区别？", "acceptedAnswer": {"@type": "Answer", "text": "生成器（Generator）用于创建 DNS 记录，检查器（Checker/Lookup）用于查询验证已有记录。建议工作流：用生成器生成记录 → 发布到 DNS → 用检查器验证生效。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">DMARC 记录检查器</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · DNS-over-HTTPS 实时查询 · 浏览器端运行，不上传数据</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">DMARC（Domain-based Message Authentication, Reporting & Conformance，RFC 7489）建立在 SPF 与 DKIM 之上，通过 DNS 的 _dmarc.<域名> 记录声明域名的邮件处理策略，并接收外部邮件系统的认证结果报告（rua 聚合报告、ruf 失败报告）。DMARC 策略 p=none → quarantine → reject 的渐进式部署是国际通行的安全实践；查询 DMARC 记录可以快速判断一个域名是否已受 DMARC 保护。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">域名（Domain）</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    
+                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">查询DMARC 记录</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">输入域名（如 example.com），工具将查询 _dmarc.example.com 的 TXT 记录（DMARC 记录固定存放于此）。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">功能说明</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>标准位置查询：固定查询 _dmarc.&lt;domain&gt; 的 TXT 记录，与 RFC 7489 定义一致</li>
+<li>全标签解析：v/p/pct/rua/ruf/sp/fo/adkim/aspf 逐项解读，含策略百分比与子域策略</li>
+<li>策略强度评级：none（仅监控）/ quarantine（隔离）/ reject（拒绝）三档评估安全等级</li>
+<li>对齐模式检查：显示 adkim/aspf 对齐模式（宽松 r / 严格 s），提示 DKIM/SPF 对齐要求</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">DMARC 记录固定存放于 _dmarc.<域名>。输入域名后点击查询，工具通过 DoH 查询该位置的 TXT 记录并解析全部标签。重点关注 p 标签（策略）与 rua 标签（报告接收地址）。若返回「未发现 DMARC 记录」，说明域名未部署 DMARC——此时任何声称该域名的邮件都不会被 DMARC 校验拦截。若 p=none 说明仅处于监控阶段，建议按渐进式策略逐步收紧到 quarantine/reject。</p>
+            </div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，查询逻辑与解析规则均与标准定义保持一致：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DNS 查询：RFC 8484（DNS Queries over HTTPS）、RFC 1035（DNS 协议）</li>
+                    <li>记录解析：DMARC 记录解析：RFC 7489 §6（DNS 记录）、§6.3（标签定义）</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7489" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7489 — DMARC 标准原文</a></li>
+            <li><a href="https://dmarc.org/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarc.org 官方说明</a></li>
+            <li><a href="https://support.google.com/a/answer/2466563" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Google Workspace 帮助：DMARC</a></li>
+        </ul>
+    </div>
+</div>
+
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var btn = document.getElementById('check-btn');
+    var result = document.getElementById('result');
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    function keyValTable(rows) {
+        var h = '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">' +
+            '<tr style="background:#f0f4f8"><th style="padding:8px 12px;border:1px solid #ddd;text-align:left">标签</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">值</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">说明</th></tr>';
+        rows.forEach(function(r) {
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;word-break:break-all">' + esc(r[1]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd">' + r[2] + '</td></tr>';
+        });
+        return h + '</table>';
+    }
+
+    function parseTxtRecords(answers) {
+        var txts = [];
+        (answers || []).forEach(function(a) {
+            if (a.type === 16) txts.push(a.data);
+        });
+        return txts;
+    }
+
+    function dohQuery(qname, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=TXT';
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+
+    btn.addEventListener('click', function() {
+        var domain = document.getElementById('domain-input').value.trim().toLowerCase();
+        var selector = document.getElementById('selector-input') ? document.getElementById('selector-input').value.trim() : '';
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', '请输入有效域名，如 example.com');
+            return;
+        }
+        var qname = '_dmarc.' + domain + '. ';
+        result.innerHTML = '<div style="color:#666;font-size:14px;padding:8px 0">正在查询 <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">' + esc(qname) + '</code> ...</div>';
+        dohQuery(qname, function(err, j) {
+            if (err) {
+                result.innerHTML = statusBox('err', 'DNS 查询失败：' + esc(err.message) + '。请检查网络连接后重试。');
+                return;
+            }
+            var txts = parseTxtRecords(j.Answer);
+            
+            if (txts.length === 0) {
+                result.innerHTML = statusBox('err', '未在 <code>_dmarc.' + esc(domain) + '</code> 发现 DMARC 记录。') +
+                    statusBox('warn', '该域名未部署 DMARC，任何声称该域名的邮件都无法通过 DMARC 校验。建议用本站 <a href="/tools/dmarc-generator.html" style="color:#0066cc">DMARC 生成器</a> 生成记录，按 p=none → quarantine → reject 渐进部署（参考 <a href="/kb/dmarc-policy-gradual.html" style="color:#0066cc">DMARC 策略渐进指南</a>）。');
+                return;
+            }
+            var dmarc = null;
+            for (var i = 0; i < txts.length; i++) {
+                if (txts[i].indexOf('v=DMARC1') === 0) { dmarc = txts[i]; break; }
+            }
+            if (!dmarc) {
+                result.innerHTML = statusBox('warn', '该位置有 TXT 记录但不是 DMARC 记录（不以 v=DMARC1 开头）：') + txts.map(function(t){return '<pre style="background:#1a1a2e;color:#e0e0e0;padding:12px;border-radius:6px;font-size:13px">' + esc(t) + '</pre>';}).join('');
+                return;
+            }
+            var html = statusBox('ok', '<b>✓ 发现 DMARC 记录</b>');
+            html += '<pre style="background:#1a1a2e;color:#e0e0e0;padding:14px;border-radius:6px;font-size:13.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">' + esc(dmarc) + '</pre>';
+            var tags = {};
+            dmarc.split(';').forEach(function(s) {
+                var i = s.indexOf('=');
+                if (i > 0) tags[s.slice(0, i).trim().toLowerCase()] = s.slice(i + 1).trim();
+            });
+            var rows = [];
+            var policy = (tags['p'] || '').toLowerCase();
+            var policyDesc = { 'none': '仅监控（不拦截，收集报告）', 'quarantine': '隔离（进垃圾箱）', 'reject': '拒绝（退信）' };
+            if (tags['v']) rows.push(['v', tags['v'], '版本（应为 DMARC1）']);
+            if (tags['p']) rows.push(['p', tags['p'], '主域策略：' + (policyDesc[policy] || '未知')]);
+            if (tags['sp']) rows.push(['sp', tags['sp'], '子域策略（缺省继承 p）']);
+            if (tags['pct']) rows.push(['pct', tags['pct'], '策略应用百分比（' + tags['pct'] + '% 的邮件应用策略）']);
+            if (tags['rua']) rows.push(['rua', tags['rua'], '聚合报告接收地址']);
+            if (tags['ruf']) rows.push(['ruf', tags['ruf'], '取证报告（失败详情）接收地址']);
+            if (tags['fo']) rows.push(['fo', tags['fo'], '取证报告触发条件（0=全部失败，1=任一失败，d/s=DKIM/SPF）']);
+            if (tags['adkim']) rows.push(['adkim', tags['adkim'], 'DKIM 对齐模式（r=宽松，s=严格）']);
+            if (tags['aspf']) rows.push(['aspf', tags['aspf'], 'SPF 对齐模式（r=宽松，s=严格）']);
+            html += keyValTable(rows);
+            var level = policy === 'reject' ? 3 : policy === 'quarantine' ? 2 : policy === 'none' ? 1 : 0;
+            if (level === 0) html += statusBox('err', '⚠ 缺少 <code>p=</code> 策略标签，记录无效（RFC 7489 要求）。');
+            else if (level === 1) html += statusBox('warn', '策略为 <code>none</code>：仅监控阶段。建议观察 rua 报告 1-2 周后逐步收紧到 quarantine → reject。');
+            else if (level === 2) html += statusBox('warn', '策略为 <code>quarantine</code>：未通过认证的邮件将进垃圾箱。稳定后可考虑升级到 reject。');
+            else html += statusBox('ok', '策略为 <code>reject</code>：最强保护，未通过认证的邮件将被拒绝。');
+            if (!tags['rua']) html += statusBox('warn', '⚠ 缺少 <code>rua=</code>，无法接收聚合报告，建议补充。');
+            result.innerHTML = html;
+
+        });
+    });
+})();
+</script>
+</body>
+</html>

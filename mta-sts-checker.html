@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTA-STS 记录查询检查工具 — 在线 MTA-STS Lookup · ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="MTA-STS 记录检查器 — 在线查询验证 · ztpop.net">
+<meta property="og:description" content="免费在线 MTA-STS 记录查询工具：输入域名，查询 _mta-sts.<域名> 的 TXT 策略记录与 mta-sts.<域名> 的策略文件，验证 TLS 强制加密配置（RFC 8461）是否就绪。">
+<meta name="description" content="免费在线 MTA-STS 记录查询工具：输入域名，查询 _mta-sts.<域名> 的 TXT 策略记录与 mta-sts.<域名> 的策略文件，验证 TLS 强制加密配置（RFC 8461）是否就绪。">
+<link rel="canonical" href="https://www.ztpop.net/tools/mta-sts-checker.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"MTA-STS 记录检查器"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "MTA-STS 记录检查器", "url": "https://www.ztpop.net/tools/mta-sts-checker.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "免费在线 MTA-STS 记录查询工具：输入域名，查询 _mta-sts.<域名> 的 TXT 策略记录与 mta-sts.<域名> 的策略文件，验证 TLS 强制加密配置（RFC 8461）是否就绪。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "MTA-STS 记录检查器是什么？", "acceptedAnswer": {"@type": "Answer", "text": "MTA-STS 记录检查器是一款浏览器端免费工具，通过 DNS-over-HTTPS（DoH）向公共解析器实时查询域名 DNS 记录，无需安装任何软件。查询在浏览器本地完成，域名记录不会上传到本站服务器。"}}, {"@type": "Question", "name": "如何使用MTA-STS 记录检查器？", "acceptedAnswer": {"@type": "Answer", "text": "MTA-STS 配置包含两个部分：① _mta-sts.<域名> 的 TXT 发现记录（v=STSv1; id=<版本>）；② https://mta-sts.<域名>/.well-known/mta-sts.txt 策略文件。工具先查询发现记录，若存在则继续抓取策略文件并解析。两者缺一不可——只有发现记录没有策略文件（或反之），MTA-STS 都无法生效。注意策略文件必须通过 HTTPS 提供服务且证书有效，否则发送方将按 RFC 8461 忽略该策略。"}}, {"@type": "Question", "name": "查询结果多久生效？", "acceptedAnswer": {"@type": "Answer", "text": "DNS 记录查询依赖公共解析器的缓存。若刚在 DNS 服务商处修改记录，通常需要等待 TTL 时间（一般 5 分钟到数小时）后查询结果才会更新。若提示未发现记录，可稍后重试或先用 dig/nslookup 确认。"}}, {"@type": "Question", "name": "MTA-STS 记录检查器与生成器有什么区别？", "acceptedAnswer": {"@type": "Answer", "text": "生成器（Generator）用于创建 DNS 记录，检查器（Checker/Lookup）用于查询验证已有记录。建议工作流：用生成器生成记录 → 发布到 DNS → 用检查器验证生效。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">MTA-STS 记录检查器</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · DNS-over-HTTPS 实时查询 · 浏览器端运行，不上传数据</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">MTA-STS（SMTP MTA Strict Transport Security，RFC 8461）通过 DNS 记录 + HTTPS 策略文件双重机制，强制邮件服务器之间使用 TLS 加密传输，防止 SMTP 降级攻击（STRIPTLS）与中间人窃听。其发现记录 _mta-sts.<域名> 声明策略版本与策略文件的 HTTPS 位置，策略文件则规定允许连接的 MX 与加密模式。MTA-STS 是邮件传输安全的现代基线（配合 DANE/TLSA 使用）。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">域名（Domain）</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    
+                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">查询MTA-STS 记录</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">输入域名，工具将查询 _mta-sts.<域名> 的 TXT 记录（MTA-STS 策略发现记录），并尝试获取 https://mta-sts.<域名>/.well-known/mta-sts.txt 策略文件。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">功能说明</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>策略发现记录查询：查询 _mta-sts.&lt;domain&gt; TXT 记录，确认 v=STSv1 与 id= 版本号</li>
+<li>策略文件抓取：尝试访问 https://mta-sts.&lt;domain&gt;/.well-known/mta-sts.txt 并解析 mx/enforce 指令</li>
+<li>双重缺失检测：分别报告「发现记录缺失」与「策略文件缺失」，定位配置断点</li>
+<li>DANE 关联提示：说明 MTA-STS 与 DANE/TLSA（RFC 7672）的互补关系</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">MTA-STS 配置包含两个部分：① _mta-sts.<域名> 的 TXT 发现记录（v=STSv1; id=<版本>）；② https://mta-sts.<域名>/.well-known/mta-sts.txt 策略文件。工具先查询发现记录，若存在则继续抓取策略文件并解析。两者缺一不可——只有发现记录没有策略文件（或反之），MTA-STS 都无法生效。注意策略文件必须通过 HTTPS 提供服务且证书有效，否则发送方将按 RFC 8461 忽略该策略。</p>
+            </div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，查询逻辑与解析规则均与标准定义保持一致：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DNS 查询：RFC 8484（DNS Queries over HTTPS）、RFC 1035（DNS 协议）</li>
+                    <li>记录解析：MTA-STS：RFC 8461 §3.1（发现记录）、§3.2（策略文件）</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc8461" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 8461 — MTA-STS 标准原文</a></li>
+            <li><a href="https://datatracker.ietf.org/wg/uta/about/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">IETF UTA 工作组（邮件安全）</a></li>
+        </ul>
+    </div>
+</div>
+
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var btn = document.getElementById('check-btn');
+    var result = document.getElementById('result');
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    function keyValTable(rows) {
+        var h = '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">' +
+            '<tr style="background:#f0f4f8"><th style="padding:8px 12px;border:1px solid #ddd;text-align:left">标签</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">值</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">说明</th></tr>';
+        rows.forEach(function(r) {
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;word-break:break-all">' + esc(r[1]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd">' + r[2] + '</td></tr>';
+        });
+        return h + '</table>';
+    }
+
+    function parseTxtRecords(answers) {
+        var txts = [];
+        (answers || []).forEach(function(a) {
+            if (a.type === 16) txts.push(a.data);
+        });
+        return txts;
+    }
+
+    function dohQuery(qname, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=TXT';
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+
+    btn.addEventListener('click', function() {
+        var domain = document.getElementById('domain-input').value.trim().toLowerCase();
+        var selector = document.getElementById('selector-input') ? document.getElementById('selector-input').value.trim() : '';
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', '请输入有效域名，如 example.com');
+            return;
+        }
+        var qname = '_mta-sts.' + domain + '. ';
+        result.innerHTML = '<div style="color:#666;font-size:14px;padding:8px 0">正在查询 <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">' + esc(qname) + '</code> ...</div>';
+        dohQuery(qname, function(err, j) {
+            if (err) {
+                result.innerHTML = statusBox('err', 'DNS 查询失败：' + esc(err.message) + '。请检查网络连接后重试。');
+                return;
+            }
+            var txts = parseTxtRecords(j.Answer);
+            
+            var html = '';
+            if (txts.length === 0) {
+                html += statusBox('err', '未在 <code>_mta-sts.' + esc(domain) + '</code> 发现 MTA-STS 策略发现记录。') +
+                    statusBox('warn', '域名未启用 MTA-STS，SMTP 传输存在降级攻击（STRIPTLS）风险。可用本站 <a href="/tools/mta-sts-generator.html" style="color:#0066cc">MTA-STS 生成器</a> 生成发现记录与策略文件。');
+            } else {
+                var mta = txts[0];
+                html += statusBox('ok', '<b>✓ 发现 MTA-STS 发现记录</b>');
+                html += '<pre style="background:#1a1a2e;color:#e0e0e0;padding:14px;border-radius:6px;font-size:13.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">' + esc(mta) + '</pre>';
+                if (mta.indexOf('v=STSv1') !== 0) html += statusBox('err', '⚠ 记录不以 <code>v=STSv1</code> 开头，格式错误（RFC 8461 §3.1）。');
+            }
+            // 尝试抓取策略文件
+            html += '<div style="margin:14px 0 8px;font-size:14px;color:#555"><b>策略文件检查</b>（https://mta-sts.' + esc(domain) + '/.well-known/mta-sts.txt）</div>';
+            fetch('https://mta-sts.' + domain + '/.well-known/mta-sts.txt', { method: 'GET' })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.text();
+                })
+                .then(function(text) {
+                    var lines = text.trim().split(/\\r?\\n/);
+                    var ok = lines.some(function(l) { return l.indexOf('version: STSv1') === 0; });
+                    html += statusBox(ok ? 'ok' : 'err', (ok ? '<b>✓ 策略文件存在</b>' : '⚠ 策略文件格式异常（缺 version: STSv1）') + '，内容如下：');
+                    html += '<pre style="background:#1a1a2e;color:#e0e0e0;padding:14px;border-radius:6px;font-size:13px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">' + esc(text.slice(0, 1500)) + '</pre>';
+                    var enforce = lines.some(function(l) { return l.indexOf('mode: enforce') === 0; });
+                    if (ok && enforce) html += statusBox('ok', '模式为 <code>enforce</code>：强制 TLS，未加密连接将被拒绝。');
+                    else if (ok) html += statusBox('warn', '模式非 enforce（testing 或缺失）：仅测试阶段，不会强制 TLS。');
+                    result.innerHTML = html;
+                })
+                .catch(function(e) {
+                    html += statusBox('warn', '无法获取策略文件（' + esc(e.message) + '）。若浏览器跨域限制或服务器未部署 HTTPS，可稍后手动访问验证。');
+                    result.innerHTML = html;
+                });
+
+        });
+    });
+})();
+</script>
+</body>
+</html>

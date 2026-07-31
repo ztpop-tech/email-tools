@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>MTA-STS 记录生成器 — RFC 8461 在线生成策略与 DNS 记录 · ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="MTA-STS 记录生成器 — 生成 _mta-sts TXT 记录与策略文件（RFC 8461）">
+<meta property="og:description" content="免费在线 MTA-STS 记录生成器：生成 _mta-sts TXT 记录与 https://mta-sts.example.com/.well-known/mta-sts.txt 策略文件内容，支持 enforce/testing 策略与 mx 主机列表。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/mta-sts-generator.html">
+<meta name="description" content="免费在线 MTA-STS 记录生成器。生成符合 RFC 8461 的 _mta-sts TXT 记录与 .well-known/mta-sts.txt 策略文件，支持 enforce/testing 策略模式、mx 主机列表、max_age 配置，输出完整部署清单。">
+<link rel="canonical" href="https://www.ztpop.net/tools/mta-sts-generator.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "MTA-STS 记录生成器",
+  "description": "生成符合 RFC 8461 的 MTA-STS TXT 记录与策略文件。支持 enforce/testing 策略、mx 主机列表、max_age 配置，输出完整部署清单与 HTTPS 证书要求说明。",
+  "url": "https://www.ztpop.net/tools/mta-sts-generator.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {"@type":"Organization","name":"ztpop.net 邮件技术知识库","url":"https://www.ztpop.net/"}
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"MTA-STS 记录生成器"}]}</script>
+<style>
+/* scoped to .gen-tool */
+.gen-tool{max-width:860px;margin:40px auto;padding:0 20px}
+.gen-tool h1{font-size:24px;color:#003366;margin-bottom:8px}
+.gen-tool .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.gen-tool .panel{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #003366}
+.gen-tool .panel h3{margin:0 0 14px;font-size:16px;color:#003366}
+.gen-tool .panel label{display:block;font-size:13px;color:#555;margin:10px 0 6px;font-weight:600}
+.gen-tool .panel input[type=text],.gen-tool .panel input[type=number]{width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box}
+.gen-tool .panel input:focus{border-color:#003366}
+.gen-tool .panel .hint{font-size:12px;color:#888;margin-top:4px;line-height:1.6}
+.gen-tool .radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.gen-tool .radio-row label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;cursor:pointer}
+.gen-tool .radio-row input[type=radio]{width:auto}
+.gen-tool .btn-gen{padding:12px 32px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;transition:background .2s}
+.gen-tool .btn-gen:hover{background:#004488}
+.gen-tool .output{background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px 20px;margin:16px 0;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.7;word-break:break-all;display:none}
+.gen-tool .output .copy-btn{float:right;background:#2d2d4a;border:1px solid #4a4a6a;color:#ccc;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+.gen-tool .output .copy-btn:hover{background:#3a3a5c}
+.gen-tool .validation{font-size:13px;margin:8px 0;padding:10px 14px;border-radius:6px;display:none}
+.gen-tool .validation.ok{background:#f0fdf4;color:#166534;border-left:3px solid #16a34a}
+.gen-tool .validation.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+.gen-tool .info-box{background:#e8f0fe;border-radius:8px;padding:20px 24px;margin-top:32px;font-size:14px;color:#444;line-height:1.8}
+.gen-tool .info-box h3{font-size:16px;color:#003366;margin-bottom:12px}
+.gen-tool .info-box code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:3px;font-size:13px}
+@media (max-width:600px){.gen-tool .radio-row{flex-direction:column;gap:8px}}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "MTA-STS 是什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "MTA-STS（SMTP MTA Strict Transport Security，RFC 8461）通过 DNS 发现 HTTPS 托管的策略文件，强制收件方 MTA 使用 TLS 接收邮件，抵御 STARTTLS 明文协商阶段的降级攻击。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "MTA-STS 需要部署哪些部分？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "三部分：① _mta-sts.您的域名 的 TXT 记录（v=STSv1; id=时间戳）；② https://mta-sts.您的域名/.well-known/mta-sts.txt 策略文件（需 HTTPS 证书）；③ 所有 MX 主机支持 TLS 1.2+ 且证书有效。建议配合 TLS-RPT 监控。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "MTA-STS 的 testing 和 enforce 模式有什么区别？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "testing 模式只报告不强制，配合 TLS-RPT 观察 1-2 周确认无失败；enforce 模式强制要求 TLS，连接不符合策略时拒绝。上线流程建议先 testing 后 enforce。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "MTA-STS 和 DANE 有什么关系？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "两者目标相同（强制 SMTP TLS），但机制不同：MTA-STS 依赖 HTTPS 信任锚，DANE（RFC 7672）依赖 DNSSEC 的 TLSA 记录。MTA-STS 无法覆盖的 mta-sts 子域证书场景可用 DANE 补充。"
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="gen-tool">
+    <h1>MTA-STS 记录生成器</h1>
+    <p class="subtitle">SMTP MTA Strict Transport Security（RFC 8461）——通过 DNS 发现策略并强制收件方使用 TLS 接收邮件，抵御 STARTTLS 降级攻击。生成 _mta-sts TXT 记录与策略文件。</p>
+
+    <div class="panel">
+        <h3>1️⃣ 域名</h3>
+        <input type="text" id="domain" placeholder="如 example.com（不要加 www）">
+        <p class="hint">RFC 8461 §3：MTA-STS 策略按"接收域"生效，域名不带协议前缀与子域（策略适用于该域所有 MX 主机）。</p>
+    </div>
+
+    <div class="panel">
+        <h3>2️⃣ 策略模式</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="mode" value="testing" checked> <code>testing</code> 测试模式（只报告不强制）</label>
+            <label><input type="radio" name="mode" value="enforce"> <code>enforce</code> 强制模式（推荐最终态）</label>
+        </div>
+        <p class="hint">RFC 8461 §3.2：建议先 <code>testing</code> 配合 TLS-RPT 观察 1-2 周，确认无失败后再切 <code>enforce</code>。</p>
+    </div>
+
+    <div class="panel">
+        <h3>3️⃣ MX 主机列表</h3>
+        <input type="text" id="mxList" placeholder="每行一个 MX 主机名，如 mx1.example.com" style="min-height:80px">
+        <p class="hint">RFC 8461 §3.2：策略中的 mx 主机必须与 DNS MX 记录匹配（可包含通配符 *.example.com）。留空则从 DNS 自动推断（需后续手动核对）。</p>
+    </div>
+
+    <div class="panel">
+        <h3>4️⃣ 策略缓存时长（max_age）</h3>
+        <input type="number" id="maxAge" value="86400" min="1">
+        <p class="hint">RFC 8461 §3.2：收件方缓存策略的秒数。建议 86400（1 天）至 604800（1 周）。测试阶段可设短一些。</p>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">生成 MTA-STS 配置</button>
+    <div id="validation" class="validation"></div>
+    <div id="output" class="output"></div>
+    <div id="output2" class="output" style="display:none"></div>
+
+    <div class="info-box">
+        <h3>📖 MTA-STS 原理与部署清单</h3>
+        <p><strong>MTA-STS</strong>（RFC 8461）解决 STARTTLS 协议的先天缺陷：明文协商阶段的主动攻击者可剥离 TLS 扩展实现降级。MTA-STS 通过 HTTPS 托管策略文件，让收件方 MTA 在建立连接前就知道"该域必须使用 TLS"。</p>
+        <p><strong>部署需要三部分</strong>：</p>
+        <p>① <strong>DNS TXT 记录</strong>：主机名 <code>_mta-sts.您的域名</code>，值 <code>v=STSv1; id=时间戳</code>。id 变更时收件方会重新拉取策略。</p>
+        <p>② <strong>策略文件</strong>：托管在 <code>https://mta-sts.您的域名/.well-known/mta-sts.txt</code>，需 HTTPS 证书（可用通配符证书或 Let's Encrypt），MIME 类型 <code>text/plain</code>。</p>
+        <p>③ <strong>TLS 配置</strong>：所有 MX 主机必须支持 TLS 1.2+，且证书链有效。建议同时配置 <a href="/tools/tls-rpt-generator.html">TLS-RPT</a> 报告接收失败情况。</p>
+        <p><strong>注意事项</strong>：MTA-STS 依赖 DNSSEC 之外的"HTTPS 信任锚"；若 mta-sts 子域无法配置证书，可考虑 DANE（RFC 7672，需 DNSSEC 支持）作为替代方案。两者机制互补。</p>
+        <p><strong>参考标准</strong>：RFC 8461（MTA-STS）、RFC 8460（TLS-RPT）、RFC 7672（DANE SMTP）、RFC 3207（STARTTLS）。</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+function generate() {
+    const domain = document.getElementById('domain').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+    const mode = document.querySelector('input[name=mode]:checked').value;
+    const mxRaw = document.getElementById('mxList').value.trim();
+    const maxAge = parseInt(document.getElementById('maxAge').value) || 86400;
+    const v = document.getElementById('validation');
+
+    const warnings = [];
+    if (!domain) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '❌ 请填写域名';
+        return;
+    }
+    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(domain)) {
+        warnings.push('域名格式可能不正确（应为 example.com 形式）');
+    }
+
+    const mxs = mxRaw.split('\n').map(s => s.trim().replace(/^\./,'')).filter(Boolean);
+    if (mxs.length === 0) {
+        warnings.push('未填写 MX 主机列表，策略文件将为空（需手动补充）');
+    }
+
+    const id = Math.floor(Date.now() / 1000);
+    const txtRecord = `v=STSv1; id=${id}`;
+
+    // 策略文件
+    const policyLines = ['version: STSv1', 'mode: ' + mode];
+    if (mxs.length) {
+        policyLines.push('mx: ' + mxs.join('\nmx: '));
+    }
+    policyLines.push('max_age: ' + maxAge);
+    const policy = policyLines.join('\n');
+
+    v.className = 'validation warn';
+    v.style.display = 'block';
+    v.innerHTML = '⚠️ ' + (warnings.length ? warnings.join('<br>⚠️ ') : '配置已生成，请按下方部署清单逐项发布。');
+
+    const out1 = document.getElementById('output');
+    out1.style.display = 'block';
+    out1.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">复制</button><strong>① DNS TXT 记录</strong>（主机名：<code>_mta-sts.${domain}</code>）<br><br>${txtRecord}`;
+
+    const out2 = document.getElementById('output2');
+    out2.style.display = 'block';
+    out2.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">复制</button><strong>② 策略文件内容</strong>（部署到 <code>https://mta-sts.${domain}/.well-known/mta-sts.txt</code>，Content-Type: text/plain）<br><br>${policy}`;
+}
+
+function copyRec(btn) {
+    const node = btn.parentNode.cloneNode(true);
+    node.querySelector('.copy-btn').remove();
+    const text = node.innerText.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => btn.textContent = '复制', 1500);
+    });
+}
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc8461" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 8461 — SMTP MTA Strict Transport Security (MTA-STS) 原文</a></li>
+            <li><a href="https://developers.cloudflare.com/email-security/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Cloudflare MTA-STS 部署指南</a></li>
+            <li><a href="https://datatracker.ietf.org/wg/uta/about/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">IETF 邮件安全工作组（UMA）</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

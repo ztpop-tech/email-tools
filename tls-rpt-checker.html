@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TLS-RPT 记录查询检查工具 — 在线 TLS-RPT Lookup · ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="TLS-RPT 记录检查器 — 在线查询验证 · ztpop.net">
+<meta property="og:description" content="免费在线 TLS-RPT 记录查询工具：输入域名，查询 _smtp._tls.<域名> 的 TXT 记录，解析 v=TLSRPTv1 与 rua= 报告地址，确认 TLS 传输失败报告（RFC 8460）接收配置是否就绪。">
+<meta name="description" content="免费在线 TLS-RPT 记录查询工具：输入域名，查询 _smtp._tls.<域名> 的 TXT 记录，解析 v=TLSRPTv1 与 rua= 报告地址，确认 TLS 传输失败报告（RFC 8460）接收配置是否就绪。">
+<link rel="canonical" href="https://www.ztpop.net/tools/tls-rpt-checker.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"TLS-RPT 记录检查器"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "TLS-RPT 记录检查器", "url": "https://www.ztpop.net/tools/tls-rpt-checker.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "免费在线 TLS-RPT 记录查询工具：输入域名，查询 _smtp._tls.<域名> 的 TXT 记录，解析 v=TLSRPTv1 与 rua= 报告地址，确认 TLS 传输失败报告（RFC 8460）接收配置是否就绪。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "TLS-RPT 记录检查器是什么？", "acceptedAnswer": {"@type": "Answer", "text": "TLS-RPT 记录检查器是一款浏览器端免费工具，通过 DNS-over-HTTPS（DoH）向公共解析器实时查询域名 DNS 记录，无需安装任何软件。查询在浏览器本地完成，域名记录不会上传到本站服务器。"}}, {"@type": "Question", "name": "如何使用TLS-RPT 记录检查器？", "acceptedAnswer": {"@type": "Answer", "text": "TLS-RPT 记录存放于 _smtp._tls.<域名>，格式为 v=TLSRPTv1; rua=mailto:reports@example.com。输入域名查询后，工具解析版本号与报告地址。若返回「未发现 TLS-RPT 记录」，说明域名未配置 TLS 传输失败监控——建议与 MTA-STS 或 DANE 同步部署。rua= 地址应为真实可收信的邮箱，否则报告会丢失。"}}, {"@type": "Question", "name": "查询结果多久生效？", "acceptedAnswer": {"@type": "Answer", "text": "DNS 记录查询依赖公共解析器的缓存。若刚在 DNS 服务商处修改记录，通常需要等待 TTL 时间（一般 5 分钟到数小时）后查询结果才会更新。若提示未发现记录，可稍后重试或先用 dig/nslookup 确认。"}}, {"@type": "Question", "name": "TLS-RPT 记录检查器与生成器有什么区别？", "acceptedAnswer": {"@type": "Answer", "text": "生成器（Generator）用于创建 DNS 记录，检查器（Checker/Lookup）用于查询验证已有记录。建议工作流：用生成器生成记录 → 发布到 DNS → 用检查器验证生效。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">TLS-RPT 记录检查器</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · DNS-over-HTTPS 实时查询 · 浏览器端运行，不上传数据</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">TLS-RPT（SMTP TLS Reporting，RFC 8460）用于收集 MTA-STS 或 DANE 部署后的 TLS 传输失败报告。其 DNS 记录存放于 _smtp._tls.<域名>，声明 v=TLSRPTv1 版本与 rua= 聚合报告接收地址（mailto: URI）。没有 TLS-RPT 记录，域名管理员将无法得知 MTA-STS/DANE 策略下有多少邮件因 TLS 问题传输失败——它是邮件安全策略的「监控仪表盘」。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">域名（Domain）</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    
+                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">查询TLS-RPT 记录</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">输入域名，工具将查询 _smtp._tls.<域名> 的 TXT 记录（TLS-RPT 报告接收配置）。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">功能说明</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>标准位置查询：查询 _smtp._tls.&lt;domain&gt; TXT 记录，与 RFC 8460 定义一致</li>
+<li>报告地址解析：解析 rua= 标签中的 mailto: URI，展示聚合报告接收邮箱</li>
+<li>版本校验：确认记录以 v=TLSRPTv1 开头，识别格式错误的记录</li>
+<li>配套检查提示：提醒 TLS-RPT 应配合 MTA-STS/DANE 部署，形成「策略+监控」闭环</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">TLS-RPT 记录存放于 _smtp._tls.<域名>，格式为 v=TLSRPTv1; rua=mailto:reports@example.com。输入域名查询后，工具解析版本号与报告地址。若返回「未发现 TLS-RPT 记录」，说明域名未配置 TLS 传输失败监控——建议与 MTA-STS 或 DANE 同步部署。rua= 地址应为真实可收信的邮箱，否则报告会丢失。</p>
+            </div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，查询逻辑与解析规则均与标准定义保持一致：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DNS 查询：RFC 8484（DNS Queries over HTTPS）、RFC 1035（DNS 协议）</li>
+                    <li>记录解析：TLS-RPT：RFC 8460 §3（DNS 记录）、§4（报告格式）</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc8460" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 8460 — TLS-RPT 标准原文</a></li>
+            <li><a href="https://datatracker.ietf.org/wg/uta/about/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">IETF UTA 工作组（邮件安全）</a></li>
+        </ul>
+    </div>
+</div>
+
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var btn = document.getElementById('check-btn');
+    var result = document.getElementById('result');
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    function keyValTable(rows) {
+        var h = '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">' +
+            '<tr style="background:#f0f4f8"><th style="padding:8px 12px;border:1px solid #ddd;text-align:left">标签</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">值</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">说明</th></tr>';
+        rows.forEach(function(r) {
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;word-break:break-all">' + esc(r[1]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd">' + r[2] + '</td></tr>';
+        });
+        return h + '</table>';
+    }
+
+    function parseTxtRecords(answers) {
+        var txts = [];
+        (answers || []).forEach(function(a) {
+            if (a.type === 16) txts.push(a.data);
+        });
+        return txts;
+    }
+
+    function dohQuery(qname, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=TXT';
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+
+    btn.addEventListener('click', function() {
+        var domain = document.getElementById('domain-input').value.trim().toLowerCase();
+        var selector = document.getElementById('selector-input') ? document.getElementById('selector-input').value.trim() : '';
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', '请输入有效域名，如 example.com');
+            return;
+        }
+        var qname = '_smtp._tls.' + domain + '. ';
+        result.innerHTML = '<div style="color:#666;font-size:14px;padding:8px 0">正在查询 <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">' + esc(qname) + '</code> ...</div>';
+        dohQuery(qname, function(err, j) {
+            if (err) {
+                result.innerHTML = statusBox('err', 'DNS 查询失败：' + esc(err.message) + '。请检查网络连接后重试。');
+                return;
+            }
+            var txts = parseTxtRecords(j.Answer);
+            
+            if (txts.length === 0) {
+                result.innerHTML = statusBox('warn', '未在 <code>_smtp._tls.' + esc(domain) + '</code> 发现 TLS-RPT 记录。') +
+                    statusBox('info', '域名未配置 TLS 传输失败报告。建议与 MTA-STS / DANE 同步部署：用本站 <a href="/tools/tls-rpt-generator.html" style="color:#0066cc">TLS-RPT 生成器</a> 生成记录，接收聚合报告以监控 TLS 传输健康度。');
+                return;
+            }
+            var rpt = txts[0];
+            var html = statusBox('ok', '<b>✓ 发现 TLS-RPT 记录</b>');
+            html += '<pre style="background:#1a1a2e;color:#e0e0e0;padding:14px;border-radius:6px;font-size:13.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">' + esc(rpt) + '</pre>';
+            if (rpt.indexOf('v=TLSRPTv1') !== 0) {
+                html += statusBox('err', '⚠ 记录不以 <code>v=TLSRPTv1</code> 开头，格式错误（RFC 8460 §3）。');
+            } else {
+                var rua = rpt.match(/rua=([^;]+)/);
+                if (rua) {
+                    var uris = rua[1].split(',').map(function(u) { return u.trim(); });
+                    html += keyValTable(uris.map(function(u, i) { return ['rua[' + i + ']', u, u.indexOf('mailto:') === 0 ? '聚合报告接收地址' : '非 mailto URI（目前仅支持 mailto）']; }));
+                } else {
+                    html += statusBox('err', '⚠ 记录缺少 <code>rua=</code> 报告地址，报告将无处可发。');
+                }
+            }
+            html += statusBox('info', 'TLS-RPT 本身不改变邮件传输行为，仅收集 MTA-STS/DANE 策略下的 TLS 失败报告，是邮件安全策略的监控仪表盘。');
+            result.innerHTML = html;
+
+        });
+    });
+})();
+</script>
+</body>
+</html>

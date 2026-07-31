@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SPF 记录生成器 — RFC 7208 在线生成 SPF TXT 记录 · ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="SPF 记录生成器 — 可视化生成符合 RFC 7208 的 SPF TXT 记录">
+<meta property="og:description" content="免费在线 SPF 记录生成器：选择 IP 段、include 机制、修饰符，自动生成符合 RFC 7208 的 SPF TXT 记录，实时校验 10 次 DNS 查询上限，附带 BIND/云 DNS 发布格式。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/spf-generator.html">
+<meta name="description" content="免费在线 SPF 记录生成器。可视化选择 ip4/ip6/include/mx/a 机制与 all 修饰符，自动生成符合 RFC 7208 的 SPF TXT 记录，实时校验 10 次 DNS 查询上限，输出 BIND 与云 DNS 两种发布格式，附 SPF 配置最佳实践。">
+<link rel="canonical" href="https://www.ztpop.net/tools/spf-generator.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SPF 记录生成器",
+  "description": "可视化生成符合 RFC 7208 的 SPF TXT 记录。支持 ip4/ip6/include/mx/a 机制、+/-/~/? 修饰符、10 次 DNS 查询上限实时校验、BIND 与云 DNS 两种发布格式输出。",
+  "url": "https://www.ztpop.net/tools/spf-generator.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {"@type":"Organization","name":"ztpop.net 邮件技术知识库","url":"https://www.ztpop.net/"}
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"SPF 记录生成器"}]}</script>
+<style>
+/* scoped to .gen-tool */
+.gen-tool{max-width:860px;margin:40px auto;padding:0 20px}
+.gen-tool h1{font-size:24px;color:#003366;margin-bottom:8px}
+.gen-tool .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.gen-tool .panel{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #003366}
+.gen-tool .panel h3{margin:0 0 14px;font-size:16px;color:#003366}
+.gen-tool .panel label{display:block;font-size:13px;color:#555;margin:10px 0 6px;font-weight:600}
+.gen-tool .panel input[type=text],.gen-tool .panel input[type=number]{width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box}
+.gen-tool .panel input:focus{border-color:#003366}
+.gen-tool .panel .hint{font-size:12px;color:#888;margin-top:4px}
+.gen-tool .mech-row{display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+.gen-tool .mech-row select{padding:8px 10px;border:1px solid #d0d5dd;border-radius:6px;font-size:13px;background:#fff}
+.gen-tool .mech-row input[type=text]{flex:1;min-width:200px;width:auto}
+.gen-tool .mech-row button{padding:6px 12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:13px;cursor:pointer}
+.gen-tool .mech-row button:hover{background:#fee2e2}
+.gen-tool .radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.gen-tool .radio-row label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;cursor:pointer}
+.gen-tool .radio-row input[type=radio]{width:auto}
+.gen-tool .btn-gen{padding:12px 32px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;transition:background .2s}
+.gen-tool .btn-gen:hover{background:#004488}
+.gen-tool .output{background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px 20px;margin:16px 0;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.7;word-break:break-all;display:none}
+.gen-tool .output .copy-btn{float:right;background:#2d2d4a;border:1px solid #4a4a6a;color:#ccc;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+.gen-tool .output .copy-btn:hover{background:#3a3a5c}
+.gen-tool .validation{font-size:13px;margin:8px 0;padding:10px 14px;border-radius:6px;display:none}
+.gen-tool .validation.ok{background:#f0fdf4;color:#166534;border-left:3px solid #16a34a}
+.gen-tool .validation.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+.gen-tool .info-box{background:#e8f0fe;border-radius:8px;padding:20px 24px;margin-top:32px;font-size:14px;color:#444;line-height:1.8}
+.gen-tool .info-box h3{font-size:16px;color:#003366;margin-bottom:12px}
+.gen-tool .info-box code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:3px;font-size:13px}
+@media (max-width:600px){.gen-tool .mech-row{flex-direction:column;align-items:stretch}.gen-tool .mech-row input[type=text]{min-width:0}}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "SPF 记录是什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "SPF（Sender Policy Framework，RFC 7208）通过 DNS TXT 记录声明哪些服务器 IP 有权使用您的域名发信。收件方 MTA 收到邮件后查询发件域 SPF 记录，对照连接来源 IP 判定发件是否被授权。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "SPF 记录格式怎么写？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "以 v=spf1 开头，后跟机制与修饰符，空格分隔。例如：v=spf1 ip4:203.0.113.10 include:_spf.google.com mx -all。其中 -all 表示未授权来源一律拒绝。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "SPF 的 10 次 DNS 查询限制是什么？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RFC 7208 §4.6.4 规定 SPF 求值过程中的 DNS 查询总数不得超过 10 次，超过则返回 permerror。每个 include、mx、a 机制都可能消耗查询次数，生成记录时应精简机制数量。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "一个域名可以有多条 SPF 记录吗？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "不可以。一个域名只能有一条 SPF 记录，多条记录会导致收件方返回 permerror 使 SPF 完全失效。修改时直接更新现有 TXT 记录。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "SPF 和 DMARC 有什么关系？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "SPF 验证\"发件 IP 是否被授权\"，是 DMARC（RFC 7489）的验证支柱之一。DMARC 会综合 SPF 与 DKIM 结果及域名对齐情况决定邮件的处理策略（none/quarantine/reject）。"
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="gen-tool">
+    <h1>SPF 记录生成器</h1>
+    <p class="subtitle">Sender Policy Framework（RFC 7208）——声明哪些服务器有权使用您的域名发信。可视化配置机制与修饰符，自动生成标准 SPF TXT 记录。</p>
+
+    <div class="panel">
+        <h3>1️⃣ 发信服务器授权（机制）</h3>
+        <div id="mechList"></div>
+        <button class="btn-gen" style="background:#fff;color:#003366;border:1px solid #003366;padding:8px 16px;font-size:13px;margin-top:6px" onclick="addMech()">+ 添加机制</button>
+    </div>
+
+    <div class="panel">
+        <h3>2️⃣ 全局策略（all 修饰符）</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="allMod" value="-all" checked> <code>-all</code> 严格拒绝（推荐，域名未授权发信全部拒绝）</label>
+            <label><input type="radio" name="allMod" value="~all"> <code>~all</code> 软失败（仅标记，不拒绝）</label>
+            <label><input type="radio" name="allMod" value="+all"> <code>+all</code> 全部放行（不推荐）</label>
+        </div>
+        <p class="hint">RFC 7208 §4.7：<code>-all</code> 之外的策略会显著降低反伪造效果，仅建议在过渡期使用 <code>~all</code>。</p>
+    </div>
+
+    <div class="panel">
+        <h3>3️⃣ 可选限定符</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="qualifier" value="+" checked> <code>+</code> Pass（默认）</label>
+            <label><input type="radio" name="qualifier" value="~"> <code>~</code> SoftFail</label>
+            <label><input type="radio" name="qualifier" value="-"> <code>-</code> Fail</label>
+            <label><input type="radio" name="qualifier" value="?"> <code>?</code> Neutral</label>
+        </div>
+        <p class="hint">通常无需修改，保持默认 <code>+</code> 即可。</p>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">生成 SPF 记录</button>
+    <div id="validation" class="validation"></div>
+    <div id="output" class="output"></div>
+    <div id="output2" class="output" style="display:none"></div>
+
+    <div class="info-box">
+        <h3>📖 SPF 原理与配置要点</h3>
+        <p><strong>SPF</strong>（Sender Policy Framework）通过 DNS TXT 记录声明"哪些 IP/服务器被授权使用本域名发信"。收件方 MTA 在收到邮件后查询发件域 SPF 记录，对照连接来源 IP 判定结果，结果供 DMARC 评估使用。</p>
+        <p><strong>记录结构</strong>：SPF 记录以 <code>v=spf1</code> 开头，后跟若干机制（<code>ip4</code>/<code>ip6</code>/<code>include</code>/<code>mx</code>/<code>a</code>）与修饰符（<code>all</code>），机制间以空格分隔。</p>
+        <p><strong>关键限制（RFC 7208 §4.6.4）</strong>：SPF 求值过程中的 DNS 查询总数不得超过 <strong>10 次</strong>，超过则返回 <code>permerror</code>。每个 <code>include</code> 与 <code>mx</code>、<code>a</code>（需解析时）都会消耗查询次数——本工具实时统计。</p>
+        <p><strong>发布方式</strong>：在域名 DNS 中添加一条 TXT 记录，主机名留空（或 @），值填入生成的 SPF 文本。注意一个域名只能有一条 SPF 记录，多记录会导致 <code>permerror</code>。</p>
+        <p><strong>注意</strong>：SPF 只验证"发件 IP 是否被授权"，不验证邮件内容。它不能阻止使用您域名但从非授权 IP 发出的伪造邮件，但结合 DKIM 与 DMARC（策略 <code>quarantine</code>/<code>reject</code>）可有效遏制域名伪造。生成后请用本站 <a href="/tools/dns-check.html">邮件 DNS 一键诊断</a> 验证记录生效。</p>
+        <p><strong>参考标准</strong>：RFC 7208（SPF 规范）、RFC 7489（DMARC，SPF 结果的上层应用）。</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+let mechCount = 0;
+const MECH_TYPES = [
+    {v:'ip4', label:'ip4 — 单个 IPv4 或网段', ph:'如 203.0.113.10 或 203.0.113.0/24'},
+    {v:'ip6', label:'ip6 — 单个 IPv6 或网段', ph:'如 2001:db8::10 或 2001:db8::/32'},
+    {v:'include', label:'include — 引入其他域的 SPF', ph:'如 _spf.google.com'},
+    {v:'mx', label:'mx — 使用 MX 记录对应的 IP', ph:'（可留空）'},
+    {v:'a', label:'a — 使用 A 记录对应的 IP', ph:'如 mail.example.com 或留空用本域'}
+];
+function addMech() {
+    const list = document.getElementById('mechList');
+    const row = document.createElement('div');
+    row.className = 'mech-row';
+    row.innerHTML = `
+        <select>${MECH_TYPES.map((m,i)=>`<option value="${m.v}" ${i===0?'selected':''}>${m.label}</option>`).join('')}</select>
+        <input type="text" placeholder="${MECH_TYPES[0].ph}">
+        <button onclick="this.parentNode.remove()">✕</button>`;
+    list.appendChild(row);
+    mechCount++;
+    // 默认添加 2 行
+    if (mechCount <= 2 && list.children.length < 2) { /* no-op */ }
+}
+// 预置两个常用行
+addMech();
+addMech();
+
+function mechNeedsValue(type) {
+    return type === 'ip4' || type === 'ip6' || type === 'include' || type === 'a';
+}
+
+function generate() {
+    const rows = document.querySelectorAll('#mechList .mech-row');
+    const parts = ['v=spf1'];
+    let dnsQueries = 0; // v=spf1 本身不算
+    const warnings = [];
+    let hasAll = false;
+
+    rows.forEach(row => {
+        const type = row.querySelector('select').value;
+        const value = row.querySelector('input').value.trim();
+        const qualifier = document.querySelector('input[name=qualifier]:checked').value;
+
+        if (type === 'mx') {
+            parts.push(qualifier + 'mx');
+            dnsQueries++;
+            return;
+        }
+        if (type === 'a') {
+            if (value) {
+                parts.push(qualifier + 'a:' + value);
+                dnsQueries++;
+            } else {
+                parts.push(qualifier + 'a');
+                dnsQueries++;
+            }
+            return;
+        }
+        if (!value) {
+            warnings.push('有机制未填写值，已忽略: ' + type);
+            return;
+        }
+        if (type === 'ip4') {
+            if (!/^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/.test(value)) {
+                warnings.push('ip4 格式可能不正确（应为 x.x.x.x 或 x.x.x.x/xx）: ' + value);
+            }
+            parts.push(qualifier + 'ip4:' + value);
+        } else if (type === 'ip6') {
+            if (!value.includes(':')) {
+                warnings.push('ip6 格式可能不正确: ' + value);
+            }
+            parts.push(qualifier + 'ip6:' + value);
+        } else if (type === 'include') {
+            parts.push(qualifier + 'include:' + value);
+            dnsQueries += 2; // include 自身 + 其展开
+        }
+    });
+
+    const allMod = document.querySelector('input[name=allMod]:checked').value;
+    parts.push(allMod);
+    hasAll = true;
+
+    // 校验 10 次 DNS 上限（RFC 7208 §4.6.4）
+    const record = parts.join(' ');
+
+    const v = document.getElementById('validation');
+    if (dnsQueries > 10) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = `⚠️ <strong>DNS 查询次数估算 ${dnsQueries} 次，超过 RFC 7208 规定的 10 次上限</strong>，收件方会返回 permerror 导致 SPF 失效。请减少 include/mx/a 机制数量。`;
+    } else if (dnsQueries >= 8) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = `⚠️ DNS 查询次数估算 ${dnsQueries} 次，接近 10 次上限（RFC 7208 §4.6.4）。建议精简机制。`;
+    } else {
+        v.className = 'validation ok';
+        v.style.display = 'block';
+        v.innerHTML = `✅ DNS 查询估算 ${dnsQueries} 次（上限 10 次，RFC 7208 §4.6.4）${warnings.length ? '<br>⚠️ ' + warnings.join('<br>⚠️ ') : ''}`;
+    }
+
+    // 输出
+    const out = document.getElementById('output');
+    out.style.display = 'block';
+    out.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">复制</button><strong>SPF TXT 记录</strong>（主机名：@ 或留空）<br><br>${record}`;
+
+    const out2 = document.getElementById('output2');
+    out2.style.display = 'block';
+    out2.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">复制</button><strong>BIND 区域文件格式</strong><br><br>@ IN TXT "${record}"`;
+}
+
+function copyRec(btn) {
+    const text = btn.parentNode.innerText.replace('复制', '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => btn.textContent = '复制', 1500);
+    });
+}
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7208" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7208 — Sender Policy Framework (SPF) 原文</a></li>
+            <li><a href="https://www.cloudflare.com/learning/email-security/what-is-spf/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Cloudflare Learn：SPF 是什么（中文）</a></li>
+            <li><a href="https://dmarcian.com/spf-survey/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarcian SPF 记录解释器</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>
