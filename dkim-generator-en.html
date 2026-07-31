@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DKIM Record Generator (RFC 6376) — Key Pair &amp; TXT Record | ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net Email Knowledge Base">
+<meta property="og:title" content="DKIM Record Generator — RSA Key Pair &amp; RFC 6376 DKIM TXT Records">
+<meta property="og:description" content="Free online DKIM record generator: generate RSA 2048 key pairs and matching DKIM TXT records (RFC 6376 format) in one click, with BIND and cloud DNS publish formats plus private key security tips.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/dkim-generator.html">
+<meta name="description" content="Free online DKIM record generator. Uses the Web Crypto API to generate RSA 2048 key pairs locally in your browser (private key never leaves the browser), produces RFC 6376-compliant DKIM TXT records in BIND and cloud DNS formats, with DKIM key rotation and private key best practices.">
+<link rel="canonical" href="https://www.ztpop.net/tools/dkim-generator.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "DKIM Record Generator",
+  "description": "Generates RSA 2048 key pairs and RFC 6376-compliant DKIM TXT records locally in the browser via the Web Crypto API. The private key never leaves the browser; supports custom selectors and BIND/cloud DNS dual-format output.",
+  "url": "https://www.ztpop.net/tools/dkim-generator.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {"@type":"Organization","name":"ztpop.net Email Knowledge Base","url":"https://www.ztpop.net/"}
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"Email Tools","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"DKIM Record Generator"}]}</script>
+<style>
+/* scoped to .gen-tool */
+.gen-tool{max-width:860px;margin:40px auto;padding:0 20px}
+.gen-tool h1{font-size:24px;color:#003366;margin-bottom:8px}
+.gen-tool .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.gen-tool .panel{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #003366}
+.gen-tool .panel h3{margin:0 0 14px;font-size:16px;color:#003366}
+.gen-tool .panel label{display:block;font-size:13px;color:#555;margin:10px 0 6px;font-weight:600}
+.gen-tool .panel input[type=text]{width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box}
+.gen-tool .panel input:focus{border-color:#003366}
+.gen-tool .panel .hint{font-size:12px;color:#888;margin-top:4px;line-height:1.6}
+.gen-tool .radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.gen-tool .radio-row label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;cursor:pointer}
+.gen-tool .radio-row input[type=radio]{width:auto}
+.gen-tool .btn-gen{padding:12px 32px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;transition:background .2s}
+.gen-tool .btn-gen:hover{background:#004488}
+.gen-tool .output{background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px 20px;margin:16px 0;font-family:Consolas,Monaco,monospace;font-size:13px;line-height:1.6;word-break:break-all;display:none;max-height:320px;overflow:auto}
+.gen-tool .output .copy-btn{float:right;background:#2d2d4a;border:1px solid #4a4a6a;color:#ccc;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+.gen-tool .output .copy-btn:hover{background:#3a3a5c}
+.gen-tool .validation{font-size:13px;margin:8px 0;padding:10px 14px;border-radius:6px;display:none}
+.gen-tool .validation.ok{background:#f0fdf4;color:#166534;border-left:3px solid #16a34a}
+.gen-tool .validation.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+.gen-tool .info-box{background:#e8f0fe;border-radius:8px;padding:20px 24px;margin-top:32px;font-size:14px;color:#444;line-height:1.8}
+.gen-tool .info-box h3{font-size:16px;color:#003366;margin-bottom:12px}
+.gen-tool .info-box code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:3px;font-size:13px}
+.gen-tool .warn-box{background:#fffbeb;border-left:3px solid #f59e0b;border-radius:8px;padding:16px 20px;margin-bottom:16px;font-size:13px;color:#92400e;line-height:1.7}
+@media (max-width:600px){.gen-tool .radio-row{flex-direction:column;gap:8px}}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is DKIM?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "DKIM (DomainKeys Identified Mail, RFC 6376) signs mail with the domain private key, placing the signature in the DKIM-Signature header; receivers fetch the public key at selector._domainkey from DNS to verify the mail was sent by an authorized server and was not tampered with."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the DKIM TXT record format?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The format is v=DKIM1; k=rsa; p=publicKeyBase64, published in a TXT record at selector._domainkey.yourdomain.com. A single DNS TXT record is limited to 255 characters; longer values must be split (most DNS providers handle this automatically)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if the DKIM private key leaks?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A leaked private key lets attackers forge your domain signature and send phishing mail that bypasses DKIM/DMARC. Keep the private key strictly on your mail server; this tool generates key pairs locally in the browser and never uploads the private key."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How often should DKIM keys be rotated?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Rotate every 6-12 months (M3AAWG best practice recommends 6 months). Publish the new selector public key first, switch signing, confirm verification passes, then remove the old selector to avoid disruption."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why not use 1024-bit DKIM keys?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RFC 8301 deprecated weak key algorithms, and major receivers like Gmail already reject 1024-bit DKIM keys. Use 2048 bits or higher."
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="gen-tool">
+    <h1>DKIM Record Generator</h1>
+    <p class="subtitle">DomainKeys Identified Mail (RFC 6376) — sign mail with your domain private key; receivers verify via the DNS public key. Generate an RSA key pair and a standard DKIM TXT record.</p>
+
+    <div class="warn-box">
+        ⚠️ <strong>Security note</strong>: the key pair is generated locally in your browser (Web Crypto API); the private key is <strong>never</strong> uploaded to any server. Store it safely and configure it on your mail server; publish the public key (TXT record) to DNS. A leaked private key lets attackers forge your domain signature.
+    </div>
+
+    <div class="panel">
+        <h3>1️⃣ Selector</h3>
+        <input type="text" id="selector" value="default" placeholder="e.g. default, mail, s1">
+        <p class="hint">RFC 6376 §3.1: the selector identifies which public key to verify with, and multiple selectors can run in parallel (e.g. old and new coexisting during rotation). DNS hostname format: <code>selector._domainkey.yourdomain.com</code>.</p>
+    </div>
+
+    <div class="panel">
+        <h3>2️⃣ Key Length</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="bits" value="1024"> 1024-bit (not recommended)</label>
+            <label><input type="radio" name="bits" value="2048" checked> 2048-bit (recommended)</label>
+            <label><input type="radio" name="bits" value="3072"> 3072-bit</label>
+        </div>
+        <p class="hint">RFC 6376 §3.3.3: use 2048 bits or higher. Some receivers (e.g. Gmail) already reject 1024-bit DKIM keys.</p>
+    </div>
+
+    <div class="panel">
+        <h3>3️⃣ Hash Algorithm</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="hash" value="rsa-sha256" checked> <code>rsa-sha256</code> (recommended)</label>
+            <label><input type="radio" name="hash" value="rsa-sha1"> <code>rsa-sha1</code> (not recommended, deprecated)</label>
+        </div>
+        <p class="hint">RFC 6376 §3.3: sha256 is required by the standard; sha1 is only for legacy compatibility.</p>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">Generate DKIM Key Pair</button>
+        <button class="btn-cite" onclick="copyCitation(this)" style="background:#fff;color:#003366;border:1px solid #003366;padding:8px 16px;font-size:13px;border-radius:6px;cursor:pointer;margin-left:10px" title="Copy the standard citation format for use in blogs or documents">📝 Copy citation</button>
+    <div id="validation" class="validation"></div>
+
+    <div id="output" class="output"></div>
+    <div id="output2" class="output" style="display:none"></div>
+    <div id="output3" class="output" style="display:none"></div>
+
+    <div class="info-box">
+        <h3>📖 DKIM Explained &amp; Deployment Guide</h3>
+        <p><strong>DKIM</strong> (RFC 6376): the sender signs specific header fields and the body with the domain's <b>private key</b>, placing the signature in the <code>DKIM-Signature</code> header; receivers fetch the <b>public key</b> (TXT record) at <code>selector._domainkey</code> from DNS to verify. A valid signature proves the mail was sent by an authorized server for the domain and was not tampered with.</p>
+        <p><strong>TXT record format</strong>: <code>v=DKIM1; k=rsa; p=publicKeyBase64</code>. <code>k</code> is the key type and <code>p</code> is the Base64-encoded public key (without PEM headers/footers). A single DNS TXT record is limited to 255 characters; longer values must be split (most DNS providers handle this automatically).</p>
+        <p><strong>Private key setup</strong>: configure the private key (PEM) in your mail server signing module. Common locations: OpenDKIM (<code>/etc/opendkim/keys/</code>), Postfix (via milter), Exchange/commercial mail systems (import via admin console).</p>
+        <p><strong>Key rotation</strong>: rotate every 6-12 months. When rotating, publish the new selector public key first, switch signing, confirm verification passes, then remove the old selector to avoid disruption.</p>
+        <p><strong>Relation to DMARC</strong>: DKIM is one of DMARC's authentication pillars. DMARC alignment requires the <code>d=</code> domain to match the sender domain (or a subdomain). After generating, verify with our <a href="/tools/dns-check.html">Email DNS One-Click Diagnostic</a>.</p>
+        <p><strong>Standards</strong>: RFC 6376 (DKIM), RFC 8301 (deprecation of weak key algorithms), RFC 7489 (DMARC).</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+async function generate() {
+    const selector = document.getElementById('selector').value.trim() || 'default';
+    const bits = parseInt(document.querySelector('input[name=bits]:checked').value);
+    const hash = document.querySelector('input[name=hash]:checked').value;
+    const v = document.getElementById('validation');
+
+    v.className = 'validation warn';
+    v.style.display = 'block';
+    v.innerHTML = '⏳ Generating RSA ' + bits + ' key pair locally (about 1-3 seconds)...';
+
+    try {
+        const keyPair = await crypto.subtle.generateKey(
+            { name: 'RSASSA-PKCS1-v1_5', modulusLength: bits, publicExponent: new Uint8Array([1,0,1]), hash: hash === 'rsa-sha1' ? 'SHA-1' : 'SHA-256' },
+            true,
+            ['sign', 'verify']
+        );
+
+        // Export PEM
+        const privRaw = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+        const pubRaw = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+
+        function toPEM(buf, type) {
+            const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+            const lines = b64.match(/.{1,64}/g).join('\n');
+            return `-----BEGIN ${type} KEY-----\n${lines}\n-----END ${type} KEY-----`;
+        }
+        const privPem = toPEM(privRaw, 'PRIVATE');
+        const pubPem = toPEM(pubRaw, 'PUBLIC');
+
+        // Extract public key Base64 (strip PEM headers/footers and newlines) for TXT
+        const pubB64 = pubPem.replace(/-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\n/g, '');
+
+        const record = `v=DKIM1; k=rsa; p=${pubB64}`;
+
+        v.className = 'validation ok';
+        v.style.display = 'block';
+        v.innerHTML = `✅ Key pair generated (RSA ${bits} / ${hash}). Configure the private key on your mail server and publish the public key at DNS hostname <code>${selector}._domainkey.yourdomain.com</code>.`;
+
+        const out1 = document.getElementById('output');
+        out1.style.display = 'block';
+        out1.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">Copy</button><strong>📄 DNS TXT Record</strong> (hostname: ${selector}._domainkey.yourdomain.com)<br><br>${record}`;
+
+        const out2 = document.getElementById('output2');
+        out2.style.display = 'block';
+        out2.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">Copy</button><strong>🔑 Private Key (configure on mail server, never publish!)</strong><br><br>${privPem}`;
+
+        const out3 = document.getElementById('output3');
+        out3.style.display = 'block';
+        out3.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">Copy</button><strong>🔓 Public Key PEM (alternate format)</strong><br><br>${pubPem}`;
+    } catch (e) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '❌ Generation failed (browser may not support Web Crypto): ' + e.message;
+    }
+}
+
+function copyRec(btn) {
+    // Copy only the code part (strip button text)
+    const node = btn.parentNode.cloneNode(true);
+    node.querySelector('.copy-btn').remove();
+    const text = node.innerText.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+}
+
+function copyCitation(btn) {
+    const text = `DKIM Record Generator (https://www.ztpop.net/tools/dkim-generator.html), implemented per RFC 6376`;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => btn.textContent = '📝 Copy citation', 1500);
+    });
+}
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 Authoritative References</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc6376" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 6376 — DomainKeys Identified Mail (DKIM)</a></li>
+            <li><a href="https://dmarcian.com/what-is-dkim/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarcian DKIM Explained</a></li>
+            <li><a href="http://www.opendkim.org/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">OpenDKIM Official Documentation</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

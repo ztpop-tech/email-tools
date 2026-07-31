@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TLS-RPT Record Generator (RFC 8460) — TLS Report Records | ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net Email Knowledge Base">
+<meta property="og:title" content="TLS-RPT Record Generator — _smtp._tls TXT Report Record (RFC 8460)">
+<meta property="og:description" content="Free online TLS-RPT record generator: produces the _smtp._tls TXT report record (RFC 8460), configures the TLS report address and monitors MTA-STS and STARTTLS downgrade attacks.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/tls-rpt-generator.html">
+<meta name="description" content="Free online TLS-RPT record generator. Produces RFC 8460-compliant _smtp._tls TXT report records, configures the TLS report address and outputs BIND and cloud DNS formats. TLS-RPT monitors MTA-STS policy enforcement and STARTTLS downgrade attacks.">
+<link rel="canonical" href="https://www.ztpop.net/tools/tls-rpt-generator.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "TLS-RPT Record Generator",
+  "description": "Generates RFC 8460-compliant TLS-RPT TXT records. Configures the aggregate report address (rua) to monitor MTA-STS policy enforcement and STARTTLS downgrade attacks, with BIND and cloud DNS output formats.",
+  "url": "https://www.ztpop.net/tools/tls-rpt-generator.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {"@type":"Organization","name":"ztpop.net Email Knowledge Base","url":"https://www.ztpop.net/"}
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"Email Tools","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"TLS-RPT Record Generator"}]}</script>
+<style>
+/* scoped to .gen-tool */
+.gen-tool{max-width:860px;margin:40px auto;padding:0 20px}
+.gen-tool h1{font-size:24px;color:#003366;margin-bottom:8px}
+.gen-tool .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.gen-tool .panel{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #003366}
+.gen-tool .panel h3{margin:0 0 14px;font-size:16px;color:#003366}
+.gen-tool .panel label{display:block;font-size:13px;color:#555;margin:10px 0 6px;font-weight:600}
+.gen-tool .panel input[type=text]{width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box}
+.gen-tool .panel input:focus{border-color:#003366}
+.gen-tool .panel .hint{font-size:12px;color:#888;margin-top:4px;line-height:1.6}
+.gen-tool .radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.gen-tool .radio-row label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;cursor:pointer}
+.gen-tool .radio-row input[type=radio]{width:auto}
+.gen-tool .btn-gen{padding:12px 32px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;transition:background .2s}
+.gen-tool .btn-gen:hover{background:#004488}
+.gen-tool .output{background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px 20px;margin:16px 0;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.7;word-break:break-all;display:none}
+.gen-tool .output .copy-btn{float:right;background:#2d2d4a;border:1px solid #4a4a6a;color:#ccc;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+.gen-tool .output .copy-btn:hover{background:#3a3a5c}
+.gen-tool .validation{font-size:13px;margin:8px 0;padding:10px 14px;border-radius:6px;display:none}
+.gen-tool .validation.ok{background:#f0fdf4;color:#166534;border-left:3px solid #16a34a}
+.gen-tool .validation.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+.gen-tool .info-box{background:#e8f0fe;border-radius:8px;padding:20px 24px;margin-top:32px;font-size:14px;color:#444;line-height:1.8}
+.gen-tool .info-box h3{font-size:16px;color:#003366;margin-bottom:12px}
+.gen-tool .info-box code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:3px;font-size:13px}
+@media (max-width:600px){.gen-tool .radio-row{flex-direction:column;gap:8px}}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is TLS-RPT?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "TLS-RPT (SMTP TLS Reporting, RFC 8460) is the companion monitoring mechanism for MTA-STS: receiving MTAs generate aggregate reports (one JSON per day) on TLS negotiation failures and certificate errors, sent to the rua address, helping admins find misconfigurations or downgrade attacks."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where is the TLS-RPT record published?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It is published in a TXT record at _smtp._tls.yourdomain.com in the format v=TLSRPTv1; rua=mailto:report@example.com. The record covers the main domain and subdomains; it is a pure monitoring channel with no enforcement."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is inside a TLS-RPT report?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Reports include failure timestamps, failure types (e.g. certificate-expired, starttls-not-supported), involved IPs and MX hosts, and TLS versions, aggregated daily in JSON format."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Must TLS-RPT and MTA-STS be used together?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not required, but strongly recommended. TLS-RPT enforces nothing by itself; it is a pure monitoring channel. Used with MTA-STS testing mode, it helps find and fix TLS issues before enforcement."
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="gen-tool">
+    <h1>TLS-RPT Record Generator</h1>
+    <p class="subtitle">SMTP TLS Reporting (RFC 8460) — receiving MTAs send aggregate reports of TLS connection failures (downgrade attacks, certificate errors, etc.) to domain owners. Generate the _smtp._tls TXT report record.</p>
+
+    <div class="panel">
+        <h3>1️⃣ Report Address (rua)</h3>
+        <input type="text" id="rua" placeholder="e.g. tls-report@example.com">
+        <p class="hint">RFC 8460 §3: rua is the aggregate report mailbox; multiple addresses are supported (comma-separated) and each must be prefixed with <code>mailto:</code>. Use a dedicated mailbox with automated processing.</p>
+    </div>
+
+    <div class="panel">
+        <h3>2️⃣ Additional Report Address (optional)</h3>
+        <input type="text" id="ruaExtra" placeholder="e.g. tls-report2@example.com (optional)">
+        <p class="hint">Add more report recipients, same format.</p>
+    </div>
+
+    <div class="panel">
+        <h3>3️⃣ Scope</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="scope" value="full" checked> Main domain + all subdomains</label>
+            <label><input type="radio" name="scope" value="root"> Main domain only</label>
+        </div>
+        <p class="hint">RFC 8460 §3: the TLS-RPT record is published at <code>_smtp._tls.yourdomain.com</code> and applies to the domain and its subdomains (unless a subdomain has its own record).</p>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">Generate TLS-RPT Record</button>
+        <button class="btn-cite" onclick="copyCitation(this)" style="background:#fff;color:#003366;border:1px solid #003366;padding:8px 16px;font-size:13px;border-radius:6px;cursor:pointer;margin-left:10px" title="Copy the standard citation format for use in blogs or documents">📝 Copy citation</button>
+    <div id="validation" class="validation"></div>
+    <div id="output" class="output"></div>
+
+    <div class="info-box">
+        <h3>📖 TLS-RPT Explained &amp; Deployment Guide</h3>
+        <p><strong>TLS-RPT</strong> (RFC 8460) is the companion monitoring mechanism for MTA-STS: when a receiving MTA tries to connect to your domain's MX and hits TLS negotiation failures, certificate validation errors or policy errors, it generates an <strong>aggregate report</strong> (one per day, JSON) sent to the rua address.</p>
+        <p><strong>Report content</strong>: failure timestamps, failure types (e.g. <code>certificate-expired</code>, <code>starttls-not-supported</code>), involved IPs and MX hosts, TLS versions and more — helping admins spot misconfigurations or active attacks.</p>
+        <p><strong>Record location</strong>: TXT record at <code>_smtp._tls.yourdomain.com</code>. Value format: <code>v=TLSRPTv1; rua=mailto:report@example.com</code>.</p>
+        <p><strong>Deployment tips</strong>: use with <a href="/tools/mta-sts-generator.html">MTA-STS</a> — run <code>testing</code> mode + TLS-RPT for two weeks, then switch to <code>enforce</code> once no failures appear. TLS-RPT itself enforces nothing; it is a pure monitoring channel with no downgrade risk.</p>
+        <p><strong>Standards</strong>: RFC 8460 (TLS-RPT), RFC 8461 (MTA-STS), RFC 3207 (STARTTLS).</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+function generate() {
+    const rua = document.getElementById('rua').value.trim();
+    const ruaExtra = document.getElementById('ruaExtra').value.trim();
+    const scope = document.querySelector('input[name=scope]:checked').value;
+    const v = document.getElementById('validation');
+
+    if (!rua) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '❌ Please enter the report address (rua)';
+        return;
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(rua)) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '❌ Invalid email format: ' + rua;
+        return;
+    }
+
+    const ruaList = ['mailto:' + rua];
+    if (ruaExtra) {
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ruaExtra)) {
+            v.className = 'validation warn';
+            v.style.display = 'block';
+            v.innerHTML = '❌ Invalid additional email format: ' + ruaExtra;
+            return;
+        }
+        ruaList.push('mailto:' + ruaExtra);
+    }
+
+    const record = 'v=TLSRPTv1; rua=' + ruaList.join(',');
+
+    v.className = 'validation ok';
+    v.style.display = 'block';
+    v.innerHTML = '✅ Record generated' + (scope === 'full' ? ' (applies to main domain and all subdomains)' : ' (main domain only)') + '. After publishing, configure MTA-STS as well.';
+
+    const out = document.getElementById('output');
+    out.style.display = 'block';
+    out.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">Copy</button><strong>TLS-RPT TXT Record</strong> (hostname: _smtp._tls.yourdomain.com)<br><br>${record}`;
+}
+
+function copyRec(btn) {
+    const node = btn.parentNode.cloneNode(true);
+    node.querySelector('.copy-btn').remove();
+    const text = node.innerText.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+}
+
+function copyCitation(btn) {
+    const text = `TLS-RPT Record Generator (https://www.ztpop.net/tools/tls-rpt-generator.html), implemented per RFC 8460`;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => btn.textContent = '📝 Copy citation', 1500);
+    });
+}
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 Authoritative References</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc8460" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 8460 — SMTP TLS Reporting (TLS-RPT)</a></li>
+            <li><a href="https://datatracker.ietf.org/wg/uta/about/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">IETF UTA Working Group</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

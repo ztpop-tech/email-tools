@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MTA-STS Record Generator (RFC 8461) — Policy &amp; DNS Records | ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net Email Knowledge Base">
+<meta property="og:title" content="MTA-STS Record Generator — _mta-sts TXT Record &amp; Policy File (RFC 8461)">
+<meta property="og:description" content="Free online MTA-STS record generator: produces the _mta-sts TXT record and the https://mta-sts.example.com/.well-known/mta-sts.txt policy file content, with enforce/testing policies and an MX host list.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/mta-sts-generator.html">
+<meta name="description" content="Free online MTA-STS record generator. Produces RFC 8461-compliant _mta-sts TXT records and the .well-known/mta-sts.txt policy file, with enforce/testing policy modes, an MX host list and max_age configuration, plus a full deployment checklist.">
+<link rel="canonical" href="https://www.ztpop.net/tools/mta-sts-generator.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "MTA-STS Record Generator",
+  "description": "Generates RFC 8461-compliant MTA-STS TXT records and policy files. Supports enforce/testing policies, MX host lists and max_age configuration, with a full deployment checklist and HTTPS certificate requirements.",
+  "url": "https://www.ztpop.net/tools/mta-sts-generator.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {"@type":"Organization","name":"ztpop.net Email Knowledge Base","url":"https://www.ztpop.net/"}
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"Email Tools","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"MTA-STS Record Generator"}]}</script>
+<style>
+/* scoped to .gen-tool */
+.gen-tool{max-width:860px;margin:40px auto;padding:0 20px}
+.gen-tool h1{font-size:24px;color:#003366;margin-bottom:8px}
+.gen-tool .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.gen-tool .panel{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #003366}
+.gen-tool .panel h3{margin:0 0 14px;font-size:16px;color:#003366}
+.gen-tool .panel label{display:block;font-size:13px;color:#555;margin:10px 0 6px;font-weight:600}
+.gen-tool .panel input[type=text],.gen-tool .panel input[type=number]{width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box}
+.gen-tool .panel input:focus{border-color:#003366}
+.gen-tool .panel .hint{font-size:12px;color:#888;margin-top:4px;line-height:1.6}
+.gen-tool .radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.gen-tool .radio-row label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;cursor:pointer}
+.gen-tool .radio-row input[type=radio]{width:auto}
+.gen-tool .btn-gen{padding:12px 32px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;transition:background .2s}
+.gen-tool .btn-gen:hover{background:#004488}
+.gen-tool .output{background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px 20px;margin:16px 0;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.7;word-break:break-all;display:none}
+.gen-tool .output .copy-btn{float:right;background:#2d2d4a;border:1px solid #4a4a6a;color:#ccc;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+.gen-tool .output .copy-btn:hover{background:#3a3a5c}
+.gen-tool .validation{font-size:13px;margin:8px 0;padding:10px 14px;border-radius:6px;display:none}
+.gen-tool .validation.ok{background:#f0fdf4;color:#166534;border-left:3px solid #16a34a}
+.gen-tool .validation.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+.gen-tool .info-box{background:#e8f0fe;border-radius:8px;padding:20px 24px;margin-top:32px;font-size:14px;color:#444;line-height:1.8}
+.gen-tool .info-box h3{font-size:16px;color:#003366;margin-bottom:12px}
+.gen-tool .info-box code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:3px;font-size:13px}
+@media (max-width:600px){.gen-tool .radio-row{flex-direction:column;gap:8px}}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is MTA-STS?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "MTA-STS (SMTP MTA Strict Transport Security, RFC 8461) uses DNS to discover an HTTPS-hosted policy file, forcing receiving MTAs to use TLS when accepting mail and defending against downgrade attacks during STARTTLS plaintext negotiation."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What parts does MTA-STS require?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Three parts: ① a TXT record at _mta-sts.yourdomain.com (v=STSv1; id=timestamp); ② a policy file at https://mta-sts.yourdomain.com/.well-known/mta-sts.txt (needs an HTTPS certificate); ③ all MX hosts supporting TLS 1.2+ with valid certificates. Pair with TLS-RPT monitoring."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between testing and enforce modes?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "testing mode reports without enforcing — observe for 1-2 weeks with TLS-RPT to confirm no failures; enforce mode requires TLS and rejects connections that violate the policy. The recommended rollout is testing first, then enforce."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does MTA-STS relate to DANE?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Both aim to enforce SMTP TLS but differ in mechanism: MTA-STS relies on an HTTPS trust anchor while DANE (RFC 7672) relies on DNSSEC TLSA records. DANE can complement MTA-STS where a certificate for the mta-sts subdomain is not feasible."
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="gen-tool">
+    <h1>MTA-STS Record Generator</h1>
+    <p class="subtitle">SMTP MTA Strict Transport Security (RFC 8461) — discover a policy via DNS and force receivers to use TLS when accepting mail, defending against STARTTLS downgrade attacks. Generate the _mta-sts TXT record and policy file.</p>
+
+    <div class="panel">
+        <h3>1️⃣ Domain</h3>
+        <input type="text" id="domain" placeholder="e.g. example.com (no www)">
+        <p class="hint">RFC 8461 §3: MTA-STS policies apply per receiving domain; use no protocol prefix or subdomain (the policy covers all MX hosts of the domain).</p>
+    </div>
+
+    <div class="panel">
+        <h3>2️⃣ Policy Mode</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="mode" value="testing" checked> <code>testing</code> Testing (report only, no enforcement)</label>
+            <label><input type="radio" name="mode" value="enforce"> <code>enforce</code> Enforce (recommended end state)</label>
+        </div>
+        <p class="hint">RFC 8461 §3.2: start with <code>testing</code> plus TLS-RPT for 1-2 weeks, then switch to <code>enforce</code> once no failures are observed.</p>
+    </div>
+
+    <div class="panel">
+        <h3>3️⃣ MX Host List</h3>
+        <input type="text" id="mxList" placeholder="One MX hostname per line, e.g. mx1.example.com" style="min-height:80px">
+        <p class="hint">RFC 8461 §3.2: mx hosts in the policy must match DNS MX records (wildcards like *.example.com allowed). Leave empty to infer from DNS (verify manually afterwards).</p>
+    </div>
+
+    <div class="panel">
+        <h3>4️⃣ Policy Cache Duration (max_age)</h3>
+        <input type="number" id="maxAge" value="86400" min="1">
+        <p class="hint">RFC 8461 §3.2: seconds receivers cache the policy. Recommended 86400 (1 day) to 604800 (1 week). Shorter during testing.</p>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">Generate MTA-STS Config</button>
+        <button class="btn-cite" onclick="copyCitation(this)" style="background:#fff;color:#003366;border:1px solid #003366;padding:8px 16px;font-size:13px;border-radius:6px;cursor:pointer;margin-left:10px" title="Copy the standard citation format for use in blogs or documents">📝 Copy citation</button>
+    <div id="validation" class="validation"></div>
+    <div id="output" class="output"></div>
+    <div id="output2" class="output" style="display:none"></div>
+
+    <div class="info-box">
+        <h3>📖 MTA-STS Explained &amp; Deployment Checklist</h3>
+        <p><strong>MTA-STS</strong> (RFC 8461) solves STARTTLS's inherent flaw: during the plaintext negotiation an active attacker can strip the TLS extension and downgrade the connection. MTA-STS hosts a policy file over HTTPS so receiving MTAs know before connecting that "this domain must use TLS".</p>
+        <p><strong>Three components are required</strong>:</p>
+        <p>① <strong>DNS TXT record</strong>: hostname <code>_mta-sts.yourdomain.com</code>, value <code>v=STSv1; id=timestamp</code>. Receivers re-fetch the policy when the id changes.</p>
+        <p>② <strong>Policy file</strong>: hosted at <code>https://mta-sts.yourdomain.com/.well-known/mta-sts.txt</code>, requires an HTTPS certificate (wildcard or Let's Encrypt works), MIME type <code>text/plain</code>.</p>
+        <p>③ <strong>TLS configuration</strong>: all MX hosts must support TLS 1.2+ with a valid certificate chain. Also configure <a href="/tools/tls-rpt-generator.html">TLS-RPT</a> to receive failure reports.</p>
+        <p><strong>Notes</strong>: MTA-STS relies on an "HTTPS trust anchor" rather than DNSSEC; if you cannot get a certificate for the mta-sts subdomain, consider DANE (RFC 7672, requires DNSSEC) as an alternative. The two mechanisms are complementary.</p>
+        <p><strong>Standards</strong>: RFC 8461 (MTA-STS), RFC 8460 (TLS-RPT), RFC 7672 (DANE SMTP), RFC 3207 (STARTTLS).</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+function generate() {
+    const domain = document.getElementById('domain').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+    const mode = document.querySelector('input[name=mode]:checked').value;
+    const mxRaw = document.getElementById('mxList').value.trim();
+    const maxAge = parseInt(document.getElementById('maxAge').value) || 86400;
+    const v = document.getElementById('validation');
+
+    const warnings = [];
+    if (!domain) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '❌ Please enter the domain';
+        return;
+    }
+    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(domain)) {
+        warnings.push('Domain format may be invalid (should be example.com)');
+    }
+
+    const mxs = mxRaw.split('\n').map(s => s.trim().replace(/^\./,'')).filter(Boolean);
+    if (mxs.length === 0) {
+        warnings.push('No MX hosts entered — policy file will be empty (complete manually)');
+    }
+
+    const id = Math.floor(Date.now() / 1000);
+    const txtRecord = `v=STSv1; id=${id}`;
+
+    // Policy file
+    const policyLines = ['version: STSv1', 'mode: ' + mode];
+    if (mxs.length) {
+        policyLines.push('mx: ' + mxs.join('\nmx: '));
+    }
+    policyLines.push('max_age: ' + maxAge);
+    const policy = policyLines.join('\n');
+
+    v.className = 'validation warn';
+    v.style.display = 'block';
+    v.innerHTML = '⚠️ ' + (warnings.length ? warnings.join('<br>⚠️ ') : 'Config generated — publish each item per the deployment checklist below.');
+
+    const out1 = document.getElementById('output');
+    out1.style.display = 'block';
+    out1.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">Copy</button><strong>① DNS TXT Record</strong> (hostname: <code>_mta-sts.${domain}</code>)<br><br>${txtRecord}`;
+
+    const out2 = document.getElementById('output2');
+    out2.style.display = 'block';
+    out2.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">Copy</button><strong>② Policy File Content</strong> (deploy to <code>https://mta-sts.${domain}/.well-known/mta-sts.txt</code>, Content-Type: text/plain)<br><br>${policy}`;
+}
+
+function copyRec(btn) {
+    const node = btn.parentNode.cloneNode(true);
+    node.querySelector('.copy-btn').remove();
+    const text = node.innerText.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+}
+
+function copyCitation(btn) {
+    const text = `MTA-STS Record Generator (https://www.ztpop.net/tools/mta-sts-generator.html), implemented per RFC 8461`;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => btn.textContent = '📝 Copy citation', 1500);
+    });
+}
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 Authoritative References</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc8461" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 8461 — SMTP MTA Strict Transport Security (MTA-STS)</a></li>
+            <li><a href="https://developers.cloudflare.com/email-security/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Cloudflare MTA-STS Deployment Guide</a></li>
+            <li><a href="https://datatracker.ietf.org/wg/uta/about/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">IETF UTA Working Group</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

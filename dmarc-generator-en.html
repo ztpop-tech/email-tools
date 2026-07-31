@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DMARC Record Generator (RFC 7489) — Online DMARC TXT Records | ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net Email Knowledge Base">
+<meta property="og:title" content="DMARC Record Generator — RFC 7489 Compliant DMARC TXT Records">
+<meta property="og:description" content="Free online DMARC record generator: pick a policy (none/quarantine/reject), alignment mode and report addresses to generate RFC 7489-compliant DMARC TXT records, with policy escalation guidance.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/dmarc-generator.html">
+<meta name="description" content="Free online DMARC record generator. Visually configure the p policy (none/quarantine/reject), sp subdomain policy, adkim/aspf alignment, and rua/ruf report addresses to produce RFC 7489-compliant DMARC TXT records in BIND and cloud DNS formats, with DMARC best practices and a policy escalation path.">
+<link rel="canonical" href="https://www.ztpop.net/tools/dmarc-generator.html">
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "DMARC Record Generator",
+  "description": "Visually generates RFC 7489-compliant DMARC TXT records. Supports p/sp policies (none/quarantine/reject), adkim/aspf alignment, rua/ruf report addresses and percentage sampling, with BIND and cloud DNS output formats.",
+  "url": "https://www.ztpop.net/tools/dmarc-generator.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {"@type":"Organization","name":"ztpop.net Email Knowledge Base","url":"https://www.ztpop.net/"}
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"Email Tools","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"DMARC Record Generator"}]}</script>
+<style>
+/* scoped to .gen-tool */
+.gen-tool{max-width:860px;margin:40px auto;padding:0 20px}
+.gen-tool h1{font-size:24px;color:#003366;margin-bottom:8px}
+.gen-tool .subtitle{color:#666;font-size:14px;margin-bottom:28px;line-height:1.7}
+.gen-tool .panel{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #003366}
+.gen-tool .panel h3{margin:0 0 14px;font-size:16px;color:#003366}
+.gen-tool .panel label{display:block;font-size:13px;color:#555;margin:10px 0 6px;font-weight:600}
+.gen-tool .panel input[type=text],.gen-tool .panel input[type=number]{width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:6px;font-size:14px;outline:none;box-sizing:border-box}
+.gen-tool .panel input:focus{border-color:#003366}
+.gen-tool .panel .hint{font-size:12px;color:#888;margin-top:4px;line-height:1.6}
+.gen-tool .radio-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.gen-tool .radio-row label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;cursor:pointer}
+.gen-tool .radio-row input[type=radio]{width:auto}
+.gen-tool .btn-gen{padding:12px 32px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:600;transition:background .2s}
+.gen-tool .btn-gen:hover{background:#004488}
+.gen-tool .output{background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px 20px;margin:16px 0;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.7;word-break:break-all;display:none}
+.gen-tool .output .copy-btn{float:right;background:#2d2d4a;border:1px solid #4a4a6a;color:#ccc;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+.gen-tool .output .copy-btn:hover{background:#3a3a5c}
+.gen-tool .validation{font-size:13px;margin:8px 0;padding:10px 14px;border-radius:6px;display:none}
+.gen-tool .validation.ok{background:#f0fdf4;color:#166534;border-left:3px solid #16a34a}
+.gen-tool .validation.warn{background:#fffbeb;color:#92400e;border-left:3px solid #f59e0b}
+.gen-tool .info-box{background:#e8f0fe;border-radius:8px;padding:20px 24px;margin-top:32px;font-size:14px;color:#444;line-height:1.8}
+.gen-tool .info-box h3{font-size:16px;color:#003366;margin-bottom:12px}
+.gen-tool .info-box code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:3px;font-size:13px}
+@media (max-width:600px){.gen-tool .radio-row{flex-direction:column;gap:8px}}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a DMARC record?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "DMARC (Domain-based Message Authentication, Reporting and Conformance, RFC 7489) defines domain policy on top of SPF/DKIM: when mail fails SPF or DKIM authentication and domain alignment, receivers act per the p policy (none/quarantine/reject) and send aggregate reports to the rua address."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where is the DMARC record published?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It is published in a TXT record at _dmarc.yourdomain.com, starting with v=DMARC1 with semicolon-separated tags. Example: v=DMARC1; p=reject; rua=mailto:dmarc@example.com; adkim=r; aspf=r."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do you escalate a DMARC policy?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RFC 7489 §6.3 recommends starting with p=none for 2-4 weeks, escalating to quarantine after confirming no legitimate mail fails, then finally to reject. Always check SPF/DKIM pass rates in rua aggregate reports before escalating."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between adkim and aspf alignment?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "adkim controls DKIM alignment and aspf controls SPF alignment. r (relaxed) allows subdomain/main-domain inter-recognition; s (strict) requires exact domain match. Use relaxed when sending from many subdomains."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does DMARC require SPF or DKIM?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. DMARC itself does not authenticate mail; it relies on at least one of SPF/DKIM passing with domain alignment. If neither is configured, DMARC can only report and provides no real protection."
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/images/logo.webp" alt="昆仑邮件系统" width="108" height="57"></a>
+            <button class="mg-search-btn" id="searchBtn" aria-label="搜索">🔍</button>
+        </div>
+        <div class="mg-nav"><ul class="nav-list">
+            <li class="nav-li"><a href="/">首页</a></li>
+            <li class="nav-li"><a href="#">产品和服务</a>
+                <ul class="sub-nav-list">
+                    <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                    <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                </ul>
+            </li>
+            <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+            <li class="nav-li"><a href="/support.html">支持</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a></li>
+            <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+        </ul></div>
+    </div>
+</header>
+
+<div class="gen-tool">
+    <h1>DMARC Record Generator</h1>
+    <p class="subtitle">Domain-based Message Authentication, Reporting &amp; Conformance (RFC 7489) — defines domain policy and failure reporting on top of SPF/DKIM. Configure the p policy, alignment and report addresses to generate a standard DMARC TXT record.</p>
+
+    <div class="panel">
+        <h3>1️⃣ Policy (p)</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="p" value="none" checked> <code>none</code> Monitor only (no action)</label>
+            <label><input type="radio" name="p" value="quarantine"> <code>quarantine</code> Quarantine (mark as spam)</label>
+            <label><input type="radio" name="p" value="reject"> <code>reject</code> Reject (recommended end state)</label>
+        </div>
+        <p class="hint">Recommended path: run <code>none</code> for 2-4 weeks to confirm no legitimate mail fails, then escalate to <code>quarantine</code>, then <code>reject</code> (RFC 7489 §6.3 recommends incremental deployment).</p>
+    </div>
+
+    <div class="panel">
+        <h3>2️⃣ Subdomain Policy (sp, optional)</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="sp" value="" checked> Not set (inherit main domain)</label>
+            <label><input type="radio" name="sp" value="none"> <code>none</code></label>
+            <label><input type="radio" name="sp" value="quarantine"> <code>quarantine</code></label>
+            <label><input type="radio" name="sp" value="reject"> <code>reject</code></label>
+        </div>
+        <p class="hint">RFC 7489 §6.3: the sp tag is optional; when unset, subdomains inherit the main domain policy.</p>
+    </div>
+
+    <div class="panel">
+        <h3>3️⃣ Alignment Mode</h3>
+        <div class="radio-row">
+            <label><input type="radio" name="adkim" value="r" checked> <code>adkim=r</code> Relaxed (recommended)</label>
+            <label><input type="radio" name="adkim" value="s"> <code>adkim=s</code> Strict</label>
+            <span style="color:#888;font-size:12px;align-self:center">DKIM alignment</span>
+        </div>
+        <div class="radio-row" style="margin-top:8px">
+            <label><input type="radio" name="aspf" value="r" checked> <code>aspf=r</code> Relaxed (recommended)</label>
+            <label><input type="radio" name="aspf" value="s"> <code>aspf=s</code> Strict</label>
+            <span style="color:#888;font-size:12px;align-self:center">SPF alignment</span>
+        </div>
+        <p class="hint">RFC 7489 §6.1: relaxed mode allows subdomain/main-domain inter-recognition; strict mode requires exact domain match. If you send from many subdomains, relaxed is recommended.</p>
+    </div>
+
+    <div class="panel">
+        <h3>4️⃣ Report Addresses</h3>
+        <label>Aggregate report receiver (rua)</label>
+        <input type="text" id="rua" placeholder="e.g. dmarc@example.com (use a dedicated mailbox)">
+        <label>Forensic report receiver (ruf, optional)</label>
+        <input type="text" id="ruf" placeholder="e.g. forensic@example.com (optional)">
+        <label>Sampling percentage (pct, optional)</label>
+        <input type="number" id="pct" min="1" max="100" placeholder="empty = 100%">
+        <p class="hint">RFC 7489 §7.1: rua is strongly recommended (without it you cannot monitor via aggregate reports); ruf is optional. The report mailbox domain may differ from or equal the DMARC domain, but use a dedicated address to avoid abuse.</p>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">Generate DMARC Record</button>
+        <button class="btn-cite" onclick="copyCitation(this)" style="background:#fff;color:#003366;border:1px solid #003366;padding:8px 16px;font-size:13px;border-radius:6px;cursor:pointer;margin-left:10px" title="Copy the standard citation format for use in blogs or documents">📝 Copy citation</button>
+    <div id="validation" class="validation"></div>
+    <div id="output" class="output"></div>
+
+    <div class="info-box">
+        <h3>📖 DMARC Explained &amp; Deployment Guide</h3>
+        <p><strong>DMARC</strong> (RFC 7489) builds on SPF and DKIM: when receivers judge either SPF or DKIM to pass with <b>domain alignment</b>, DMARC is pass; otherwise the <code>p</code> policy applies. DMARC addresses exactly the spoofing of the visible From domain that SPF/DKIM alone cannot cover (subdomain impersonation, display-name spoofing).</p>
+        <p><strong>Record location</strong>: TXT record at <code>_dmarc.yourdomain.com</code>. The value starts with <code>v=DMARC1</code>; tags are separated by semicolons. A domain can have only one DMARC record.</p>
+        <p><strong>Reporting</strong>: rua aggregate reports (one XML per day) are sent by receivers; ruf forensic reports contain original mail samples. Use tools like <a href="/tools/mail-tools.html">DMARC XML report parser</a> to analyze rua reports.</p>
+        <p><strong>Typical example</strong>: <code>v=DMARC1; p=reject; rua=mailto:dmarc@example.com; adkim=r; aspf=r; pct=100</code></p>
+        <p><strong>Note</strong>: DMARC only takes effect when at least one of SPF/DKIM is correctly configured. If neither is configured, DMARC can only report, not protect. After generating, verify the full chain with our <a href="/tools/dns-check.html">Email DNS One-Click Diagnostic</a>.</p>
+        <p><strong>Standards</strong>: RFC 7489 (DMARC), RFC 7208 (SPF), RFC 6376 (DKIM).</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+function generate() {
+    const p = document.querySelector('input[name=p]:checked').value;
+    const sp = document.querySelector('input[name=sp]:checked').value;
+    const adkim = document.querySelector('input[name=adkim]:checked').value;
+    const aspf = document.querySelector('input[name=aspf]:checked').value;
+    const rua = document.getElementById('rua').value.trim();
+    const ruf = document.getElementById('ruf').value.trim();
+    const pct = document.getElementById('pct').value.trim();
+
+    const tags = ['v=DMARC1', 'p=' + p];
+    const warnings = [];
+    if (sp) tags.push('sp=' + sp);
+    if (rua) {
+        tags.push('rua=mailto:' + rua);
+    } else {
+        warnings.push('No rua report address configured — aggregate reports cannot be received');
+    }
+    if (ruf) tags.push('ruf=mailto:' + ruf);
+    if (pct) {
+        const n = parseInt(pct);
+        if (n >= 1 && n <= 100) tags.push('pct=' + n);
+        else warnings.push('pct must be 1-100, ignored');
+    }
+    tags.push('adkim=' + adkim, 'aspf=' + aspf);
+
+    const record = tags.join('; ');
+
+    const v = document.getElementById('validation');
+    if (warnings.length) {
+        v.className = 'validation warn';
+        v.style.display = 'block';
+        v.innerHTML = '⚠️ ' + warnings.join('<br>⚠️ ');
+    } else {
+        v.className = 'validation ok';
+        v.style.display = 'block';
+        v.innerHTML = '✅ Record structure complete (' + tags.length + ' tags), policy ' + p.toUpperCase() + '. After publishing, confirm SPF/DKIM are correctly configured.';
+    }
+
+    const out = document.getElementById('output');
+    out.style.display = 'block';
+    out.innerHTML = `<button class="copy-btn" onclick="copyRec(this)">Copy</button><strong>DMARC TXT Record</strong> (hostname: _dmarc.yourdomain.com)<br><br>${record}`;
+}
+
+function copyRec(btn) {
+    const text = btn.parentNode.innerText.replace('Copy', '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+}
+
+function copyCitation(btn) {
+    const text = `DMARC Record Generator (https://www.ztpop.net/tools/dmarc-generator.html), implemented per RFC 7489`;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => btn.textContent = '📝 Copy citation', 1500);
+    });
+}
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 Authoritative References</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7489" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7489 — Domain-based Message Authentication (DMARC)</a></li>
+            <li><a href="https://dmarc.org/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarc.org Official Site</a></li>
+            <li><a href="https://support.google.com/a/answer/2466563" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Google Workspace Help: DMARC Records &amp; Reports</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>
