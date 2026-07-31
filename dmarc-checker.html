@@ -78,6 +78,35 @@
                 <p style="font-size:15px;color:#333;line-height:1.8;margin:0">DMARC 记录固定存放于 _dmarc.<域名>。输入域名后点击查询，工具通过 DoH 查询该位置的 TXT 记录并解析全部标签。重点关注 p 标签（策略）与 rua 标签（报告接收地址）。若返回「未发现 DMARC 记录」，说明域名未部署 DMARC——此时任何声称该域名的邮件都不会被 DMARC 校验拦截。若 p=none 说明仅处于监控阶段，建议按渐进式策略逐步收紧到 quarantine/reject。</p>
             </div>
 
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">为什么需要定期检查</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">DMARC（Domain-based Message Authentication, Reporting and Conformance，RFC 7489）建立在 SPF 和 DKIM 之上，定义了「当认证失败时收件方应如何处理邮件」以及「如何向域名所有者报告结果」。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">没有 DMARC 记录的域名，等于放弃了对伪造邮件的处置权——攻击者可以任意冒用您的域名发钓鱼邮件，而收件方无法依据统一策略拦截。DMARC 的 p=none / quarantine / reject 三级策略正是为渐进式部署设计的。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">检查 DMARC 记录时，除了策略标签（p / sp），还应重点核对 rua/ruf 报告地址是否有效（无效地址会导致报告丢失）、pct 百分比是否符合部署阶段、以及对齐模式（adkim/aspf）是否与 SPF/DKIM 的实际配置匹配。</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">检查结果解读</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">标签</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">含义</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">风险提示</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">p=none</td><td style="padding:8px 12px;border:1px solid #ddd;">仅监控，不采取行动，所有邮件照常投递</td><td style="padding:8px 12px;border:1px solid #ddd;">低（部署初期）</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">p=quarantine</td><td style="padding:8px 12px;border:1px solid #ddd;">认证失败的邮件进入垃圾箱</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">p=reject</td><td style="padding:8px 12px;border:1px solid #ddd;">认证失败的邮件直接拒收</td><td style="padding:8px 12px;border:1px solid #ddd;">高（需确保配置无误）</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">sp=</td><td style="padding:8px 12px;border:1px solid #ddd;">子域策略，覆盖子域的 DMARC 处理</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">rua=</td><td style="padding:8px 12px;border:1px solid #ddd;">聚合报告接收地址（必须为有效邮箱）</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">pct=</td><td style="padding:8px 12px;border:1px solid #ddd;">策略应用比例（1-100），渐进部署用</td><td style="padding:8px 12px;border:1px solid #ddd;">低</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">常见配置错误与修复</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>无 DMARC 记录</strong>：从 p=none 开始部署，观察报告 1-2 周确认无合法邮件被误伤</li>
+<li><strong>rua 地址无效</strong>：确保报告邮箱真实存在并可接收，否则无法获取认证统计</li>
+<li><strong>adkim/aspf 对齐失败</strong>：确认 DKIM 签名域名与 From 头域名一致（relaxed）或完全一致（strict）</li>
+<li><strong>p=reject 误伤</strong>：先确认 SPF 和 DKIM 的通过率（通过 rua 报告），再逐步升级策略</li>
+<li><strong>pct 未充分利用</strong>：渐进部署时应从 pct=10 起步逐步提升，观察报告后再到 100%</li>
+</ul>
+</div>
+
             <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
                 <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
                 <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，查询逻辑与解析规则均与标准定义保持一致：</p>

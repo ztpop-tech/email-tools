@@ -78,6 +78,32 @@
                 <p style="font-size:15px;color:#333;line-height:1.8;margin:0">TLS-RPT 记录存放于 _smtp._tls.<域名>，格式为 v=TLSRPTv1; rua=mailto:reports@example.com。输入域名查询后，工具解析版本号与报告地址。若返回「未发现 TLS-RPT 记录」，说明域名未配置 TLS 传输失败监控——建议与 MTA-STS 或 DANE 同步部署。rua= 地址应为真实可收信的邮箱，否则报告会丢失。</p>
             </div>
 
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">为什么需要定期检查</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">TLS-RPT（SMTP TLS Reporting，RFC 8460）为 MTA-STS 和 DANE 提供「可观测性」。它定义了一种 DNS TXT 记录（_smtp._tls），用于声明接收 TLS 传输报告的邮箱地址。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">没有 TLS-RPT 时，MTA-STS 部署后是否生效、是否有合法邮件因策略被拒收，您完全无法感知。TLS-RPT 报告会汇总：TLS 连接成功/失败次数、失败原因（证书错误、策略错误、协议错误）、以及涉及的对方域名——这是排查邮件互操作性问题的第一手数据。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">检查 TLS-RPT 记录时，核心是确认 rua 地址有效且格式正确（支持多个地址，逗号分隔），并建议与 MTA-STS 同时部署——MTA-STS 定义策略，TLS-RPT 提供反馈，二者配合才能形成「部署-监控-优化」闭环。</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">检查结果解读</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">检查项</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">合格标准</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">风险</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">记录存在</td><td style="padding:8px 12px;border:1px solid #ddd;">_smtp._tls.&lt;domain&gt; 的 TXT 记录存在</td><td style="padding:8px 12px;border:1px solid #ddd;">高（无记录则无报告）</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">版本标记</td><td style="padding:8px 12px;border:1px solid #ddd;">以 v=TLSRPTv1 开头</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">rua 地址</td><td style="padding:8px 12px;border:1px solid #ddd;">至少一个有效邮箱，可接收报告</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">地址格式</td><td style="padding:8px 12px;border:1px solid #ddd;">rua=mailto:xxx@domain 格式正确，多地址用逗号分隔</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">常见配置错误与修复</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>记录缺失</strong>：添加 TXT 记录：v=TLSRPTv1; rua=mailto:report@yourdomain.com</li>
+<li><strong>rua 邮箱无效</strong>：确认报告邮箱可正常收信，建议使用专用邮箱便于统计</li>
+<li><strong>与 MTA-STS 脱节</strong>：同时部署 MTA-STS + TLS-RPT，用报告数据驱动策略调整</li>
+<li><strong>格式错误</strong>：严格按 RFC 8460 格式：v=TLSRPTv1; rua=mailto:...（分号后空格可选但建议统一）</li>
+</ul>
+</div>
+
             <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
                 <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
                 <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，查询逻辑与解析规则均与标准定义保持一致：</p>

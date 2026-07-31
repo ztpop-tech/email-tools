@@ -78,6 +78,36 @@
                 <p style="font-size:15px;color:#333;line-height:1.8;margin:0">在输入框输入域名（如 ztpop.net），点击「查询 SPF」即可。工具通过 DoH 查询该域名的 TXT 记录，自动过滤出 v=spf1 开头的 SPF 记录并逐机制解析。若域名无 SPF 记录，会提示「未发现 SPF 记录」并给出配置建议。查询结果下方会同步展示该记录的 DNS 查询次数估算，帮助判断是否接近 RFC 7208 的 10 次上限。</p>
             </div>
 
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">为什么需要定期检查</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">SPF（Sender Policy Framework）是邮件认证的第一道防线，用于声明「哪些服务器有权代表您的域名发信」。未配置或配置错误的 SPF 记录，是邮件被判定为垃圾邮件、被对方拒收（bounce）的首要原因之一。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">根据 RFC 7208 的定义，收件方邮件系统在收到邮件后，会查询发件域名的 SPF 记录并与实际连接 IP 比对。查询失败（无记录）、比对失败（未授权 IP）都会导致认证结果 fail，进而触发对方的反垃圾策略。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">定期检查 SPF 记录的价值在于：及时发现记录丢失（如 DNS 迁移后）、机制错误（如 ip4 段写错）、以及最隐蔽的「超出 10 次 DNS 查询上限」问题——后者会导致 SPF 结果被判定为 permerror，相当于整条记录失效。</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">检查结果解读</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">查询结果</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">含义</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">风险等级</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">pass</td><td style="padding:8px 12px;border:1px solid #ddd;">发件 IP 在 SPF 允许列表中，认证通过</td><td style="padding:8px 12px;border:1px solid #ddd;">无风险</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">fail / hardfail</td><td style="padding:8px 12px;border:1px solid #ddd;">发件 IP 明确未被授权，应拒收或隔离</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">softfail</td><td style="padding:8px 12px;border:1px solid #ddd;">发件 IP 未被授权但策略较宽松（~all）</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">neutral</td><td style="padding:8px 12px;border:1px solid #ddd;">记录存在但未声明明确策略（?all）</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">permerror</td><td style="padding:8px 12px;border:1px solid #ddd;">记录语法或 DNS 查询次数超限，整条记录失效</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">temperror</td><td style="padding:8px 12px;border:1px solid #ddd;">临时 DNS 故障，建议稍后重试</td><td style="padding:8px 12px;border:1px solid #ddd;">低</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">none</td><td style="padding:8px 12px;border:1px solid #ddd;">域名无 SPF 记录</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">常见配置错误与修复</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>未配置 SPF</strong>：添加 TXT 记录，最简配置 v=spf1 mx ~all，仅授权 MX 服务器发信</li>
+<li><strong>all 修饰符缺失</strong>：SPF 记录必须以 -all / ~all / ?all 结尾，否则策略不完整，攻击者可伪造</li>
+<li><strong>10 次查询上限超限</strong>：用 include 机制时逐级累加查询次数，超过 10 次（RFC 7208 §4.6.4）需合并或精简机制</li>
+<li><strong>ip4 段错误</strong>：确认发信服务器公网 IP 与记录一致，注意 NAT/多线路场景需全部列出</li>
+<li><strong>与 DKIM/DMARC 不匹配</strong>：SPF 只解决「发信身份」问题，务必配合 DKIM 签名和 DMARC 策略形成完整认证链</li>
+</ul>
+</div>
+
             <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
                 <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
                 <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，查询逻辑与解析规则均与标准定义保持一致：</p>

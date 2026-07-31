@@ -78,6 +78,34 @@
                 <p style="font-size:15px;color:#333;line-height:1.8;margin:0">MTA-STS 配置包含两个部分：① _mta-sts.<域名> 的 TXT 发现记录（v=STSv1; id=<版本>）；② https://mta-sts.<域名>/.well-known/mta-sts.txt 策略文件。工具先查询发现记录，若存在则继续抓取策略文件并解析。两者缺一不可——只有发现记录没有策略文件（或反之），MTA-STS 都无法生效。注意策略文件必须通过 HTTPS 提供服务且证书有效，否则发送方将按 RFC 8461 忽略该策略。</p>
             </div>
 
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">为什么需要定期检查</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">MTA-STS（SMTP MTA Strict Transport Security，RFC 8461）解决的是「邮件传输加密的强制性问题」。STARTTLS 虽然是标准能力，但在传统实现中可以被降级攻击（downgrade attack）——攻击者拦截握手后，可诱导双方以明文传输。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">MTA-STS 通过两个组件实现强制加密：一是 DNS 中的 _mta-sts 策略发现记录（TXT），二是 HTTPS 托管的策略 JSON 文件。两者同时生效，收件方 MTA 才会应用「强制 TLS + 证书校验」策略。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">检查 MTA-STS 时需注意：发现记录与策略文件必须同时存在且内容一致（policy-id 匹配）；策略文件的 HTTPS 证书必须有效（RFC 8461 §3.3 要求验证证书链）；以及 mx 列表必须与实际 MX 记录一致——不一致会导致合法邮件被拒收。</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">检查结果解读</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">检查项</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">合格标准</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">风险</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">发现记录</td><td style="padding:8px 12px;border:1px solid #ddd;">_mta-sts.&lt;domain&gt; 的 TXT 记录存在且 v=STSv1</td><td style="padding:8px 12px;border:1px solid #ddd;">高（缺失则策略不生效）</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">策略文件</td><td style="padding:8px 12px;border:1px solid #ddd;">https://mta-sts.&lt;domain&gt;/.well-known/mta-sts.txt 可访问</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">policy-id</td><td style="padding:8px 12px;border:1px solid #ddd;">发现记录与策略文件的 id 字段一致</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">mx 列表</td><td style="padding:8px 12px;border:1px solid #ddd;">策略文件 mx 字段与实际 MX 记录匹配</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">HTTPS 证书</td><td style="padding:8px 12px;border:1px solid #ddd;">mta-sts 子域证书有效且受信任</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">常见配置错误与修复</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>发现记录缺失</strong>：添加 TXT 记录：v=STSv1; id=20260101（id 建议用日期便于轮换）</li>
+<li><strong>策略文件不可达</strong>：在 mta-sts 子域部署 HTTPS，提供 /well-known/mta-sts.txt，内容含 version: STSv1 和 mx 列表</li>
+<li><strong>policy-id 不一致</strong>：修改发现记录或策略文件，使两者 id 完全一致，否则策略不生效</li>
+<li><strong>mx 列表不匹配</strong>：将实际 MX 主机全部加入策略文件 mx 字段，遗漏会导致邮件被拒收</li>
+<li><strong>证书问题</strong>：为 mta-sts 子域申请有效证书（可用通配符或单域名证书），并确保证书链完整</li>
+</ul>
+</div>
+
             <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
                 <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
                 <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，查询逻辑与解析规则均与标准定义保持一致：</p>

@@ -78,6 +78,34 @@
                 <p style="font-size:15px;color:#333;line-height:1.8;margin:0">DKIM 记录以「选择器 + 域名」定位。选择器由发件服务商决定（腾讯云邮件推送默认 s1，Google Workspace 默认 google，自建 OpenDKIM 可自定义）。输入域名和选择器后点击查询，工具拼接 &lt;selector&gt;._domainkey.&lt;domain&gt; 发起 DoH TXT 查询，解析 v/k/p/s/t 各标签并给出公钥强度评估。查询失败时请先确认选择器拼写，再检查 DNS 是否已生效（TTL 内等待）。</p>
             </div>
 
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">为什么需要定期检查</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">DKIM（DomainKeys Identified Mail，RFC 6376）通过数字签名验证邮件在传输过程中是否被篡改，并绑定邮件与发件域名。它不直接判断发件人身份，而是提供「内容完整性 + 域名关联」的证据。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">DKIM 失效的典型场景：更换邮件服务器后未迁移私钥、DNS 中公钥记录过期（TXT 记录 TTL 到期待清理）、选择器（selector）与签名头不匹配。这些故障通常不会立即报错，而是悄悄导致邮件信誉下降、进入垃圾箱。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">通过本工具检查 DKIM 记录，可以确认公钥是否在 DNS 中正确发布、密钥长度是否达到安全标准（RFC 8301 建议 1024 位以上，推荐 2048 位）、以及记录格式是否与签名算法（rsa-sha256 等）匹配。</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">检查结果解读</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">检查项</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">合格标准</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">风险</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">公钥记录存在</td><td style="padding:8px 12px;border:1px solid #ddd;">DNS 中可查询到 selector._domainkey 的 TXT 记录</td><td style="padding:8px 12px;border:1px solid #ddd;">无</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">密钥长度</td><td style="padding:8px 12px;border:1px solid #ddd;">≥1024 位（RFC 8301），推荐 2048 位</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">记录格式</td><td style="padding:8px 12px;border:1px solid #ddd;">以 v=DKIM1 开头，含 p= 公钥字段</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">选择器匹配</td><td style="padding:8px 12px;border:1px solid #ddd;">签名头中的 s= 选择器与查询的 selector 一致</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">TXT 记录数量</td><td style="padding:8px 12px;border:1px solid #ddd;">同一选择器下只有一条 DKIM 记录</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">常见配置错误与修复</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>公钥记录丢失</strong>：重新发布公钥：生成新密钥对后，将 p= 字段粘贴到 selector._domainkey 的 TXT 记录</li>
+<li><strong>密钥过短</strong>：重新生成 2048 位 RSA 密钥（部分 DNS 对 TXT 长度有限制，需注意拆分）</li>
+<li><strong>选择器不匹配</strong>：确认签名服务器配置的 selector 与 DNS 中发布的 selector 完全一致</li>
+<li><strong>记录被截断</strong>：TXT 记录有 255 字符/段限制，长公钥需按标准拆分并用引号包裹</li>
+<li><strong>轮转未完成</strong>：更换私钥前先在 DNS 发布新公钥，等待 TTL 过期后再切换签名配置，避免签名验证窗口期失败</li>
+</ul>
+</div>
+
             <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
                 <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
                 <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，查询逻辑与解析规则均与标准定义保持一致：</p>

@@ -155,7 +155,7 @@
 
 <script>
 // DNS-over-HTTPS via Google
-const DOH_URL = 'https://dns.google/resolve';
+const DOH_URL = 'https://dns.alidns.com/resolve';
 const CACHE_TIME = 0; // Always fresh queries
 
 async function dnsQuery(name, type) {
@@ -563,7 +563,40 @@ document.getElementById('domainInput').addEventListener('keydown', function(e) {
 </script>
 
 <div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
-    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+    <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">为什么需要定期检查</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">邮件系统的 DNS 配置是一个「组合拳」：MX 决定邮件投递方向，SPF/DKIM/DMARC 决定认证信任，MTA-STS/DANE 决定传输加密，PTR 反向解析影响部分反垃圾策略，DNSSEC 保证以上所有 DNS 查询的完整性。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">任何一个环节缺失或错误，都可能造成邮件投递失败、进入垃圾箱、或被中间人攻击。而 DNS 故障的排查往往是最耗时的——因为错误可能藏在 TTL、记录类型、甚至大小写细节里。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">本工具一次查询 10 类关键记录，从「认证」「传输」「投递」三个维度给出综合诊断，帮助快速定位问题域，再针对性深入排查。</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">检查结果解读</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">检查项</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">作用</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">缺失/错误的影响</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">MX</td><td style="padding:8px 12px;border:1px solid #ddd;">邮件路由方向</td><td style="padding:8px 12px;border:1px solid #ddd;">投递失败或投递到错误服务器</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">SPF</td><td style="padding:8px 12px;border:1px solid #ddd;">发件授权</td><td style="padding:8px 12px;border:1px solid #ddd;">认证失败、被拒收</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">DKIM</td><td style="padding:8px 12px;border:1px solid #ddd;">内容签名</td><td style="padding:8px 12px;border:1px solid #ddd;">无法验证完整性、信誉下降</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">DMARC</td><td style="padding:8px 12px;border:1px solid #ddd;">认证策略</td><td style="padding:8px 12px;border:1px solid #ddd;">伪造邮件无法统一处置</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">PTR</td><td style="padding:8px 12px;border:1px solid #ddd;">反向解析</td><td style="padding:8px 12px;border:1px solid #ddd;">部分反垃圾策略拒绝无 PTR 的 IP</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">MTA-STS</td><td style="padding:8px 12px;border:1px solid #ddd;">强制 TLS</td><td style="padding:8px 12px;border:1px solid #ddd;">传输可被降级为明文</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">TLS-RPT</td><td style="padding:8px 12px;border:1px solid #ddd;">TLS 报告</td><td style="padding:8px 12px;border:1px solid #ddd;">无法感知 TLS 失败</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">DANE</td><td style="padding:8px 12px;border:1px solid #ddd;">证书锚定</td><td style="padding:8px 12px;border:1px solid #ddd;">证书可被伪造</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">DNSSEC</td><td style="padding:8px 12px;border:1px solid #ddd;">DNS 完整性</td><td style="padding:8px 12px;border:1px solid #ddd;">上述查询可能被篡改</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">BIMI</td><td style="padding:8px 12px;border:1px solid #ddd;">品牌标识</td><td style="padding:8px 12px;border:1px solid #ddd;">认证通过邮件无法展示品牌 Logo</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">常见配置错误与修复</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>MX 缺失</strong>：添加 MX 记录指向邮件服务器，优先级从 10 开始</li>
+<li><strong>SPF 缺失</strong>：添加 v=spf1 mx ~all 或按发信架构扩展</li>
+<li><strong>DMARC 缺失</strong>：从 p=none 开始部署，观察报告后逐步升级</li>
+<li><strong>PTR 缺失</strong>：联系 IP 归属 ISP 添加反向解析，须与正向解析一致</li>
+<li><strong>DNSSEC 未启用</strong>：在域名注册商/托管商启用 DNSSEC，注意 DS 记录同步</li>
+</ul>
+</div>
+
+            <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
         <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
         <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
             <li><a href="https://www.rfc-editor.org/rfc/rfc1035" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 1035 — Domain Names 原文（DNS 基础）</a></li>
