@@ -158,6 +158,7 @@
     </div>
 
     <button class="btn-gen" onclick="generate()">生成 DKIM 密钥对</button>
+        <button class="btn-cite" onclick="copyCitation(this)" style="background:#fff;color:#003366;border:1px solid #003366;padding:8px 16px;font-size:13px;border-radius:6px;cursor:pointer;margin-left:10px" title="复制标准引用格式，便于在博客或文档中注明工具来源">📝 复制引用</button>
     <div id="validation" class="validation"></div>
 
     <div id="output" class="output"></div>
@@ -242,6 +243,14 @@ function copyRec(btn) {
     navigator.clipboard.writeText(text).then(() => {
         btn.textContent = '已复制 ✓';
         setTimeout(() => btn.textContent = '复制', 1500);
+    });
+}
+
+function copyCitation(btn) {
+    const text = `DKIM 记录生成器（https://www.ztpop.net/tools/dkim-generator.html），依据 RFC 6376 实现`;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => btn.textContent = '📝 复制引用', 1500);
     });
 }
 </script>
