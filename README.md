@@ -10,11 +10,19 @@
 | 工具 | 说明 | 标准 |
 |------|------|------|
 | [SPF 记录检查器](https://www.ztpop.net/tools/spf-checker.html) | 解析 SPF 机制，校验 10 次 DNS 查询上限 | RFC 7208 |
+| [SPF 深度诊断工具](https://www.ztpop.net/tools/spf-deep-diagnose.html) | 逐机制解析 + void lookup 检测 + ptr 误用识别 | RFC 7208 |
 | [DKIM 记录检查器](https://www.ztpop.net/tools/dkim-checker.html) | 按选择器查询公钥，评估密钥强度 | RFC 6376 |
 | [DMARC 记录检查器](https://www.ztpop.net/tools/dmarc-checker.html) | 解析全部标签，评估策略强度 | RFC 7489 |
 | [MTA-STS 记录检查器](https://www.ztpop.net/tools/mta-sts-checker.html) | 双重验证发现记录 + 策略文件 | RFC 8461 |
 | [TLS-RPT 记录检查器](https://www.ztpop.net/tools/tls-rpt-checker.html) | 解析报告记录与 rua 地址 | RFC 8460 |
 | [邮件 DNS 一键诊断](https://www.ztpop.net/tools/dns-check.html) | 10 项邮件 DNS 记录一次性检测 | 综合 |
+
+### 地址验证与报告解析
+| 工具 | 说明 | 标准 |
+|------|------|------|
+| [邮箱地址语法验证器](https://www.ztpop.net/tools/email-syntax-validator.html) | 逐字符校验邮箱语法，支持 SMTPUTF8 | RFC 5321/5322/6531 |
+| [一次性邮箱检测器](https://www.ztpop.net/tools/disposable-email-checker.html) | 1600+ 一次性域名黑名单本地比对 | 开源列表 |
+| [DMARC XML 报告解析器](https://www.ztpop.net/tools/dmarc-xml-parser.html) | RUA 聚合报告解析为可读摘要 | RFC 7489 |
 
 ### DNS 记录生成器
 | 工具 | 说明 | 标准 |
@@ -59,6 +67,10 @@ email-tools/
 ├── collection.html     # 工具集合说明页
 ├── spf-generator.html  # 5 个生成器（spf/dkim/dmarc/mta-sts/tls-rpt）
 ├── spf-checker.html    # 5 个检查器（spf/dkim/dmarc/mta-sts/tls-rpt）
+├── spf-deep-diagnose.html # SPF 深度诊断
+├── email-syntax-validator.html # 邮箱地址语法验证器
+├── disposable-email-checker.html # 一次性邮箱检测器
+├── dmarc-xml-parser.html # DMARC XML 报告解析器
 ├── dns-check.html      # 邮件 DNS 一键诊断
 ├── mail-tools.html     # 邮件头解析器
 └── js/                 # 各页面内嵌 JS 逻辑提取（独立文件，便于复用）
