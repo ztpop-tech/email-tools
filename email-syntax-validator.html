@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>邮箱地址语法验证器 — RFC 5321/5322/6531 合规检查 · ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="邮箱地址语法验证器 — RFC 5321/5322/6531 合规检查 · ztpop.net">
+<meta property="og:description" content="免费在线邮箱地址语法验证器：基于 RFC 5321/5322/6531 逐字符校验邮箱地址合规性，支持 SMTPUTF8 国际化邮箱、引号局部、IP 字面量域名等边界场景，给出违规位置与修复建议。浏览器端运行，不上传数据。">
+<meta name="description" content="免费在线邮箱地址语法验证器：基于 RFC 5321/5322/6531 逐字符校验邮箱地址合规性，支持 SMTPUTF8 国际化邮箱、引号局部、IP 字面量域名等边界场景，给出违规位置与修复建议。浏览器端运行，不上传数据。">
+<link rel="canonical" href="https://www.ztpop.net/tools/email-syntax-validator.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"邮箱地址语法验证器"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "邮箱地址语法验证器", "url": "https://www.ztpop.net/tools/email-syntax-validator.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "免费在线邮箱地址语法验证器：基于 RFC 5321/5322/6531 逐字符校验邮箱地址合规性，支持 SMTPUTF8 国际化邮箱、引号局部、IP 字面量域名等边界场景，给出违规位置与修复建议。浏览器端运行，不上传数据。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "邮箱地址语法验证器是什么？", "acceptedAnswer": {"@type": "Answer", "text": "邮箱地址语法验证器是一款浏览器端免费工具，基于 IETF RFC 5321（SMTP）、RFC 5322（Internet Message Format）与 RFC 6531（SMTPUTF8 国际化邮件）规范，逐字符校验邮箱地址的语法合规性。所有校验在浏览器本地完成，地址不会上传到任何服务器。"}}, {"@type": "Question", "name": "邮箱地址有哪几种合法形式？", "acceptedAnswer": {"@type": "Answer", "text": "按 RFC 5321，邮箱地址为 local-part@domain 结构。local-part 可为点原子（由字母数字与特定符号组成，点不能连续或位于首尾）、带引号字符串（quoted-string，可含空格与特殊字符）；domain 可为域名、IPv4 字面量（如 [192.0.2.1]）或 IPv6 字面量（如 [IPv6:2001:db8::1]）。RFC 6531 扩展允许 local-part 与域名使用 UTF-8 国际化字符。"}}, {"type": "Question", "name": "验证器与邮箱真实性检测有什么区别？", "acceptedAnswer": {"type": "Answer", "text": "语法验证只检查地址是否符合 RFC 规范格式，不联网、不验证地址是否真实存在。真实性检测需通过 DNS 查询 MX 记录、甚至建立 SMTP 会话试探（如 VRFY），属于另一类工具。建议先做语法验证，通过后再做真实性检测。"}}, {"type": "Question", "name": "为什么我的邮箱地址被判定不合规？", "acceptedAnswer": {"type": "Answer", "text": "常见原因：local-part 中出现连续点号（a..b@example.com）、点号位于开头或结尾、出现空格或中文全角字符但未加引号、域名部分包含下划线等非法字符。工具会给出具体违规位置与修复建议，可对照 RFC 5321 §4.1.2 的 ABNF 语法逐项排查。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                <li class="nav-li"><a href="/standards/">标准与工具</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">邮箱地址语法验证器</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · RFC 5321/5322/6531 合规校验 · 浏览器端运行，不上传数据</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">邮箱地址的语法由 IETF 标准严格定义：RFC 5321（SMTP 传输格式）、RFC 5322（邮件消息格式）与 RFC 6531（SMTPUTF8 国际化邮件）。不合规的地址会在收发两端被拒（如 501 5.1.3 Bad recipient address syntax）。本工具逐字符校验 local-part@domain 结构，覆盖点原子、引号字符串、IP 字面量域名与国际化地址等全部合法形式，并定位违规位置。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="email-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">邮箱地址（Email Address）</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <div style="flex:1 1 260px"><input type="text" id="email-input" placeholder="user@example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">验证语法</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">支持批量验证：多个地址用逗号或换行分隔。示例：user@example.com、用户@例子.中国（SMTPUTF8）、"john doe"@example.com、admin@[192.0.2.1]。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">功能说明</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>RFC 5321 合规校验：按 SMTP 的 Mailbox 语法（§4.1.2）逐字符检查 local-part 与 domain</li>
+<li>点原子与引号字符串：识别点分隔规则（连续点/首尾点非法）与 quoted-string 转义（反斜杠转义、双引号对）</li>
+<li>IP 字面量域名：支持 [192.0.2.1] IPv4 与 [IPv6:2001:db8::1] IPv6 地址字面量形式</li>
+<li>SMTPUTF8 国际化：RFC 6531 允许 UTF-8 字符，识别非 ASCII 地址并提示需 SMTPUTF8 支持</li>
+<li>违规定位与修复建议：指出具体字符位置与原因，给出可操作的修复方向</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">输入单个邮箱地址或多个（逗号/换行分隔）后点击「验证语法」。每个地址会得到合规/不合规判定；不合规时显示违规字符位置、规则依据（RFC 章节）与修复建议。所有校验在浏览器本地完成，地址不会上传到任何服务器。</p>
+            </div>
+
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">邮箱地址语法规则速查</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">按 RFC 5321 §4.1.2，邮箱地址为 <code>Local-part@Domain</code>。Local-part 最大 64 字符，Domain 最大 255 字符，总长不超过 254 字符（RFC 5321 修订，原先 256）。</p>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">部分</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">合法字符</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">要点</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">Local-part（点原子）</td><td style="padding:8px 12px;border:1px solid #ddd;">A-Z a-z 0-9 与 ! # $ % &amp; ' * + - / = ? ^ _ ` { | } ~ .</td><td style="padding:8px 12px;border:1px solid #ddd;">点不能连续、不能位于首尾；大小写敏感（规范层面）</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">Local-part（引号字符串）</td><td style="padding:8px 12px;border:1px solid #ddd;">引号内可含空格与上述之外的字符，\ 转义</td><td style="padding:8px 12px;border:1px solid #ddd;">如 "john doe"@example.com 合法</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">Domain</td><td style="padding:8px 12px;border:1px solid #ddd;">A-Z a-z 0-9 - .（标签以字母数字开头结尾，连字符不能在首尾）</td><td style="padding:8px 12px;border:1px solid #ddd;">标签长度 ≤63；不允许下划线</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">Domain（IP 字面量）</td><td style="padding:8px 12px;border:1px solid #ddd;">[192.0.2.1] 或 [IPv6:2001:db8::1]</td><td style="padding:8px 12px;border:1px solid #ddd;">方括号包裹，IPv6 需 IPv6: 前缀</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">SMTPUTF8 扩展</td><td style="padding:8px 12px;border:1px solid #ddd;">UTF-8 非 ASCII 字符（RFC 6531）</td><td style="padding:8px 12px;border:1px solid #ddd;">发件服务器与收件方均需支持 SMTPUTF8</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">常见违规与修复</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>连续点号（a..b@example.com）</strong>：点原子中两个点不能相邻，RFC 5321 §4.1.2 的 dot-string 规则。删除多余点号</li>
+<li><strong>点号位于首尾（.a@example.com / a.@example.com）</strong>：dot-string 要求原子之间用点分隔，不能以点开头或结尾。调整结构</li>
+<li><strong>局部含空格（john doe@example.com）</strong>：空格不在 atext 字符集内，必须用引号包裹为 "john doe"@example.com</li>
+<li><strong>域名含下划线（my_domain.com）</strong>：DNS 标签不允许下划线（RFC 1035），域名部分需修正</li>
+<li><strong>中文地址（用户@例子.中国）</strong>：语法上 SMTPUTF8 允许，但发件方与收件方服务器都需支持 EAI（RFC 6531），否则会退信</li>
+<li><strong>长度超限</strong>：Local-part 超 64 字符或总长超 254 字符（RFC 5321 修订）会导致部分服务器拒收</li>
+</ul>
+</div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，校验逻辑与 ABNF 语法定义保持一致：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>邮箱地址语法：RFC 5321 §4.1.2（SMTP Mailbox 语法）、RFC 5322 §3.4.1（addr-spec）</li>
+                    <li>国际化邮箱：RFC 6531（SMTPUTF8 Extension）、RFC 6532（Internationalized Email Headers）</li>
+                    <li>域名规则：RFC 1035 §2.3.1（标签长度与字符）、RFC 1123（主机名要求）</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc5321" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 5321 — Simple Mail Transfer Protocol</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc6531" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 6531 — SMTPUTF8 Extension</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc5322" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 5322 — Internet Message Format</a></li>
+        </ul>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var btn = document.getElementById('check-btn');
+    var result = document.getElementById('result');
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    // RFC 5321 §4.1.2 字符集
+    var ATEXT = /^[A-Za-z0-9!#$%&'*+\-\/=?^_`{|}~]$/;
+    var LABEL_RE = /^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?$/;
+
+    function validateOne(addr) {
+        // 整体长度上限：254（RFC 5321 修订）
+        if (addr.length > 254) return { ok: false, pos: 254, reason: '总长度超过 254 字符上限（RFC 5321 修订）', fix: '缩短地址，Local-part 与 Domain 均需精简' };
+
+        // 查找最后一个未转义的 @（local-part 引号内允许 @）
+        var atIdx = -1, inQuote = false, escaped = false;
+        for (var i = 0; i < addr.length; i++) {
+            var ch = addr[i];
+            if (escaped) { escaped = false; continue; }
+            if (inQuote) {
+                if (ch === '\\') escaped = true;
+                else if (ch === '"') inQuote = false;
+                continue;
+            }
+            if (ch === '"') { inQuote = true; continue; }
+            if (ch === '@') atIdx = i;
+        }
+        if (atIdx === -1) return { ok: false, pos: 0, reason: '缺少 @ 分隔符，不是有效的 addr-spec（RFC 5321 §4.1.2）', fix: '格式应为 local-part@domain' };
+        if (atIdx === 0) return { ok: false, pos: 0, reason: 'local-part 为空，@ 前必须有内容', fix: '补充 @ 前的用户部分' };
+        if (atIdx === addr.length - 1) return { ok: false, pos: atIdx, reason: 'domain 为空，@ 后必须有内容', fix: '补充 @ 后的域名部分' };
+
+        var local = addr.substring(0, atIdx);
+        var domain = addr.substring(atIdx + 1);
+
+        if (local.length > 64) return { ok: false, pos: 64, reason: 'local-part 超过 64 字符上限（RFC 5321 §4.5.3.1.1）', fix: '缩短 @ 前部分至 64 字符内' };
+
+        // ---- local-part 校验 ----
+        if (local.charAt(0) === '"') {
+            // quoted-string：必须以配对引号结束
+            if (local.length < 2 || local.charAt(local.length - 1) !== '"') {
+                return { ok: false, pos: atIdx, reason: '引号字符串未闭合（RFC 5321 §4.1.2 quoted-string）', fix: '补全结尾的双引号，或用点原子形式' };
+            }
+            var inner = local.substring(1, local.length - 1);
+            // 检查转义合法性：qtext 允许 32-33,35-91,93-126；quoted-pair \x 任意
+            for (var qi = 0; qi < inner.length; qi++) {
+                var qc = inner[qi];
+                if (qc === '\\') {
+                    if (qi === inner.length - 1) return { ok: false, pos: atIdx, reason: '反斜杠转义符后缺少字符（quoted-pair）', fix: '\\ 后必须跟一个字符' };
+                    qi++;
+                    continue;
+                }
+                var code = qc.charCodeAt(0);
+                if (qc === '"') return { ok: false, pos: atIdx, reason: '引号字符串内出现未转义双引号', fix: '用 \\" 转义内部引号' };
+                if (code < 32 || code > 126) return { ok: false, pos: atIdx, reason: '引号字符串内出现控制字符（qtext 不允许）', fix: '移除控制字符或用 quoted-pair 转义' };
+            }
+        } else {
+            // dot-string：点原子序列
+            var atoms = local.split('.');
+            if (local.charAt(0) === '.' || local.charAt(local.length - 1) === '.') {
+                return { ok: false, pos: atIdx, reason: 'dot-string 不能以点开头或结尾（RFC 5321 §4.1.2）', fix: '调整 local-part，去掉首尾点号' };
+            }
+            for (var ai = 0; ai < atoms.length; ai++) {
+                var atom = atoms[ai];
+                if (atom.length === 0) {
+                    // 连续点
+                    return { ok: false, pos: atIdx, reason: 'local-part 出现连续点号（a..b），点原子不能为空', fix: '删除连续点号中的多余点' };
+                }
+                for (var ci = 0; ci < atom.length; ci++) {
+                    if (!ATEXT.test(atom[ci])) {
+                        var code2 = atom.charCodeAt(ci);
+                        var isUtf8 = code2 > 127;
+                        return { ok: false, pos: atIdx, reason: 'local-part 含非法字符「' + esc(atom[ci]) + '」' + (isUtf8 ? '（UTF-8 字符仅 SMTPUTF8/RFC 6531 模式允许）' : '（不在 atext 字符集内）'), fix: isUtf8 ? '确保发收双方支持 SMTPUTF8，或用 ASCII 形式' : '移除或转义该字符（空格需用引号字符串包裹）' };
+                    }
+                }
+            }
+        }
+
+        // ---- domain 校验 ----
+        var isLiteral = false;
+        if (domain.charAt(0) === '[' && domain.charAt(domain.length - 1) === ']') {
+            isLiteral = true;
+            var lit = domain.substring(1, domain.length - 1);
+            // IPv4 字面量或 IPv6: 前缀
+            var ipv4Re = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+            var m4 = lit.match(ipv4Re);
+            if (m4) {
+                for (var oct = 1; oct <= 4; oct++) {
+                    if (parseInt(m4[oct], 10) > 255) return { ok: false, pos: atIdx, reason: 'IPv4 字面量八位组超 255：' + esc(lit), fix: '修正 IP 地址范围' };
+                }
+                // 合法
+            } else if (lit.indexOf('IPv6:') === 0) {
+                var v6 = lit.substring(5);
+                // 粗略校验 IPv6：hex 与冒号
+                if (!/^[0-9A-Fa-f:]+$/.test(v6) || v6.indexOf(':') === -1) {
+                    return { ok: false, pos: atIdx, reason: 'IPv6 字面量格式非法：' + esc(lit), fix: '使用标准 IPv6 表示法，如 [IPv6:2001:db8::1]' };
+                }
+            } else {
+                return { ok: false, pos: atIdx, reason: '地址字面量格式非法：' + esc(lit) + '（需为 [IPv4] 或 [IPv6:...]）', fix: '使用标准 IP 字面量格式' };
+            }
+        } else {
+            if (domain.length > 255) return { ok: false, pos: atIdx, reason: 'domain 超过 255 字符上限', fix: '缩短域名' };
+            var labels = domain.split('.');
+            if (domain.charAt(domain.length - 1) === '.') {
+                // 尾部点（FQDN 形式）允许，去掉后校验
+                labels.pop();
+                if (labels.length === 0) return { ok: false, pos: atIdx, reason: '域名部分非法', fix: '修正域名' };
+            }
+            for (var li = 0; li < labels.length; li++) {
+                var lab = labels[li];
+                if (lab.length === 0) return { ok: false, pos: atIdx, reason: '域名含连续点（空标签）', fix: '修正域名结构' };
+                if (lab.length > 63) return { ok: false, pos: atIdx, reason: '域名标签超 63 字符（RFC 1035 §2.3.1）', fix: '缩短标签' };
+                // SMTPUTF8 域名：含非 ASCII 则按国际化域名处理
+                if (/[^\x00-\x7F]/.test(lab)) {
+                    // 检查是否有 IDN 形式（xn--）之外的裸 UTF-8——SMTPUTF8 允许
+                    continue;
+                }
+                if (!LABEL_RE.test(lab)) {
+                    var badChar = lab.match(/[^A-Za-z0-9-]/);
+                    return { ok: false, pos: atIdx, reason: '域名标签含非法字符' + (badChar ? '「' + esc(badChar[0]) + '」' : '（连字符位置错误）') + '（RFC 1035）', fix: '域名标签仅允许字母数字与连字符，且连字符不能在首尾' };
+                }
+            }
+        }
+
+        // SMTPUTF8 检测
+        var hasUtf8 = /[^\x00-\x7F]/.test(addr);
+        return { ok: true, hasUtf8: hasUtf8, local: local, domain: domain, isLiteral: isLiteral };
+    }
+
+    btn.addEventListener('click', function() {
+        var raw = document.getElementById('email-input').value;
+        if (!raw.trim()) {
+            result.innerHTML = statusBox('err', '请输入邮箱地址。');
+            return;
+        }
+        // 支持逗号或换行分隔多个
+        var addrs = raw.split(/[\n,]+/).map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+        var html = '';
+        addrs.forEach(function(addr, idx) {
+            var v = validateOne(addr);
+            if (v.ok) {
+                html += '<div style="padding:12px 16px;border-radius:8px;margin-bottom:10px;background:#e8f5e9;border:1px solid #c8e6c9">';
+                html += '<div style="font-size:14.5px;color:#2e7d32"><b>✓ 合规</b> <code style="background:#fff;padding:2px 6px;border-radius:4px;word-break:break-all">' + esc(addr) + '</code></div>';
+                html += '<div style="font-size:13px;color:#555;margin-top:6px">local-part：<code>' + esc(v.local) + '</code>（' + v.local.length + ' 字符） · domain：<code>' + esc(v.domain) + '</code>' + (v.isLiteral ? '（IP 字面量）' : '') + '</div>';
+                if (v.hasUtf8) html += '<div style="font-size:13px;color:#8a6d3b;margin-top:4px">⚠ 含 UTF-8 国际化字符（SMTPUTF8），需发收双方支持 RFC 6531 才可正常收发</div>';
+                html += '</div>';
+            } else {
+                html += '<div style="padding:12px 16px;border-radius:8px;margin-bottom:10px;background:#fdecea;border:1px solid #f5c6cb">';
+                html += '<div style="font-size:14.5px;color:#a94442"><b>✗ 不合规</b> <code style="background:#fff;padding:2px 6px;border-radius:4px;word-break:break-all">' + esc(addr) + '</code></div>';
+                html += '<div style="font-size:13px;color:#a94442;margin-top:6px">原因：' + v.reason + '</div>';
+                html += '<div style="font-size:13px;color:#555;margin-top:4px">建议：' + v.fix + '</div>';
+                html += '</div>';
+            }
+        });
+        if (addrs.length === 0) {
+            html = statusBox('err', '未识别到有效邮箱地址输入。');
+        }
+        result.innerHTML = html;
+    });
+})();
+</script>
+</body>
+</html>

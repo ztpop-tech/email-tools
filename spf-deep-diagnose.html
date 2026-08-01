@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPF 深度诊断工具 — 逐机制解析与合规审计 · ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="SPF 深度诊断工具 — 逐机制解析与合规审计 · ztpop.net">
+<meta property="og:description" content="免费在线 SPF 深度诊断工具：输入域名或直接粘贴 SPF 记录，逐机制解析（ip4/ip6/include/mx/a/ptr/exists/redirect/all），DNS 查询次数精确统计（RFC 7208 §4.6.4 上限 10 次）、void lookup 检测、宏展开、permerror 预警与修复建议。浏览器端运行，不上传数据。">
+<meta name="description" content="免费在线 SPF 深度诊断工具：输入域名或直接粘贴 SPF 记录，逐机制解析（ip4/ip6/include/mx/a/ptr/exists/redirect/all），DNS 查询次数精确统计（RFC 7208 §4.6.4 上限 10 次）、void lookup 检测、宏展开、permerror 预警与修复建议。浏览器端运行，不上传数据。">
+<link rel="canonical" href="https://www.ztpop.net/tools/spf-deep-diagnose.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"SPF 深度诊断工具"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "SPF 深度诊断工具", "url": "https://www.ztpop.net/tools/spf-deep-diagnose.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "免费在线 SPF 深度诊断工具：输入域名或直接粘贴 SPF 记录，逐机制解析（ip4/ip6/include/mx/a/ptr/exists/redirect/all），DNS 查询次数精确统计（RFC 7208 §4.6.4 上限 10 次）、void lookup 检测、宏展开、permerror 预警与修复建议。浏览器端运行，不上传数据。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "SPF 深度诊断工具与普通 SPF 检查器有什么区别？", "acceptedAnswer": {"@type": "Answer", "text": "普通 SPF 检查器只查询并展示记录；深度诊断工具额外做合规审计：精确统计 DNS 查询次数（RFC 7208 §4.6.4 上限 10 次，含 include/mx/a 嵌套逐级累计）、识别 void lookup（如 include 指向无记录域名）、检查 ptr 机制误用、宏展开示例、ip4 段格式校验、all 修饰符位置与策略强度评估等，并逐项给出 permerror/软失败预警与修复建议。"}}, {"@type": "Question", "name": "什么是 void lookup？为什么它会导致 permerror？", "acceptedAnswer": {"@type": "Answer", "text": "void lookup 指 DNS 查询返回 NXDOMAIN（域名不存在）的情况。按 RFC 7208 §4.6.4，include 机制解析时若目标域无 SPF 记录（或 DNS 错误），整个 SPF 评估返回 permerror（永久错误），等价于记录失效。识别 void lookup 是深度诊断的核心能力之一，能定位 include 链断裂的位置。"}}, {"@type": "Question", "name": "ptr 机制为什么不推荐？", "acceptedAnswer": {"@type": "Answer", "text": "RFC 7208 §5.5 明确不推荐使用 ptr 机制：它依赖反向 DNS（PTR 记录）与正向解析比对，性能差（每次匹配需 2 次 DNS 查询以上）、结果不确定（PTR 由 ISP 管理，常与发信 IP 不一致）、且容易放大 DNS 查询次数。若必须使用，应放在记录末尾、用 ~all 等宽松策略兜底。"}}, {"@type": "Question", "name": "如何判断我的 SPF 记录 DNS 查询次数是否超限？", "acceptedAnswer": {"@type": "Answer", "text": "RFC 7208 §4.6.4 规定 SPF 评估的 DNS 查询总次数不得超过 10 次（含最外层查询）。每次 include/mx/a/ptr/exists 机制都可能触发 1 次额外查询（mx/a 仅在目标未解析过时计数）。本工具会逐机制累计统计，并在接近或超过上限时给出预警与精简建议（如合并 include、删除多余 mx/a 机制）。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                <li class="nav-li"><a href="/standards/">标准与工具</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">SPF 深度诊断工具</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · 逐机制解析与合规审计 · 浏览器端运行，不上传数据</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">SPF（Sender Policy Framework，RFC 7208）通过 DNS TXT 记录声明哪些服务器有权使用您的域名发信。本工具在基础查询之外提供深度合规审计：逐机制解析、DNS 查询次数精确统计（RFC 7208 §4.6.4 上限 10 次）、void lookup 检测、ptr 机制误用识别、宏展开与 permerror 预警。您可以直接查询域名，或粘贴 SPF 记录文本直接诊断。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">域名（Domain）</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">查询并诊断</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">输入要诊断的域名（如 example.com），工具将查询其 SPF 记录并深度审计。</p>
+                <label for="spf-input" style="font-size:14px;color:#555;display:block;margin:16px 0 8px">或直接粘贴 SPF 记录（可选）</label>
+                <textarea id="spf-input" rows="3" placeholder="v=spf1 ip4:192.0.2.1 include:_spf.example.net ~all" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:13.5px;font-family:monospace"></textarea>
+                <p class="hint" style="font-size:13px;color:#888;margin:8px 0 0">粘贴后优先使用粘贴内容诊断，无需域名查询。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">功能说明</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>逐机制解析：ip4/ip6/include/mx/a/ptr/exists/redirect/all 全部机制逐项拆解，含修饰符（+ - ~ ?）与参数</li>
+<li>DNS 查询次数精确统计：按 RFC 7208 §4.6.4 规则逐级累计（含嵌套 include），超过 10 次给出 permerror 预警</li>
+<li>void lookup 检测：识别 include 指向无记录域名导致的 permerror 风险</li>
+<li>ptr 机制审计：识别 RFC 7208 §5.5 不推荐用法，提示性能与不确定性问题</li>
+<li>ip4/ip6 段校验：CIDR 格式、段长度（IPv4 ≤32、IPv6 ≤128）与地址合法性检查</li>
+<li>宏展开示例：展示常见宏（%{i} %{s} %{d} %{o} %{h}）在记录中的展开效果</li>
+<li>all 修饰符审计：检查 all 是否为最后一项、策略强度（-all 最严 / ~all 推荐 / ?all 无效）</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">方式一：输入域名点击「查询并诊断」，工具通过 DoH 查询其 TXT 记录并定位 SPF 记录后深度审计；方式二：在下方文本框直接粘贴 SPF 记录（以 v=spf1 开头），点击「查询并诊断」即直接诊断粘贴内容。诊断结果包含：机制拆解表、DNS 查询次数审计、void lookup 风险、ptr 误用提示、ip4 段校验与修复建议。</p>
+            </div>
+
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">深度诊断项说明</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">诊断项</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">判定规则</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">风险等级</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">DNS 查询次数</td><td style="padding:8px 12px;border:1px solid #ddd;">RFC 7208 §4.6.4：含外层查询总计 ≤10 次</td><td style="padding:8px 12px;border:1px solid #ddd;">超限=permerror（高）</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">void lookup</td><td style="padding:8px 12px;border:1px solid #ddd;">include/redirect 目标域无记录或 NXDOMAIN</td><td style="padding:8px 12px;border:1px solid #ddd;">高（整条失效）</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">ptr 机制</td><td style="padding:8px 12px;border:1px solid #ddd;">RFC 7208 §5.5 不推荐：2 次查询、依赖 ISP PTR</td><td style="padding:8px 12px;border:1px solid #ddd;">中（性能/不确定）</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">ip4/ip6 段格式</td><td style="padding:8px 12px;border:1px solid #ddd;">CIDR 前缀长度合法（IPv4≤32，IPv6≤128）、地址合法</td><td style="padding:8px 12px;border:1px solid #ddd;">非法=permerror（高）</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">all 修饰符位置</td><td style="padding:8px 12px;border:1px solid #ddd;">必须为最后一项（RFC 7208 §4.7）</td><td style="padding:8px 12px;border:1px solid #ddd;">缺失/位置错=高</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">策略强度</td><td style="padding:8px 12px;border:1px solid #ddd;">-all（严格）/ ~all（推荐软失败）/ ?all（中性无效）</td><td style="padding:8px 12px;border:1px solid #ddd;">?all=中（无防护）</td></tr>
+</table>
+</div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现，解析与审计逻辑均与标准定义保持一致：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DNS 查询：RFC 8484（DNS Queries over HTTPS）、RFC 1035（DNS 协议）</li>
+                    <li>记录解析与机制：RFC 7208 §4（机制与修饰符）、§5（机制详解）</li>
+                    <li>查询次数上限：RFC 7208 §4.6.4（DNS 查询上限 10 次）</li>
+                    <li>ptr 机制说明：RFC 7208 §5.5（不推荐用法）</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7208" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7208 — SPF 标准原文</a></li>
+            <li><a href="https://dmarcian.com/spf-survey/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarcian SPF 机制解释器</a></li>
+            <li><a href="https://www.cloudflare.com/learning/email-security/what-is-spf/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Cloudflare Learn：SPF 是什么</a></li>
+        </ul>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var btn = document.getElementById('check-btn');
+    var result = document.getElementById('result');
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    function keyValTable(rows) {
+        var h = '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">' +
+            '<tr style="background:#f0f4f8"><th style="padding:8px 12px;border:1px solid #ddd;text-align:left">标签</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">值</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">说明</th></tr>';
+        rows.forEach(function(r) {
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;word-break:break-all">' + esc(r[1]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd">' + r[2] + '</td></tr>';
+        });
+        return h + '</table>';
+    }
+
+    function parseTxtRecords(answers) {
+        var txts = [];
+        (answers || []).forEach(function(a) {
+            if (a.type === 16) txts.push(a.data);
+        });
+        return txts;
+    }
+
+    function dohQuery(qname, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=TXT';
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+
+    // CIDR 校验：address 合法且 prefix 在 [0, maxBits] 范围内
+    function validIp4(addr) {
+        var parts = addr.split('.');
+        if (parts.length !== 4) return false;
+        for (var i = 0; i < 4; i++) {
+            if (!/^\d{1,3}$/.test(parts[i])) return false;
+            var n = parseInt(parts[i], 10);
+            if (n > 255) return false;
+        }
+        return true;
+    }
+    function validIp6(addr) {
+        if (addr.indexOf('::') !== -1) {
+            if (addr.split('::').length > 2) return false;
+        }
+        var groups = addr.replace(/::/g, ':').split(':');
+        for (var i = 0; i < groups.length; i++) {
+            var g = groups[i];
+            if (g === '') continue;
+            if (!/^[0-9A-Fa-f]{1,4}$/.test(g)) return false;
+        }
+        return true;
+    }
+
+    // 深度诊断函数：输入完整 SPF 记录字符串，输出诊断 HTML
+    function diagnose(spf, originDomain) {
+        var html = '';
+        var issues = [];
+        var dnsQueries = 1; // 初始 TXT 查询
+        var hasAll = false;
+        var allIndex = -1;
+        var ptrCount = 0;
+        var voidRisk = [];
+        var parts = spf.split(/\s+/);
+        var rows = [];
+        var redirectTo = null;
+
+        for (var i = 1; i < parts.length; i++) {
+            var p = parts[i];
+            if (!p) continue;
+            var m = p.match(/^([+\-~?]?)([a-z0-9]+)(?::(.*))?$/i);
+            if (!m) {
+                rows.push([p, '—', '⚠ 无法识别的机制（可能导致 permerror）']);
+                issues.push('无法识别的机制「' + p + '」：RFC 7208 未定义该机制，评估将返回 permerror');
+                continue;
+            }
+            var qual = m[1] || '+';
+            var mech = m[2].toLowerCase();
+            var arg = m[3] || '';
+            var qmap = { '+': '通过 (Pass)', '-': '失败 (Fail)', '~': '软失败 (SoftFail)', '?': '中立 (Neutral)' };
+            var desc = '';
+            var risk = '';
+
+            if (mech === 'all') {
+                desc = '匹配所有来源，必须为最后一项。' + qmap[qual];
+                hasAll = true;
+                allIndex = i;
+                if (i !== parts.length - 1) {
+                    desc += ' ⚠ 不在最后位置！';
+                    issues.push('all 修饰符出现在第 ' + i + ' 项而非最后：RFC 7208 §4.7 要求 all 为最后一项，后续机制永不生效');
+                }
+                if (qual === '?') issues.push('策略为 ?all（中性）：RFC 7208 建议至少使用 ~all，?all 对伪造无防护效果');
+                if (qual === '-') desc += '（严格策略：未授权一律拒绝）';
+                if (qual === '~') desc += '（推荐策略：未授权软失败，便于过渡观察）';
+            }
+            else if (mech === 'include') {
+                dnsQueries++;
+                desc = '引入其他域名的 SPF 记录（消耗 1 次 DNS 查询）。';
+                if (arg) voidRisk.push(arg);
+            }
+            else if (mech === 'ip4') {
+                desc = '允许的 IPv4 地址/段。';
+                var a4 = arg.split('/');
+                if (!validIp4(a4[0])) { desc += ' ⚠ IPv4 地址非法！'; issues.push('ip4 段地址非法：' + arg + '（RFC 7208 §5.6 要求合法 IPv4 地址）'); }
+                if (a4[1] !== undefined) {
+                    var plen = parseInt(a4[1], 10);
+                    if (isNaN(plen) || plen < 0 || plen > 32) { desc += ' ⚠ CIDR 前缀长度非法！'; issues.push('ip4 段前缀长度非法：/' + a4[1] + '（IPv4 前缀范围 0-32）'); }
+                }
+            }
+            else if (mech === 'ip6') {
+                desc = '允许的 IPv6 地址/段。';
+                var a6 = arg.split('/');
+                if (!validIp6(a6[0])) { desc += ' ⚠ IPv6 地址非法！'; issues.push('ip6 段地址非法：' + arg + '（RFC 7208 §5.6 要求合法 IPv6 地址）'); }
+                if (a6[1] !== undefined) {
+                    var plen6 = parseInt(a6[1], 10);
+                    if (isNaN(plen6) || plen6 < 0 || plen6 > 128) { desc += ' ⚠ CIDR 前缀长度非法！'; issues.push('ip6 段前缀长度非法：/' + a6[1] + '（IPv6 前缀范围 0-128）'); }
+                }
+            }
+            else if (mech === 'mx') {
+                dnsQueries++;
+                desc = 'MX 记录指向的服务器（解析 MX 消耗 1 次 DNS 查询）。';
+            }
+            else if (mech === 'a') {
+                dnsQueries++;
+                desc = '域名的 A/AAAA 记录（解析消耗 1 次 DNS 查询）。';
+            }
+            else if (mech === 'ptr') {
+                dnsQueries += 2;
+                ptrCount++;
+                desc = 'PTR 反向解析匹配（RFC 7208 §5.5 不推荐：性能差、结果不确定）。⚠';
+                issues.push('检测到 ptr 机制（第 ' + i + ' 项）：RFC 7208 §5.5 明确不推荐，依赖 ISP 反向 DNS，性能差且结果不确定，建议改用 ip4/ip6 机制');
+            }
+            else if (mech === 'exists') {
+                dnsQueries++;
+                desc = '按 A 记录存在性匹配（消耗 1 次 DNS 查询）。';
+            }
+            else if (mech === 'redirect') {
+                dnsQueries++;
+                desc = '重定向到其他域名的 SPF（消耗 1 次 DNS 查询）。';
+                redirectTo = arg;
+                if (arg) voidRisk.push(arg);
+            }
+            else if (mech === 'exp') {
+                desc = '解释修饰符（不参与匹配，不影响查询次数）。';
+            }
+            else {
+                desc = '未知机制';
+            }
+            rows.push([(qual === '+' ? '+' : qual) + mech + (arg ? ':' + arg : ''), arg || '—', desc]);
+        }
+
+        // ---- 组装诊断结果 ----
+        html += statusBox('ok', '<b>✓ SPF 记录加载成功</b>（来源：' + esc(originDomain || '手动粘贴') + '）');
+        html += '<pre style="background:#1a1a2e;color:#e0e0e0;padding:14px;border-radius:6px;font-size:13.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">' + esc(spf) + '</pre>';
+
+        html += '<h3 style="font-size:16px;color:#003366;margin:20px 0 8px">一、机制拆解</h3>';
+        html += keyValTable(rows);
+
+        html += '<h3 style="font-size:16px;color:#003366;margin:20px 0 8px">二、DNS 查询次数审计（RFC 7208 §4.6.4）</h3>';
+        if (dnsQueries > 10) {
+            html += statusBox('err', '⚠ 估算 DNS 查询次数 ' + dnsQueries + ' 次，超过 RFC 7208 §4.6.4 的 10 次上限，SPF 评估将返回 permerror（整条记录失效）。建议：合并 include（如将多个 include 替换为子域统一 include）、删除冗余 mx/a 机制、避免 ptr。');
+        } else if (dnsQueries > 7) {
+            html += statusBox('warn', '估算 DNS 查询次数 ' + dnsQueries + ' 次，接近 10 次上限。建议精简 include 链，预留增长空间（每次新增发信服务 include 都会 +1）。');
+        } else {
+            html += statusBox('ok', '估算 DNS 查询次数 ' + dnsQueries + ' 次（含最外层查询），在 RFC 7208 §4.6.4 的 10 次上限内，合规。');
+        }
+
+        html += '<h3 style="font-size:16px;color:#003366;margin:20px 0 8px">三、结构合规审计</h3>';
+        if (!hasAll) {
+            html += statusBox('warn', '⚠ 记录缺少 <code>all</code> 终结符（RFC 7208 §4.7 要求）：未匹配的发送方将得到 Neutral 结果，反伪造效果为零。建议以 <code>~all</code> 或 <code>-all</code> 结尾。');
+        }
+        if (redirectTo && !hasAll) {
+            html += statusBox('warn', '⚠ 记录含 <code>redirect=' + esc(redirectTo) + '</code> 但缺少 all：redirect 仅在无匹配且无 all 时生效（RFC 7208 §6.1），建议同时配置 all 终结符。');
+        }
+        if (voidRisk.length > 0) {
+            html += statusBox('warn', '⚠ 以下 include/redirect 目标建议核查 void lookup 风险（目标域无 SPF 记录或 NXDOMAIN 会导致整条记录 permerror）：<br>' +
+                voidRisk.map(function(d) { return '&nbsp;&nbsp;• <code>' + esc(d) + '</code>'; }).join('<br>') +
+                '<br>建议：用 <code>dig TXT ' + esc(voidRisk[0]) + '</code> 核查目标域是否存在 SPF 记录。');
+        }
+        if (ptrCount > 0) {
+            html += statusBox('warn', '⚠ 检测到 ' + ptrCount + ' 处 ptr 机制（RFC 7208 §5.5 不推荐）：依赖 ISP 反向 DNS，每次匹配至少 2 次 DNS 查询，且 PTR 记录由 ISP 管理、常与发信 IP 不一致导致误判。建议替换为 ip4/ip6 机制。');
+        }
+        if (issues.length === 0 && hasAll && dnsQueries <= 10 && ptrCount === 0) {
+            html += statusBox('ok', '✅ 未发现结构性问题：记录含 all 终结符、查询次数合规、无 ptr 误用。');
+        }
+
+        html += '<h3 style="font-size:16px;color:#003366;margin:20px 0 8px">四、宏展开示例（RFC 7208 §7）</h3>';
+        var macros = [
+            ['%{i}', '连接来源 IP', '192.0.2.10'],
+            ['%{s}', '发件人地址', 'user@example.com'],
+            ['%{d}', '当前域', 'example.com'],
+            ['%{o}', '发件域（去掉最左标签）', 'example.com'],
+            ['%{h}', 'HELO/EHLO 域', 'mail.example.com']
+        ];
+        html += keyValTable(macros);
+        html += '<p style="font-size:13px;color:#888;margin:4px 0 0">宏用于 exists/redirect 等机制的动态域名构造（如 <code>exists:%{ir}.%{l1r+-}._spf.example.com</code>）。展开值取决于实际连接参数，上表为示意。</p>';
+
+        return html;
+    }
+
+    btn.addEventListener('click', function() {
+        var domain = document.getElementById('domain-input').value.trim().toLowerCase();
+        var pasted = document.getElementById('spf-input').value.trim();
+
+        // 优先使用粘贴的 SPF 记录
+        if (pasted) {
+            if (pasted.indexOf('v=spf1') !== 0) {
+                result.innerHTML = statusBox('err', '粘贴内容不是有效的 SPF 记录（必须以 v=spf1 开头）。');
+                return;
+            }
+            try {
+                result.innerHTML = diagnose(pasted, '手动粘贴');
+            } catch (e) {
+                result.innerHTML = statusBox('err', '诊断失败：' + esc(e.message));
+            }
+            return;
+        }
+
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', '请输入有效域名（如 example.com），或粘贴 SPF 记录。');
+            return;
+        }
+        result.innerHTML = '<div style="color:#666;font-size:14px;padding:8px 0">正在查询 <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">' + esc(domain) + '</code> ...</div>';
+        dohQuery(domain, function(err, j) {
+            if (err) {
+                result.innerHTML = statusBox('err', 'DNS 查询失败：' + esc(err.message) + '。请检查网络连接后重试。');
+                return;
+            }
+            var txts = parseTxtRecords(j.Answer);
+            var spf = null;
+            for (var i = 0; i < txts.length; i++) {
+                if (txts[i].indexOf('v=spf1') === 0) { spf = txts[i]; break; }
+            }
+            if (!spf) {
+                result.innerHTML = statusBox('warn', '未发现 SPF 记录（TXT 记录中无 v=spf1 开头项）。') +
+                    statusBox('err', '该域名未部署 SPF，发往此域名的邮件将无法通过 SPF 校验，伪造风险高。建议立即配置 SPF 记录（可用本站 <a href="/tools/spf-generator.html" style="color:#0066cc">SPF 生成器</a>）。') +
+                    (txts.length ? '<p style="font-size:13px;color:#888">该域名现有 TXT 记录：</p>' + txts.map(function(t){return '<pre style="background:#1a1a2e;color:#e0e0e0;padding:12px;border-radius:6px;font-size:13px;overflow-x:auto">' + esc(t) + '</pre>';}).join('') : '');
+                return;
+            }
+            try {
+                result.innerHTML = diagnose(spf, domain);
+            } catch (e) {
+                result.innerHTML = statusBox('err', '诊断失败：' + esc(e.message));
+            }
+        });
+    });
+})();
+</script>
+</body>
+</html>

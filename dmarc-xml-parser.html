@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMARC XML 报告解析器 — 聚合报告在线解读 · ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="DMARC XML 报告解析器 — 聚合报告在线解读 · ztpop.net">
+<meta property="og:description" content="免费在线 DMARC 聚合报告（RUA）XML 解析器：上传或粘贴 DMARC 聚合报告 XML，自动解析为人类可读摘要，展示报告元数据、认证结果（SPF/DKIM/DMARC）、发件源 IP 统计、策略处置分布与失败样本，浏览器端本地解析，数据不上传。">
+<meta name="description" content="免费在线 DMARC 聚合报告（RUA）XML 解析器：上传或粘贴 DMARC 聚合报告 XML，自动解析为人类可读摘要，展示报告元数据、认证结果（SPF/DKIM/DMARC）、发件源 IP 统计、策略处置分布与失败样本，浏览器端本地解析，数据不上传。">
+<link rel="canonical" href="https://www.ztpop.net/tools/dmarc-xml-parser.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"DMARC XML 报告解析器"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "DMARC XML 报告解析器", "url": "https://www.ztpop.net/tools/dmarc-xml-parser.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "免费在线 DMARC 聚合报告（RUA）XML 解析器：上传或粘贴 DMARC 聚合报告 XML，自动解析为人类可读摘要，展示报告元数据、认证结果（SPF/DKIM/DMARC）、发件源 IP 统计、策略处置分布与失败样本，浏览器端本地解析，数据不上传。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "DMARC XML 报告解析器是什么？", "acceptedAnswer": {"@type": "Answer", "text": "DMARC 聚合报告（Aggregate Report，RUA）是收件方邮件系统按 RFC 7489 约定，将发件域的认证情况汇总后以 XML 格式发送给发件方的报告。本工具可上传或粘贴这类 XML 文件，在浏览器本地解析为人类可读的摘要：报告期间、认证结果统计、失败样本与策略建议等。"}}, {"@type": "Question", "name": "如何获取 DMARC 聚合报告？", "acceptedAnswer": {"@type": "Answer", "text": "在 DMARC 记录的 rua= 标签中指定接收邮箱（如 rua=mailto:dmarc@example.com），收件方系统会定期（通常每天）将聚合报告发送到该邮箱。邮件中的附件为 .xml 或 .zip 压缩的 XML 文件，解压后用本工具解析。注意 RUA 是聚合报告，RUF 是取证报告（含原始邮件，需谨慎配置）。"}}, {"type": "Question", "name": "解析结果中的 SPF/DKIM/DMARC 结果如何理解？", "acceptedAnswer": {"type": "Answer", "text": "报告的 record 元素包含每封邮件的认证结果：spf 的 domain/scope/result（pass/fail/neutral/softfail/temperror/permerror/none）、dkim 的 domain/selector/result、以及 dmarc 的 disposition（none/quarantine/reject）与 policy_evaluated。disposition 是收件方最终采取的动作，policy_evaluated 是发件方声明策略的评估结果，两者不一致说明存在策略覆盖或对齐问题。"}}, {"type": "Question", "name": "为什么收件方会发送与我声明策略不同的处置结果？", "acceptedAnswer": {"type": "Answer", "text": "disposition 是收件方实际执行的动作，policy_evaluated 是收件方对发件域声明策略（DMARC 记录的 p= 标签）的评估。收件方可能基于自身反垃圾策略对未通过认证的邮件采取更严格或更宽松的处理，也可能因 dkim 对齐（ADKIM）或 spf 对齐（ASPF）判定失败而降低处置。这也是分析报告时需关注的差异点。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                <li class="nav-li"><a href="/standards/">标准与工具</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">DMARC XML 报告解析器</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · 聚合报告（RUA）XML 解析 · 浏览器端本地解析，数据不上传</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">DMARC（Domain-based Message Authentication, Reporting, and Conformance，RFC 7489）要求收件方将认证结果以聚合报告（Aggregate Report，rua= 标签指定的邮箱）定期回传给发件方。报告为 XML 格式，包含报告期间、每条消息的 SPF/DKIM/DMARC 认证结果与收件方处置动作。本工具在浏览器本地解析 XML，输出人类可读的统计摘要与失败样本，无需将敏感报告上传到任何服务器。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="xml-file" style="font-size:14px;color:#555;display:block;margin-bottom:8px">上传 DMARC 聚合报告 XML 文件</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                    <input type="file" id="xml-file" accept=".xml,text/xml,application/xml" style="padding:8px;border:1px solid #ccc;border-radius:6px;font-size:14px;background:#fff">
+                    <span style="color:#888;font-size:13px">或直接粘贴 XML 内容：</span>
+                </div>
+                <textarea id="xml-text" rows="6" placeholder="粘贴 DMARC 聚合报告 XML 内容…" style="width:100%;box-sizing:border-box;margin-top:10px;padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:13px;font-family:monospace"></textarea>
+                <div style="margin-top:10px">
+                    <button id="parse-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">解析报告</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">支持 .xml 文件或粘贴文本。若报告为 .zip 压缩包，请先解压。解析完全在浏览器本地完成，报告内容不会上传。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">功能说明</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>报告元数据：报告 ID、日期范围、发件方域名、接收方域名、联系邮箱</li>
+<li>策略信息：发件域声明的 DMARC 策略（p=）、子域策略（sp=）、对齐模式（adkim/aspf）、百分比（pct）</li>
+<li>认证结果统计：SPF/DKIM/DMARC 各结果（pass/fail/neutral/softfail/temperror/permerror/none）分布计数</li>
+<li>发件源分析：按源 IP 聚合的邮件量与认证通过率</li>
+<li>失败样本：列出认证失败记录的关键字段（源 IP、信封发件人、头部发件人、结果）</li>
+<li>处置分布：收件方实际处置（none/quarantine/reject）与声明策略的对比</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">方式一：点击「选择文件」上传 .xml 报告文件；方式二：将 XML 内容粘贴到文本框。点击「解析报告」后，工具会输出报告摘要：顶部为报告元数据与策略卡片，中部为认证结果统计表，底部为按源 IP 的聚合明细与失败样本。所有解析均在浏览器本地完成，报告内容不会上传到任何服务器。</p>
+            </div>
+
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">DMARC 聚合报告（RUA）解读要点</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">按 RFC 7489 §7.2，聚合报告（Aggregate Report）由收件方邮件系统生成，发送到 DMARC 记录中 rua= 指定的邮箱。报告包含报告期间内发件域所有邮件的认证评估摘要，格式为 XML（<code>&lt;feedback&gt;</code> 为根元素）。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px"><strong>核心字段：</strong><code>report_metadata</code>（org_name 报告方、date_range 起止日期、report_id）；<code>policy_published</code>（domain 发件域、p 策略、sp 子域策略、adkim/aspf 对齐模式、pct 抽样百分比）；<code>record</code>（每条消息：source_ip 源 IP、count 数量、policy_evaluated 评估策略与 disposition 实际处置、identifiers 信封与头部发件人、auth_results 中 spf/dkim 的 domain/result 与 dmarc 的 align 对齐结果）。</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px"><strong>解读优先级：</strong>先看 <code>disposition</code> 分布（有多少邮件被隔离/拒收）→ 再看认证结果（SPF/DKIM 谁在 fail）→ 定位源 IP（哪个发件源拖累整体通过率）→ 检查对齐（identifier alignment）是否通过。聚合报告不含原始邮件内容，需要取证细节时配置 ruf= 与 RUF 报告。</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">认证结果字段速查</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">结果</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">含义</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">风险</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">pass</td><td style="padding:8px 12px;border:1px solid #ddd;">认证通过，身份可信</td><td style="padding:8px 12px;border:1px solid #ddd;">无</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">fail</td><td style="padding:8px 12px;border:1px solid #ddd;">认证失败，身份未验证</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">neutral / softfail</td><td style="padding:8px 12px;border:1px solid #ddd;">未明确通过，策略宽松</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">temperror</td><td style="padding:8px 12px;border:1px solid #ddd;">临时错误（如 DNS 超时），建议稍后重试</td><td style="padding:8px 12px;border:1px solid #ddd;">低</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">permerror</td><td style="padding:8px 12px;border:1px solid #ddd;">永久错误（如 SPF 记录语法错误）</td><td style="padding:8px 12px;border:1px solid #ddd;">高</td></tr>
+<tr><td style="padding:8px 12px;border:1px solid #ddd;">none</td><td style="padding:8px 12px;border:1px solid #ddd;">未执行认证（如无记录）</td><td style="padding:8px 12px;border:1px solid #ddd;">中</td></tr>
+</table>
+</div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具解析逻辑基于以下 IETF 标准：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DMARC 协议与报告格式：RFC 7489（DMARC）、RFC 7489 §7.2（聚合报告）、§7.3（取证报告）</li>
+                    <li>报告 XML 结构：RFC 7489 附录 C（Aggregate Report XML Schema）</li>
+                    <li>关联认证协议：RFC 7208（SPF）、RFC 6376（DKIM）、RFC 5321（SMTP）</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 权威参考文档</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7489" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7489 — DMARC 标准原文</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7489#appendix-C" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7489 附录 C — 聚合报告 XML Schema</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7208" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7208 — SPF 标准</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc6376" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 6376 — DKIM 标准</a></li>
+        </ul>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var parseBtn = document.getElementById('parse-btn');
+    var result = document.getElementById('result');
+    var fileInput = document.getElementById('xml-file');
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    function txt(el, name) {
+        var n = el.getElementsByTagName(name)[0];
+        return n ? (n.textContent || '').trim() : '';
+    }
+
+    function parseXML(xmlStr) {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(xmlStr, 'application/xml');
+        var perr = doc.getElementsByTagName('parsererror');
+        if (perr.length > 0) {
+            throw new Error('XML 解析失败：' + (perr[0].textContent || '').substring(0, 200));
+        }
+        var fb = doc.getElementsByTagName('feedback')[0];
+        if (!fb) throw new Error('未找到 <feedback> 根元素，这不是标准的 DMARC 聚合报告 XML。');
+
+        var html = '';
+
+        // ---- 元数据 ----
+        var md = fb.getElementsByTagName('report_metadata')[0];
+        html += '<div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:16px 20px;margin-bottom:12px">';
+        html += '<h3 style="margin:0 0 10px;font-size:16px;color:#003366">报告元数据</h3>';
+        if (md) {
+            var org = txt(md, 'org_name');
+            var rid = txt(md, 'report_id');
+            var dr = md.getElementsByTagName('date_range')[0];
+            var begin = dr ? parseInt(txt(dr, 'begin'), 10) : 0;
+            var end = dr ? parseInt(txt(dr, 'end'), 10) : 0;
+            var fmt = function(ts) { return ts ? new Date(ts * 1000).toISOString().replace('T', ' ').substring(0, 19) : '—'; };
+            html += keyValTable([
+                ['报告方 (org_name)', org || '—'],
+                ['报告 ID', rid || '—'],
+                ['统计开始', fmt(begin)],
+                ['统计结束', fmt(end)],
+                ['邮件联系邮箱', txt(md, 'email') || '—'],
+                ['附加联系邮箱', txt(md, 'extra_contact_info') || '—']
+            ]);
+        } else {
+            html += '<p style="font-size:14px;color:#a94442">缺少 report_metadata 元素</p>';
+        }
+        html += '</div>';
+
+        // ---- 策略 ----
+        var pp = fb.getElementsByTagName('policy_published')[0];
+        if (pp) {
+            html += '<div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:16px 20px;margin-bottom:12px">';
+            html += '<h3 style="margin:0 0 10px;font-size:16px;color:#003366">发件域声明策略</h3>';
+            var pct = txt(pp, 'pct');
+            html += keyValTable([
+                ['发件域 (domain)', txt(pp, 'domain') || '—'],
+                ['主域策略 p=', txt(pp, 'p') || '—'],
+                ['子域策略 sp=', txt(pp, 'sp') || '（未声明，默认继承 p=）'],
+                ['DKIM 对齐 adkim=', txt(pp, 'adkim') || 'r'],
+                ['SPF 对齐 aspf=', txt(pp, 'aspf') || 'r'],
+                ['抽样百分比 pct=', pct || '100']
+            ]);
+            html += '</div>';
+        }
+
+        // ---- 记录统计 ----
+        var records = fb.getElementsByTagName('record');
+        var total = 0;
+        var spfStat = {}, dkimStat = {}, dmarcStat = {}, dispStat = {};
+        var ipMap = {};
+        var failures = [];
+        for (var i = 0; i < records.length; i++) {
+            var rec = records[i];
+            var count = parseInt(txt(rec, 'count'), 10) || 0;
+            total += count;
+            var ip = txt(rec, 'source_ip') || '—';
+            if (!ipMap[ip]) ipMap[ip] = { count: 0, spfPass: 0, dkimPass: 0, dmarcPass: 0 };
+            ipMap[ip].count += count;
+
+            var pe = rec.getElementsByTagName('policy_evaluated')[0];
+            var disp = pe ? txt(pe, 'disposition') : '—';
+            dispStat[disp] = (dispStat[disp] || 0) + count;
+
+            var ar = rec.getElementsByTagName('auth_results')[0];
+            var spfRes = '—', dkimRes = '—', dmarcRes = '—';
+            if (ar) {
+                var spf = ar.getElementsByTagName('spf')[0];
+                if (spf) {
+                    spfRes = txt(spf, 'result') || '—';
+                    spfStat[spfRes] = (spfStat[spfRes] || 0) + count;
+                    if (spfRes === 'pass') ipMap[ip].spfPass += count;
+                }
+                var dkim = ar.getElementsByTagName('dkim')[0];
+                if (dkim) {
+                    dkimRes = txt(dkim, 'result') || '—';
+                    dkimStat[dkimRes] = (dkimStat[dkimRes] || 0) + count;
+                    if (dkimRes === 'pass') ipMap[ip].dkimPass += count;
+                }
+                var dmarc = ar.getElementsByTagName('dmarc')[0];
+                if (dmarc) {
+                    dmarcRes = txt(dmarc, 'result') || '—';
+                    dmarcStat[dmarcRes] = (dmarcStat[dmarcRes] || 0) + count;
+                    if (dmarcRes === 'pass') ipMap[ip].dmarcPass += count;
+                }
+            }
+            // 失败样本
+            if (spfRes !== 'pass' || dkimRes !== 'pass' || dmarcRes !== 'pass') {
+                var hdrFrom = '—', envFrom = '—';
+                var ids = rec.getElementsByTagName('identifiers')[0];
+                if (ids) {
+                    var hf = ids.getElementsByTagName('header_from')[0];
+                    if (hf) hdrFrom = hf.textContent || '—';
+                    var ef = ids.getElementsByTagName('envelope_from')[0];
+                    if (ef) envFrom = ef.textContent || '—';
+                }
+                failures.push({ ip: ip, count: count, spf: spfRes, dkim: dkimRes, dmarc: dmarcRes, hf: hdrFrom, ef: envFrom });
+            }
+        }
+
+        if (records.length === 0) {
+            html += statusBox('warn', '报告中没有任何 record 记录。可能是收件方在报告期间未收到发往该域名的邮件。');
+        } else {
+            html += '<div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:16px 20px;margin-bottom:12px">';
+            html += '<h3 style="margin:0 0 10px;font-size:16px;color:#003366">认证结果统计（共 ' + total + ' 条消息，' + records.length + ' 条记录）</h3>';
+            html += '<h4 style="margin:12px 0 6px;font-size:14px;color:#555">SPF 结果分布</h4>' + statTable(spfStat);
+            html += '<h4 style="margin:12px 0 6px;font-size:14px;color:#555">DKIM 结果分布</h4>' + statTable(dkimStat);
+            html += '<h4 style="margin:12px 0 6px;font-size:14px;color:#555">DMARC 结果分布</h4>' + statTable(dmarcStat);
+            html += '<h4 style="margin:12px 0 6px;font-size:14px;color:#555">收件方实际处置（disposition）</h4>' + statTable(dispStat);
+            html += '</div>';
+
+            // ---- 源 IP 聚合 ----
+            html += '<div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:16px 20px;margin-bottom:12px">';
+            html += '<h3 style="margin:0 0 10px;font-size:16px;color:#003366">发件源 IP 聚合</h3>';
+            var ipRows = [];
+            Object.keys(ipMap).forEach(function(ip) {
+                var d = ipMap[ip];
+                var passRate = d.count ? Math.round((d.dmarcPass / d.count) * 100) : 0;
+                ipRows.push([ip, String(d.count), d.spfPass + '/' + d.count, d.dkimPass + '/' + d.count, d.dmarcPass + '/' + d.count, passRate + '%']);
+            });
+            ipRows.sort(function(a, b) { return parseInt(b[1], 10) - parseInt(a[1], 10); });
+            html += '<table style="border-collapse:collapse;width:100%;font-size:13px;margin:8px 0">' +
+                '<tr style="background:#f0f4f8"><th style="padding:6px 10px;border:1px solid #ddd;text-align:left">源 IP</th>' +
+                '<th style="padding:6px 10px;border:1px solid #ddd;text-align:left">消息数</th>' +
+                '<th style="padding:6px 10px;border:1px solid #ddd;text-align:left">SPF pass</th>' +
+                '<th style="padding:6px 10px;border:1px solid #ddd;text-align:left">DKIM pass</th>' +
+                '<th style="padding:6px 10px;border:1px solid #ddd;text-align:left">DMARC pass</th>' +
+                '<th style="padding:6px 10px;border:1px solid #ddd;text-align:left">DMARC 通过率</th></tr>';
+            ipRows.forEach(function(r) {
+                html += '<tr><td style="padding:6px 10px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td>' +
+                    '<td style="padding:6px 10px;border:1px solid #ddd">' + r[1] + '</td>' +
+                    '<td style="padding:6px 10px;border:1px solid #ddd">' + r[2] + '</td>' +
+                    '<td style="padding:6px 10px;border:1px solid #ddd">' + r[3] + '</td>' +
+                    '<td style="padding:6px 10px;border:1px solid #ddd">' + r[4] + '</td>' +
+                    '<td style="padding:6px 10px;border:1px solid #ddd">' + r[5] + '</td></tr>';
+            });
+            html += '</table></div>';
+
+            // ---- 失败样本 ----
+            if (failures.length > 0) {
+                html += '<div style="background:#fdf6f6;border:1px solid #f5c6cb;border-radius:8px;padding:16px 20px;margin-bottom:12px">';
+                html += '<h3 style="margin:0 0 10px;font-size:16px;color:#a94442">⚠ 认证失败记录（' + failures.length + ' 条，建议重点排查）</h3>';
+                html += '<table style="border-collapse:collapse;width:100%;font-size:13px;margin:8px 0">' +
+                    '<tr style="background:#fbe9e7"><th style="padding:6px 10px;border:1px solid #f5c6cb;text-align:left">源 IP</th>' +
+                    '<th style="padding:6px 10px;border:1px solid #f5c6cb;text-align:left">消息数</th>' +
+                    '<th style="padding:6px 10px;border:1px solid #f5c6cb;text-align:left">SPF</th>' +
+                    '<th style="padding:6px 10px;border:1px solid #f5c6cb;text-align:left">DKIM</th>' +
+                    '<th style="padding:6px 10px;border:1px solid #f5c6cb;text-align:left">DMARC</th>' +
+                    '<th style="padding:6px 10px;border:1px solid #f5c6cb;text-align:left">信封发件人</th>' +
+                    '<th style="padding:6px 10px;border:1px solid #f5c6cb;text-align:left">头部发件人</th></tr>';
+                failures.slice(0, 50).forEach(function(f) {
+                    html += '<tr><td style="padding:6px 10px;border:1px solid #f5c6cb;font-family:monospace">' + esc(f.ip) + '</td>' +
+                        '<td style="padding:6px 10px;border:1px solid #f5c6cb">' + f.count + '</td>' +
+                        '<td style="padding:6px 10px;border:1px solid #f5c6cb">' + esc(f.spf) + '</td>' +
+                        '<td style="padding:6px 10px;border:1px solid #f5c6cb">' + esc(f.dkim) + '</td>' +
+                        '<td style="padding:6px 10px;border:1px solid #f5c6cb">' + esc(f.dmarc) + '</td>' +
+                        '<td style="padding:6px 10px;border:1px solid #f5c6cb;font-family:monospace;word-break:break-all">' + esc(f.ef) + '</td>' +
+                        '<td style="padding:6px 10px;border:1px solid #f5c6cb;font-family:monospace;word-break:break-all">' + esc(f.hf) + '</td></tr>';
+                });
+                html += '</table>';
+                if (failures.length > 50) html += '<p style="font-size:13px;color:#888">仅显示前 50 条失败记录（共 ' + failures.length + ' 条）</p>';
+                html += '</div>';
+            } else {
+                html += statusBox('ok', '🎉 本报告期内所有记录均通过 DMARC 认证，无失败样本。');
+            }
+        }
+
+        return html;
+    }
+
+    function statTable(stat) {
+        var rows = [];
+        Object.keys(stat).forEach(function(k) {
+            rows.push([k, String(stat[k])]);
+        });
+        if (rows.length === 0) return '<p style="font-size:13px;color:#888">无数据</p>';
+        rows.sort(function(a, b) { return parseInt(b[1], 10) - parseInt(a[1], 10); });
+        return '<table style="border-collapse:collapse;width:100%;font-size:13px;margin:6px 0">' +
+            '<tr style="background:#f0f4f8"><th style="padding:6px 10px;border:1px solid #ddd;text-align:left">结果</th><th style="padding:6px 10px;border:1px solid #ddd;text-align:left">数量</th></tr>' +
+            rows.map(function(r) {
+                return '<tr><td style="padding:6px 10px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td><td style="padding:6px 10px;border:1px solid #ddd">' + r[1] + '</td></tr>';
+            }).join('') + '</table>';
+    }
+
+    function keyValTable(rows) {
+        return '<table style="border-collapse:collapse;width:100%;font-size:13.5px;margin:6px 0">' +
+            rows.map(function(r) {
+                return '<tr><td style="padding:6px 10px;border:1px solid #ddd;color:#555;white-space:nowrap;font-weight:bold">' + esc(r[0]) + '</td>' +
+                    '<td style="padding:6px 10px;border:1px solid #ddd;font-family:monospace;word-break:break-all">' + esc(r[1]) + '</td></tr>';
+            }).join('') + '</table>';
+    }
+
+    parseBtn.addEventListener('click', function() {
+        // 若已通过文件加载，优先使用文件全文
+        if (fileInput._fullText) {
+            try {
+                result.innerHTML = parseXML(fileInput._fullText);
+            } catch (e) {
+                result.innerHTML = statusBox('err', '解析失败：' + esc(e.message));
+            }
+            return;
+        }
+        var text = document.getElementById('xml-text').value;
+        if (text.trim()) {
+            try {
+                result.innerHTML = parseXML(text);
+            } catch (e) {
+                result.innerHTML = statusBox('err', '解析失败：' + esc(e.message));
+            }
+            return;
+        }
+        if (fileInput.files && fileInput.files.length > 0) {
+            var file = fileInput.files[0];
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    result.innerHTML = parseXML(ev.target.result);
+                } catch (e) {
+                    result.innerHTML = statusBox('err', '解析失败：' + esc(e.message));
+                }
+            };
+            reader.onerror = function() {
+                result.innerHTML = statusBox('err', '文件读取失败，请重试。');
+            };
+            reader.readAsText(file, 'UTF-8');
+            return;
+        }
+        result.innerHTML = statusBox('err', '请先上传 XML 文件或粘贴报告内容。');
+    });
+
+    // 选择文件后自动读取，截断显示提示信息
+    fileInput.addEventListener('change', function() {
+        if (fileInput.files && fileInput.files.length > 0) {
+            var file = fileInput.files[0];
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                document.getElementById('xml-text').value = ev.target.result.substring(0, 2000) + '…（已加载 ' + file.size + ' 字节，点击「解析报告」开始）';
+                // 保存全文
+                fileInput._fullText = ev.target.result;
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+    });
+})();
+</script>
+</body>
+</html>
