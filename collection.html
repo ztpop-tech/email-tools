@@ -113,6 +113,7 @@
             <li class="nav-li"><a href="/solution.html">解决方案</a></li>
             <li class="nav-li"><a href="/support.html">支持</a></li>
             <li class="nav-li"><a href="/kb/">知识库</a></li>
+                <li class="nav-li"><a href="/standards/">标准与工具</a></li>
             <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
             <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
                     <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
@@ -201,7 +202,28 @@
         <li><strong>MTA-STS 渐进启用</strong>：先用 testing 模式观察 TLS-RPT 报告，确认无兼容性问题后切 enforce。</li>
     </ul>
 
-    <h2>五、技术标准依据</h2>
+    
+    <h3>13. SPF 深度诊断工具（RFC 7208）</h3>
+    <p>输入域名或直接粘贴 SPF 记录，逐机制解析（ip4/ip6/include/mx/a/ptr/exists/redirect/all），精确统计 DNS 查询次数并与 RFC 7208 §4.6.4 的 10 次上限比对，识别 void lookup（include 指向无记录域名导致 permerror）、ptr 机制误用、ip4 段格式错误、all 终结符缺失与策略强度不足等问题，逐项给出修复建议。是 SPF 记录检查器的深度增强版。</p>
+    <span class="tag">RFC 7208</span><span class="tag">逐机制解析</span><span class="tag">void lookup 检测</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/spf-deep-diagnose.html">进入：SPF 深度诊断工具 →</a>
+
+    <h3>14. 邮箱地址语法验证器（RFC 5321/5322/6531）</h3>
+    <p>基于 RFC 5321（SMTP）、RFC 5322（消息格式）与 RFC 6531（SMTPUTF8）逐字符校验邮箱地址语法，覆盖点原子、引号字符串、IP 字面量域名（[IPv4]/[IPv6:...]）与国际化邮箱，定位违规字符位置并给出修复建议，支持批量验证。是注册表单校验、数据清洗与风控链路的语法层工具。</p>
+    <span class="tag">RFC 5321/5322/6531</span><span class="tag">SMTPUTF8</span><span class="tag">批量验证</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/email-syntax-validator.html">进入：邮箱地址语法验证器 →</a>
+
+    <h3>15. 一次性邮箱检测器（1600+ 黑名单）</h3>
+    <p>内置开源社区持续维护的一次性邮箱域名黑名单（GitHub martenson/disposable-email-domains，MIT 协议，1600+ 域名），输入邮箱地址即时本地比对，子域名与父域名逐级匹配，识别 Mailinator、10 Minute Mail、Guerrilla Mail 等临时邮箱服务。用于注册风控、会员体系与批量发件前的地址清洗。</p>
+    <span class="tag">临时邮箱识别</span><span class="tag">本地比对</span><span class="tag">批量检测</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/disposable-email-checker.html">进入：一次性邮箱检测器 →</a>
+
+    <h3>16. DMARC XML 报告解析器（RFC 7489）</h3>
+    <p>上传或粘贴 DMARC 聚合报告（RUA，RFC 7489 附录 C XML Schema）文件，浏览器端 DOMParser 解析为人类可读摘要：报告元数据（org_name/date_range/report_id）、发件域声明策略（p/sp/adkim/aspf/pct）、SPF/DKIM/DMARC 结果分布、按源 IP 聚合的认证通过率与认证失败样本明细，帮助快速定位「谁在伪造我的域名」与「哪个发件源拖累通过率」。</p>
+    <span class="tag">RFC 7489</span><span class="tag">RUA 聚合报告</span><span class="tag">本地解析</span><span class="tag">免费</span>
+    <br><a class="tool-link" href="/tools/dmarc-xml-parser.html">进入：DMARC XML 报告解析器 →</a>
+
+<h2>五、技术标准依据</h2>
     <p>本工具集所有功能均以 IETF RFC 为唯一技术依据，不做任何私有扩展：</p>
     <div class="ref-block">
         <h3>参考文献</h3>
@@ -217,7 +239,35 @@
             <li>RFC 6698 — The DNS-Based Authentication of Named Entities (DANE) TLSA</li>
             <li>RFC 1035 — Domain Names — Implementation and Specification</li>
         </ol>
+        
+
+
+    <h2>六、权威外部工具推荐</h2>
+    <p>除本站自研工具外，以下权威外部工具可作为补充（均为邮件安全/投递领域公认工具，用于交叉验证与深度分析）：</p>
+    <div class="ref-block">
+        <h3>投递质量与评分</h3>
+        <ul>
+            <li><a href="https://www.mail-tester.com" rel="nofollow noopener" target="_blank">mail-tester.com</a> — 发送测试邮件到随机地址，1 分钟内返回 SpamAssassin 评分与 SPF/DKIM/DMARC 认证明细，满分 10 分。适合验证新域名/IP 的投递健康度。</li>
+        </ul>
+        <h3>DNS 与黑名单查询</h3>
+        <ul>
+            <li><a href="https://mxtoolbox.com" rel="nofollow noopener" target="_blank">MxToolbox</a> — MX 查询、反向解析、Open Relay 检测与 105 个 RBL 黑名单检查，邮件基础设施诊断的事实标准。</li>
+        </ul>
+        <h3>DMARC 聚合报告与域健康</h3>
+        <ul>
+            <li><a href="https://easydmarc.com/tools/" rel="nofollow noopener" target="_blank">EasyDMARC Tools</a> — 免费 SPF/DKIM/DMARC 检查器与域名健康报告，输出修复建议。</li>
+            <li><a href="https://powerdmarc.com" rel="nofollow noopener" target="_blank">PowerDMARC</a> — SPF 检查器可检测 DNS 查询次数超限、void lookup、PTR 机制误用等深度问题，与本站 SPF 深度诊断工具互为印证。</li>
+            <li><a href="https://dmarcian.com" rel="nofollow noopener" target="_blank">dmarcian</a> — DMARC 生态权威工具，含 DMARC 检查器与报告解析服务。</li>
+        </ul>
+        <h3>邮件加密与 TLS</h3>
+        <ul>
+            <li><a href="https://www.checktls.com" rel="nofollow noopener" target="_blank">CheckTLS</a> — 邮件服务器加密与认证（STARTTLS/DANE/MTA-STS）测试权威，输出详细握手日志。</li>
+        </ul>
+        <p style="margin-top:12px;font-size:14px;color:#888">说明：外部工具仅供交叉验证与深度分析，本站对第三方服务可用性不作保证；本站所有工具均为纯前端实现，输入数据不离开浏览器。</p>
     </div>
+
+</div>
+</div></div>
 
     <p style="margin-top:24px;font-size:14px;color:#888">每个工具的详细使用方法与背后的协议原理，请参阅 <a href="/kb/">ztpop.net 邮件技术知识库</a>；工具入口导航见 <a href="/tools/index.html">工具箱首页</a>。</p>
 </div>
