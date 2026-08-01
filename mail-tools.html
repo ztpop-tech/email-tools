@@ -154,6 +154,7 @@
                 <li class="nav-li"><a href="/solution.html">解决方案</a></li>
                 <li class="nav-li"><a href="/support.html">支持</a></li>
                 <li class="nav-li"><a href="/kb/">知识库</a></li>
+                <li class="nav-li"><a href="/standards/">标准与工具</a></li>
                 <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
                 <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
                 <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
@@ -195,7 +196,7 @@
 </div>
 
 <!-- TOOL 2: 邮件头解析器 -->
-<div id="tab-headerparser" class="tool-content active">
+<div id="tab-headerparser" class="tool-content active"><a id="header-analyzer"></a>
  <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">📧 邮件头解析器</h2>
  <p style="color:#888;font-size:14px;margin-bottom:16px;">粘贴邮件原始头，解析 Received 跳转链、Authentication-Results、DKIM-Signature 和 ARC 信息</p>
  <textarea id="hdr-input" class="tool-ta" placeholder="在此粘贴完整的邮件原始头（Received、DKIM-Signature、Authentication-Results 等头字段）..."></textarea>
@@ -343,5 +344,456 @@
     </div>
 </div>
 
+
+<script>
+// mail-tools.html 功能脚本 — 为 10 个 tab 提供完整 JS 逻辑
+// 设计：与 spf-checker.html 等工具页一致的 IIFE + DoH(dns.alidns.com) 模式
+(function() {
+    'use strict';
+
+    // ========== 通用工具 ==========
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+    function dohQuery(qname, type, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=' + type;
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+    function getTxtRecords(j) {
+        var txts = [];
+        (j.Answer || []).forEach(function(a) { if (a.type === 16) txts.push(a.data); });
+        return txts;
+    }
+
+    // ========== Tab 切换 ==========
+    var tabs = document.querySelectorAll('.tool-tab');
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tool-content').forEach(function(c) { c.classList.remove('active'); });
+            tab.classList.add('active');
+            var target = document.getElementById('tab-' + tab.getAttribute('data-tab'));
+            if (target) target.classList.add('active');
+        });
+    });
+
+    // ========== 邮件头解析 ==========
+    window.parseEmailHeaders = function() {
+        var input = document.getElementById('hdr-input').value;
+        var result = document.getElementById('hdr-result');
+        if (!input.trim()) { result.innerHTML = statusBox('err', '请先粘贴邮件原始头。'); return; }
+        var html = '';
+        // Received 链
+        var received = [];
+        var lines = input.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            if (/^Received:/i.test(line) || (/^\s+(by|from|with|for|via|id|using)/i.test(line) && received.length)) {
+                received.push(line.trim());
+            }
+        }
+        if (received.length) {
+            html += '<h3 style="font-size:15px;color:#003366;margin:16px 0 8px">📬 Received 投递链</h3>';
+            received.forEach(function(r, idx) {
+                html += '<div style="padding:8px 12px;border-left:3px solid #003366;background:#f5f7fa;border-radius:0 6px 6px 0;margin-bottom:6px;font-size:13px;line-height:1.6">' +
+                    '<div style="color:#888;font-size:12px">#' + (received.length - idx) + '</div>' + esc(r) + '</div>';
+            });
+        }
+        // Authentication-Results
+        var authMatch = input.match(/Authentication-Results:[\s\S]*?(?=\n\S|$)/i);
+        if (authMatch) {
+            html += '<h3 style="font-size:15px;color:#003366;margin:16px 0 8px">🔐 Authentication-Results 认证结果</h3>';
+            var ar = authMatch[0].replace(/^Authentication-Results:\s*/i, '').trim();
+            var parts = ar.split(/\s+/);
+            var spf = '', dkim = '', dmarc = '', arc = '';
+            for (var j = 0; j < parts.length; j++) {
+                var p = parts[j];
+                if (/^spf=/i.test(p)) spf = p.split('=')[1];
+                else if (/^dkim=/i.test(p)) dkim = p.split('=')[1];
+                else if (/^dmarc=/i.test(p)) dmarc = p.split('=')[1];
+                else if (/^arc=/i.test(p)) arc = p.split('=')[1];
+            }
+            function resultTag(k, v) {
+                if (!v) return '';
+                var cls = /pass/i.test(v) ? '#e8f5e9;color:#2e7d32' : /fail|permerror|temperror/i.test(v) ? '#fdecea;color:#a94442' : '#fff8e1;color:#8a6d3b';
+                return '<span style="display:inline-block;padding:3px 10px;border-radius:12px;background:' + cls + ';font-size:12.5px;margin:2px 4px 2px 0;font-family:monospace">' + esc(k) + '=' + esc(v) + '</span>';
+            }
+            html += '<div style="display:flex;flex-wrap:wrap;gap:4px">' + resultTag('spf', spf) + resultTag('dkim', dkim) + resultTag('dmarc', dmarc) + resultTag('arc', arc) + '</div>';
+        }
+        // DKIM-Signature
+        var dkimSig = input.match(/DKIM-Signature:[\s\S]*?(?=\n\S|$)/i);
+        if (dkimSig) {
+            html += '<h3 style="font-size:15px;color:#003366;margin:16px 0 8px">🔑 DKIM 签名</h3>';
+            html += '<div style="padding:10px 12px;background:#f5f7fa;border-radius:6px;font-family:monospace;font-size:12.5px;line-height:1.6;word-break:break-all">' + esc(dkimSig[0]) + '</div>';
+        }
+        // 时间线
+        var dates = input.match(/Date:\s*(.+)/i);
+        if (dates) {
+            html += '<p style="font-size:13px;color:#666;margin-top:12px">📅 邮件日期：' + esc(dates[1].trim()) + '</p>';
+        }
+        if (!html) html = statusBox('warn', '未识别到标准邮件头字段。请粘贴完整的原始邮件头（从邮件客户端「显示原始内容」复制）。');
+        result.innerHTML = html;
+    };
+
+    // ========== DNSBL 黑名单查询 ==========
+    window.checkDNSBL = function() {
+        var input = document.getElementById('dnsbl-input').value.trim();
+        var result = document.getElementById('dnsbl-result');
+        if (!input) { result.innerHTML = statusBox('err', '请输入 IP 地址或域名。'); return; }
+        var lists = [];
+        document.querySelectorAll('#dnsbl-checkboxes input[type=checkbox]').forEach(function(c) {
+            if (c.checked) lists.push(c.getAttribute('data-list'));
+        });
+        if (!lists.length) { result.innerHTML = statusBox('err', '请至少选择一个黑名单。'); return; }
+        var isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(input);
+        var base;
+        if (isIP) base = input.split('.').reverse().join('.');
+        else base = input;
+        document.getElementById('dnsbl-loading').style.display = 'block';
+        result.innerHTML = '';
+        var done = 0;
+        lists.forEach(function(list) {
+            var qname = base + '.' + list;
+            dohQuery(qname, 'A', function(err, j) {
+                done++;
+                var listed = false, aRecord = '';
+                if (!err && j && j.Answer && j.Answer.length) {
+                    listed = true;
+                    aRecord = j.Answer[0].data;
+                }
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-radius:6px;margin-bottom:6px;font-size:13.5px;' +
+                    (listed ? 'background:#fdecea;border:1px solid #f5c6cb' : 'background:#f0fdf4;border:1px solid #c8e6c9');
+                row.innerHTML = '<span>' + esc(list) + '</span>' +
+                    (listed ? '<span style="color:#a94442;font-weight:600">🔴 已列入（' + esc(aRecord) + '）</span>' : '<span style="color:#2e7d32">🟢 未列入</span>');
+                result.appendChild(row);
+                if (done === lists.length) {
+                    document.getElementById('dnsbl-loading').style.display = 'none';
+                    if (!result.querySelector('.dnsbl-summary')) {
+                        var listedCount = result.querySelectorAll('span[style*="a94442"]').length;
+                        var sum = document.createElement('div');
+                        sum.className = 'dnsbl-summary';
+                        sum.style.cssText = 'margin-top:10px;font-size:13.5px;color:#666';
+                        sum.innerHTML = listedCount ? statusBox('warn', '检测到 ' + listedCount + ' 个黑名单收录该地址。' +
+                            '需登录对应黑名单网站提交移除申请（delist），通常 24-72 小时生效。') :
+                            statusBox('pass', '所选 ' + lists.length + ' 个黑名单均未收录该地址。');
+                        result.appendChild(sum);
+                    }
+                }
+            });
+        });
+    };
+
+    // ========== SMTP 错误码速查 ==========
+    var SMTP_CODES = [
+        { code: '220', cls: '2xx', desc: '服务就绪', detail: 'SMTP 服务器就绪，可开始会话。' },
+        { code: '221', cls: '2xx', desc: '服务关闭传输通道', detail: '服务器即将关闭连接。' },
+        { code: '235', cls: '2xx', desc: '认证成功', detail: 'SMTP AUTH 认证通过。' },
+        { code: '250', cls: '2xx', desc: '请求完成', detail: '请求的命令已完成（如 MAIL FROM/RCPT TO 接受、DATA 后邮件已接收）。' },
+        { code: '251', cls: '2xx', desc: '用户非本地，将转发', detail: '收件人不在本服务器，邮件将被转发。' },
+        { code: '252', cls: '2xx', desc: '无法验证用户，但接受投递', detail: '服务器无法确认收件人存在，但会尝试投递。' },
+        { code: '421', cls: '4xx', desc: '服务不可用，关闭传输通道', detail: '服务器过载或维护中。稍后重试。' },
+        { code: '450', cls: '4xx', desc: '邮箱忙，暂时不可用', detail: '收件人邮箱被锁定或繁忙。稍后重试。' },
+        { code: '451', cls: '4xx', desc: '本地处理错误，放弃请求', detail: '服务器临时错误（如资源不足）。稍后重试。' },
+        { code: '452', cls: '4xx', desc: '存储空间不足', detail: '收件人邮箱配额已满或服务器磁盘不足。' },
+        { code: '455', cls: '4xx', desc: '服务器暂时无法提供参数', detail: '参数暂时无法处理。' },
+        { code: '500', cls: '5xx', desc: '语法错误，命令无法识别', detail: '命令格式错误或不存在。检查 SMTP 客户端配置。' },
+        { code: '501', cls: '5xx', desc: '参数语法错误', detail: '命令参数格式错误（如邮箱地址非法）。' },
+        { code: '502', cls: '5xx', desc: '命令未实现', detail: '服务器不支持该命令。' },
+        { code: '503', cls: '5xx', desc: '命令顺序错误', detail: '命令发送顺序不正确（如未先 HELO 就 MAIL FROM）。' },
+        { code: '504', cls: '5xx', desc: '命令参数未实现', detail: '参数不被支持。' },
+        { code: '521', cls: '5xx', desc: '域不接受邮件', detail: '服务器明确不接受该域名的邮件。' },
+        { code: '530', cls: '5xx', desc: '需要认证', detail: '必须先 SMTP AUTH 认证才能发信（开放中继防护）。检查客户端「发信认证」设置。' },
+        { code: '535', cls: '5xx', desc: '认证失败', detail: '用户名或密码错误。检查发信账号凭据。' },
+        { code: '550', cls: '5xx', desc: '邮箱不可用', detail: '收件人不存在、被拒收或 SPF/DKIM/DMARC 校验失败。最常见的退信码。' },
+        { code: '551', cls: '5xx', desc: '用户非本地，请尝试其他路径', detail: '收件人不在本服务器，需改用其他路由。' },
+        { code: '552', cls: '5xx', desc: '超出存储配额', detail: '收件人邮箱已满，邮件被拒收。' },
+        { code: '553', cls: '5xx', desc: '邮箱名非法', detail: '邮箱地址格式非法或被禁止。' },
+        { code: '554', cls: '5xx', desc: '事务失败', detail: '常见于反垃圾策略拒绝（如 PTR 缺失、IP 信誉差、DMARC 策略 reject）。需检查发信 IP 信誉与认证配置。' },
+        { code: '555', cls: '5xx', desc: 'MAIL FROM/RCPT TO 参数无法识别', detail: '参数不被识别。' }
+    ];
+
+    function renderSMTP(filter, kw) {
+        var el = document.getElementById('smtp-result');
+        var list = SMTP_CODES.filter(function(c) {
+            var okF = filter === 'all' || c.cls === filter;
+            var okK = !kw || c.code.indexOf(kw) === 0 || c.desc.indexOf(kw) >= 0 || c.detail.indexOf(kw) >= 0 || (c.code + ' ' + c.desc).indexOf(kw) >= 0;
+            return okF && okK;
+        });
+        if (!list.length) { el.innerHTML = statusBox('warn', '未找到匹配的错误码。'); return; }
+        var html = '<div style="font-size:12.5px;color:#888;margin-bottom:8px">共 ' + list.length + ' 条</div>';
+        list.forEach(function(c) {
+            var color = c.cls === '4xx' ? '#8a6d3b' : '#a94442';
+            html += '<div style="display:flex;gap:12px;padding:10px 14px;border-left:3px solid ' + color + ';background:#f8f9fb;border-radius:0 6px 6px 0;margin-bottom:8px;align-items:flex-start">' +
+                '<span style="font-family:monospace;font-weight:600;color:' + color + ';white-space:nowrap">' + c.code + '</span>' +
+                '<div><div style="font-weight:600;font-size:14px">' + esc(c.desc) + '</div>' +
+                '<div style="font-size:13px;color:#666;margin-top:2px">' + esc(c.detail) + '</div></div></div>';
+        });
+        el.innerHTML = html;
+    }
+    window.filterSMTP = function() {
+        renderSMTP(document.querySelector('.smtp-filter .active') ? document.querySelector('.smtp-filter .active').textContent === '4xx' ? '4xx' : document.querySelector('.smtp-filter .active').textContent === '5xx' ? '5xx' : 'all' : 'all',
+            document.getElementById('smtp-input').value.trim());
+    };
+    window.setSMPTFilter = function(f, btn) {
+        document.querySelectorAll('.smtp-filter button').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        renderSMTP(f, document.getElementById('smtp-input').value.trim());
+    };
+
+    // ========== SPF 深度校验 ==========
+    window.checkSPF = function() {
+        var domain = document.getElementById('spf-input').value.trim().toLowerCase();
+        var result = document.getElementById('spf-result');
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', '请输入有效域名，如 example.com'); return;
+        }
+        document.getElementById('spf-loading').style.display = 'block';
+        result.innerHTML = '';
+        dohQuery(domain, 'TXT', function(err, j) {
+            document.getElementById('spf-loading').style.display = 'none';
+            if (err) { result.innerHTML = statusBox('err', 'DNS 查询失败：' + esc(err.message)); return; }
+            var txts = getTxtRecords(j);
+            var spf = null;
+            txts.forEach(function(t) { if (/^v=spf1\s/i.test(t)) spf = t; });
+            if (!spf) {
+                result.innerHTML = statusBox('warn', '未发现 SPF 记录（' + esc(domain) + '）。建议配置 SPF 以降低被伪造风险。');
+                return;
+            }
+            var mechs = spf.split(/\s+/).slice(1);
+            var lookupCount = 0;
+            var html = '<div style="padding:12px 14px;background:#f0f4f8;border-radius:6px;font-family:monospace;font-size:13px;word-break:break-all;margin-bottom:12px">' + esc(spf) + '</div>';
+            html += '<h3 style="font-size:14px;color:#003366;margin:12px 0 8px">机制解析</h3>';
+            mechs.forEach(function(m) {
+                var qual = m[0];
+                var body = qual === '+' || qual === '-' || qual === '~' || qual === '?' ? m.slice(1) : m;
+                var kind = body.split(':')[0];
+                var val = body.indexOf(':') >= 0 ? body.split(':').slice(1).join(':') : '';
+                var note = '';
+                var cls = 'background:#f5f7fa;border-left:3px solid #d0d5dd';
+                if (kind === 'include' || kind === 'redirect') { lookupCount += 1; note = '（计入 DNS 查询）'; }
+                if (kind === 'ptr') { note = '⚠️ ptr 机制已被 RFC 7208 强烈不推荐使用'; cls = 'background:#fff8e1;border-left:3px solid #f59e0b'; }
+                if (kind === 'all' && qual !== '-') { note = '⚠️ 建议使用 -all 强化策略'; cls = 'background:#fff8e1;border-left:3px solid #f59e0b'; }
+                if (kind === 'a' || kind === 'mx') lookupCount += 1;
+                html += '<div style="padding:8px 12px;' + cls + ';border-radius:0 6px 6px 0;margin-bottom:6px;font-size:13.5px">' +
+                    '<span style="font-family:monospace;font-weight:600">' + esc(m) + '</span> ' + esc(note) + '</div>';
+            });
+            var limit = lookupCount > 10;
+            html += '<div style="margin-top:12px">' + statusBox(limit ? 'err' : 'pass',
+                '估算 DNS 查询次数：' + lookupCount + ' 次（RFC 7208 §4.6.4 上限 10 次）' + (limit ? ' — 已超限！include/redirect 链过长会导致 SPF permerror，接收方将视为 SPF fail。' : ' — 合规。')) + '</div>';
+            result.innerHTML = html;
+        });
+    };
+
+    // ========== DKIM 检查 ==========
+    window.checkDKIM = function() {
+        var selector = document.getElementById('dkim-selector').value.trim().toLowerCase() || 'default';
+        var domain = document.getElementById('dkim-domain').value.trim().toLowerCase();
+        var result = document.getElementById('dkim-result');
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', '请输入有效域名。'); return;
+        }
+        document.getElementById('dkim-loading').style.display = 'block';
+        result.innerHTML = '';
+        dohQuery(selector + '._domainkey.' + domain, 'TXT', function(err, j) {
+            document.getElementById('dkim-loading').style.display = 'none';
+            if (err) { result.innerHTML = statusBox('err', 'DNS 查询失败：' + esc(err.message)); return; }
+            var txts = getTxtRecords(j);
+            if (!txts.length) {
+                result.innerHTML = statusBox('warn', '未找到 DKIM 记录：' + esc(selector + '._domainkey.' + domain) + '。' +
+                    '检查 selector 是否正确，或 DNS 是否已生效（TTL 等待）。');
+                return;
+            }
+            var html = '<div style="padding:12px 14px;background:#f0f4f8;border-radius:6px;font-family:monospace;font-size:12.5px;word-break:break-all;margin-bottom:12px">' + esc(txts[0]) + '</div>';
+            // 解析 k= 与 p=
+            var kMatch = txts[0].match(/\bk=([a-z0-9]+)/i);
+            var pMatch = txts[0].match(/\bp=([A-Za-z0-9+/=]+)/i);
+            if (kMatch) html += '<p style="font-size:13.5px">密钥类型：<code>' + esc(kMatch[1]) + '</code></p>';
+            if (pMatch) {
+                var keyLen = 0;
+                try {
+                    var der = atob(pMatch[1].replace(/-/g, '+').replace(/_/g, '/'));
+                    // 粗略估算：Base64 长度 * 3/4（公钥位长约 2048/3072）
+                    keyLen = Math.round(der.length * 0.75);
+                } catch (e) {}
+                html += '<p style="font-size:13.5px">公钥长度：约 ' + keyLen + ' 位' + (keyLen >= 2048 ? '（✅ 推荐 ≥2048）' : '（⚠️ 建议 ≥2048）') + '</p>';
+            }
+            result.innerHTML = html;
+        });
+    };
+
+    // ========== DMARC 分析 ==========
+    window.checkDMARC = function() {
+        var domain = document.getElementById('dmarc-input').value.trim().toLowerCase();
+        var result = document.getElementById('dmarc-result');
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', '请输入有效域名。'); return;
+        }
+        document.getElementById('dmarc-loading').style.display = 'block';
+        result.innerHTML = '';
+        dohQuery('_dmarc.' + domain, 'TXT', function(err, j) {
+            document.getElementById('dmarc-loading').style.display = 'none';
+            if (err) { result.innerHTML = statusBox('err', 'DNS 查询失败：' + esc(err.message)); return; }
+            var txts = getTxtRecords(j);
+            var dmarc = null;
+            txts.forEach(function(t) { if (/^v=DMARC1/i.test(t)) dmarc = t; });
+            if (!dmarc) {
+                result.innerHTML = statusBox('warn', '未配置 DMARC 记录（_dmarc.' + esc(domain) + '）。' +
+                    '建议先发布 p=none 监控，逐步收紧到 quarantine/reject。');
+                return;
+            }
+            var html = '<div style="padding:12px 14px;background:#f0f4f8;border-radius:6px;font-family:monospace;font-size:13px;word-break:break-all;margin-bottom:12px">' + esc(dmarc) + '</div>';
+            var p = (dmarc.match(/\bp=(\w+)/i) || [])[1] || '未知';
+            var sp = (dmarc.match(/\bsp=(\w+)/i) || [])[1];
+            var pct = (dmarc.match(/\bpct=(\d+)/i) || [])[1] || '100';
+            var pColor = p === 'reject' ? '#2e7d32' : p === 'quarantine' ? '#8a6d3b' : p === 'none' ? '#a94442' : '#666';
+            var pNote = p === 'reject' ? '✅ 最强防护：失败邮件直接拒收' : p === 'quarantine' ? '⚠️ 中等防护：失败邮件进垃圾箱' : p === 'none' ? '❌ 仅监控：失败邮件照常投递' : '';
+            html += '<div style="display:flex;gap:16px;flex-wrap:wrap;margin:12px 0">' +
+                '<div style="padding:10px 16px;background:#f5f7fa;border-radius:8px"><div style="font-size:12px;color:#888">策略 p=</div><div style="font-size:18px;font-weight:700;color:' + pColor + '">' + esc(p) + '</div></div>' +
+                (sp ? '<div style="padding:10px 16px;background:#f5f7fa;border-radius:8px"><div style="font-size:12px;color:#888">子域 sp=</div><div style="font-size:18px;font-weight:700;color:#666">' + esc(sp) + '</div></div>' : '') +
+                '<div style="padding:10px 16px;background:#f5f7fa;border-radius:8px"><div style="font-size:12px;color:#888">采样 pct=</div><div style="font-size:18px;font-weight:700;color:#666">' + esc(pct) + '%</div></div></div>';
+            html += '<p style="font-size:13.5px">' + pNote + '</p>';
+            result.innerHTML = html;
+        });
+    };
+
+    // ========== Base64 / QP ==========
+    var b64Mode = 'Base64编码';
+    window.setB64Mode = function(mode, btn) {
+        b64Mode = mode;
+        document.querySelectorAll('.ctrl-group .btn-sm').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        // 实时转换
+        var v = document.getElementById('b64-input').value;
+        if (v) doB64();
+    };
+    function doB64() {
+        var input = document.getElementById('b64-input').value;
+        var out = document.getElementById('b64-output');
+        try {
+            if (b64Mode === 'Base64编码') {
+                out.value = btoa(unescape(encodeURIComponent(input)));
+            } else if (b64Mode === 'Base64解码') {
+                out.value = decodeURIComponent(escape(atob(input.trim())));
+            } else if (b64Mode === 'QP编码') {
+                out.value = encodeURIComponent(input).replace(/%/g, '=').toUpperCase();
+            } else {
+                out.value = decodeURIComponent(input.trim().replace(/=/g, '%'));
+            }
+        } catch (e) {
+            out.value = '转换失败：' + e.message;
+        }
+    }
+    document.getElementById('b64-input').addEventListener('input', function() { if (this.value) doB64(); });
+    window.copyB64Output = function() {
+        var out = document.getElementById('b64-output');
+        out.select();
+        try { document.execCommand('copy'); } catch (e) {}
+    };
+
+    // ========== CIDR 计算 ==========
+    window.calcCIDR = function() {
+        var input = document.getElementById('cidr-input').value.trim();
+        var result = document.getElementById('cidr-result');
+        if (!input) { result.innerHTML = statusBox('err', '请输入 CIDR 或 IP 范围。'); return; }
+        function ipToLong(ip) {
+            var p = ip.split('.').map(Number);
+            return ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]) >>> 0;
+        }
+        function longToIp(l) {
+            return [(l >>> 24) & 255, (l >>> 16) & 255, (l >>> 8) & 255, l & 255].join('.');
+        }
+        var html = '';
+        // 处理 CIDR 列表（如 10.0.0.0/24,10.0.0.128/25）
+        var cidrs = input.split(/[,，\s]+/).filter(function(s) { return s; });
+        var merged = [];
+        cidrs.forEach(function(c) {
+            var m = c.match(/^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/);
+            if (m) {
+                var ip = ipToLong(m[1]);
+                var p = parseInt(m[2], 10);
+                if (p < 0 || p > 32) { result.innerHTML = statusBox('err', '无效前缀：' + esc(c)); return; }
+                var mask = p === 0 ? 0 : (0xffffffff << (32 - p)) >>> 0;
+                var net = (ip & mask) >>> 0;
+                merged.push({ start: net, end: (net | (~mask >>> 0)) >>> 0, prefix: p });
+            } else {
+                var range = c.match(/^(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+\.\d+\.\d+)$/);
+                if (range) {
+                    merged.push({ start: ipToLong(range[1]), end: ipToLong(range[2]), prefix: null });
+                }
+            }
+        });
+        if (!merged.length) { result.innerHTML = statusBox('err', '无法解析输入。支持格式：192.168.0.0/24 或 10.0.0.0-10.0.0.255。'); return; }
+        // 合并重叠
+        merged.sort(function(a, b) { return a.start - b.start; });
+        var out = [];
+        merged.forEach(function(c) {
+            if (!out.length || c.start > out[out.length - 1].end + 1) out.push(c);
+            else out[out.length - 1].end = Math.max(out[out.length - 1].end, c.end);
+        });
+        html += '<h3 style="font-size:14px;color:#003366;margin:0 0 8px">计算结果</h3>';
+        out.forEach(function(c) {
+            var hosts = c.end - c.start + 1;
+            var prefix = c.prefix !== null ? c.prefix : (32 - Math.log2(hosts));
+            html += '<div style="padding:8px 12px;background:#f5f7fa;border-radius:6px;margin-bottom:6px;font-size:13.5px">' +
+                '<code>' + esc(longToIp(c.start)) + '</code> ~ <code>' + esc(longToIp(c.end)) + '</code>' +
+                ' ｜ 主机数 ' + hosts.toLocaleString() + ' ｜ <code>' + esc(longToIp(c.start)) + '/' + prefix + '</code></div>';
+        });
+        result.innerHTML = html;
+    };
+
+    // ========== Email 语法验证 ==========
+    window.checkEmailSyntax = function() {
+        var input = document.getElementById('emailcheck-input').value.trim();
+        var result = document.getElementById('emailcheck-result');
+        if (!input) { result.innerHTML = statusBox('err', '请输入邮箱地址。'); return; }
+        // RFC 5321 邮箱 = local@domain，支持引号字符串与 IP 字面量
+        var issues = [];
+        var local = '', domain = '';
+        var at = input.lastIndexOf('@');
+        if (at <= 0) {
+            issues.push('缺少 @ 分隔符');
+            local = input;
+        } else {
+            local = input.slice(0, at);
+            domain = input.slice(at + 1);
+        }
+        if (local.length > 64) issues.push('本地部分超过 64 字符（RFC 5321 §4.5.3.1.1）');
+        if (domain.length > 255) issues.push('域名部分超过 255 字符');
+        var isIP = /^\[(\d{1,3}\.){3}\d{1,3}\]$/.test(domain) || /^\[IPv6:[\da-fA-F:]+\]$/.test(domain);
+        if (!isIP) {
+            if (!/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/i.test(domain)) issues.push('域名含非法字符');
+            if (!domain.includes('.')) issues.push('域名缺少顶级域（如 .com）');
+        }
+        var quoted = local.startsWith('"') && local.endsWith('"');
+        if (!quoted) {
+            if (!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(local)) issues.push('本地部分含非法字符（RFC 5321 点原子字符集）');
+            if (local.startsWith('.') || local.endsWith('.')) issues.push('本地部分不能以点开头或结尾');
+            if (local.includes('..')) issues.push('本地部分不能有连续点');
+        }
+        var addr = input.split('@').slice(1).join('@');
+        if (issues.length) {
+            result.innerHTML = statusBox('err', '❌ 地址不规范：<code>' + esc(input) + '</code>') +
+                '<ul style="font-size:13.5px;color:#a94442;margin:8px 0 0 20px">' + issues.map(function(i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>';
+        } else {
+            result.innerHTML = statusBox('pass', '✅ 地址语法合规：<code>' + esc(input) + '</code>（符合 RFC 5321/5322 语法规则）') +
+                '<p style="font-size:13px;color:#666;margin-top:8px">注：语法合法不代表邮箱真实存在，投递前建议配合 MX 查询与退信验证。</p>';
+        }
+    };
+
+    // 初始化 SMTP 列表
+    if (document.getElementById('smtp-result')) renderSMTP('all', '');
+})();
+
+</script>
 </body>
 </html>
