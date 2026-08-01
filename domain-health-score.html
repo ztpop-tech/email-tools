@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>域名健康评分 — 邮件安全 8 项体检 · ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="域名健康评分 — 邮件安全 8 项体检 · ztpop.net">
+<meta property="og:description" content="免费在线域名健康评分工具：8 项检查（SPF/DKIM/DMARC/MTA-STS/TLS-RPT/BIMI/MX/黑名单）聚合评分，输出百分制健康分与 A-F 等级，逐项解读配置状态并给出修复建议。基于 RFC 7208/6376/7489/8461/8460/1035 实现。浏览器端运行，不上传数据。">
+<meta name="description" content="免费在线域名健康评分工具：8 项检查（SPF/DKIM/DMARC/MTA-STS/TLS-RPT/BIMI/MX/黑名单）聚合评分，输出百分制健康分与 A-F 等级，逐项解读配置状态并给出修复建议。基于 RFC 7208/6376/7489/8461/8460/1035 实现。浏览器端运行，不上传数据。">
+<link rel="canonical" href="https://www.ztpop.net/tools/domain-health-score.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"域名健康评分"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "域名健康评分", "url": "https://www.ztpop.net/tools/domain-health-score.html", "applicationCategory": "SecurityApplication", "operatingSystem": "Web", "description": "免费在线域名健康评分工具：8 项检查（SPF/DKIM/DMARC/MTA-STS/TLS-RPT/BIMI/MX/黑名单）聚合评分，输出百分制健康分与 A-F 等级，逐项解读配置状态并给出修复建议。浏览器端运行，不上传数据。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "域名健康评分包含哪些检查项？", "acceptedAnswer": {"@type": "Answer", "text": "共 8 项，每项 12.5 分：SPF（RFC 7208 发信源授权）、DKIM（RFC 6376 邮件签名）、DMARC（RFC 7489 处置策略）、MTA-STS（RFC 8461 强制 TLS 传输）、TLS-RPT（RFC 8460 传输失败报告）、BIMI（品牌标识指示）、MX（邮件交换记录）、黑名单（7 个主流 DNSBL 收录状态）。总分 100 分，对应 A-F 六个等级。"}}, {"@type": "Question", "name": "多少分算健康？", "acceptedAnswer": {"@type": "Answer", "text": "90 分以上为 A（优秀，接近最佳实践）；75-89 为 B（良好，个别项待完善）；60-74 为 C（一般，建议补齐缺失项）；40-59 为 D（较差，存在明显风险）；40 分以下为 F（危险，域名极易被伪造或投递严重受损）。"}}, {"@type": "Question", "name": "域名被列入黑名单有什么影响？", "acceptedAnswer": {"@type": "Answer", "text": "若域名或发信 IP 被 DNSBL（如 Spamhaus ZEN/DBL、Barracuda、SpamCop）收录，主流邮箱服务商会拒绝接收或隔离您的邮件，导致投递率骤降。需向对应黑名单机构提交移除申请，并排查被投诉/垃圾邮件发送的原因。"}}, {"@type": "Question", "name": "MTA-STS 和 TLS-RPT 是什么？", "acceptedAnswer": {"@type": "Answer", "text": "MTA-STS（RFC 8461）通过 _mta-sts.域名 的 TXT 记录声明强制使用 TLS 传输，防降级攻击；TLS-RPT（RFC 8460）通过 _smtp._tls.域名 的 TXT 记录指定传输失败报告的接收地址，两者配合构成邮件传输层的强安全闭环。"}}, {"@type": "Question", "name": "DKIM 如何检查？", "acceptedAnswer": {"@type": "Answer", "text": "DKIM 记录位于 选择器._domainkey.域名，选择器由发信方自定（如 default、selector1、dkim、mail 等），无法枚举。本工具检查常见默认选择器组合，若均未找到会提示您需要确认发信服务商实际使用的选择器（如 Google 用 google、Microsoft 用 selector1/selector2）。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
+                <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">域名健康评分</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · 邮件安全 8 项体检 · 浏览器端运行，不上传数据</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">域名健康度直接决定邮件投递率与品牌可信度。本工具对域名执行 <strong>8 项安全检查</strong>：SPF（RFC 7208）、DKIM（RFC 6376）、DMARC（RFC 7489）、MTA-STS（RFC 8461）、TLS-RPT（RFC 8460）、BIMI、MX（RFC 1035）与主流黑名单收录状态，聚合输出 <strong>百分制健康分</strong>与 <strong>A-F 等级</strong>，逐项解读配置状态并给出修复建议。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">域名（Domain）</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">开始体检</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">输入域名（如 example.com），工具通过 DoH 执行 8 项检查并评分。黑名单项会解析 MX 指向的邮件服务器 IP 后查询 7 个主流 DNSBL。全部查询在浏览器端完成。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">评分标准</h2>
+                <table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+                    <tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">检查项</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">满分条件</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">部分得分</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">标准依据</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">SPF</td><td style="padding:8px 12px;border:1px solid #ddd;">存在且以 -all 结尾</td><td style="padding:8px 12px;border:1px solid #ddd;">~all=9；?all=4；无 all=6；缺失=0</td><td style="padding:8px 12px;border:1px solid #ddd;">RFC 7208</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">DKIM</td><td style="padding:8px 12px;border:1px solid #ddd;">常见选择器存在记录</td><td style="padding:8px 12px;border:1px solid #ddd;">未找到=0（提示确认实际选择器）</td><td style="padding:8px 12px;border:1px solid #ddd;">RFC 6376</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">DMARC</td><td style="padding:8px 12px;border:1px solid #ddd;">p=quarantine/reject</td><td style="padding:8px 12px;border:1px solid #ddd;">p=none=6；缺失=0</td><td style="padding:8px 12px;border:1px solid #ddd;">RFC 7489</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">MTA-STS</td><td style="padding:8px 12px;border:1px solid #ddd;">_mta-sts TXT 存在</td><td style="padding:8px 12px;border:1px solid #ddd;">缺失=0</td><td style="padding:8px 12px;border:1px solid #ddd;">RFC 8461</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">TLS-RPT</td><td style="padding:8px 12px;border:1px solid #ddd;">_smtp._tls TXT 存在</td><td style="padding:8px 12px;border:1px solid #ddd;">缺失=0</td><td style="padding:8px 12px;border:1px solid #ddd;">RFC 8460</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">BIMI</td><td style="padding:8px 12px;border:1px solid #ddd;">default._bimi TXT 存在</td><td style="padding:8px 12px;border:1px solid #ddd;">缺失=0（可选增强项）</td><td style="padding:8px 12px;border:1px solid #ddd;">BIMI 规范</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">MX</td><td style="padding:8px 12px;border:1px solid #ddd;">存在 MX 记录</td><td style="padding:8px 12px;border:1px solid #ddd;">缺失=0（无法收发邮件）</td><td style="padding:8px 12px;border:1px solid #ddd;">RFC 1035</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">黑名单</td><td style="padding:8px 12px;border:1px solid #ddd;">7 个 DNSBL 均未收录</td><td style="padding:8px 12px;border:1px solid #ddd;">每命中 1 个扣 4 分</td><td style="padding:8px 12px;border:1px solid #ddd;">Spamhaus/Barracuda 等</td></tr>
+                </table>
+                <p style="font-size:13px;color:#888;line-height:1.7;margin:8px 0 0">等级：A（90-100 优秀）/ B（75-89 良好）/ C（60-74 一般）/ D（40-59 较差）/ F（0-39 危险）。</p>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">输入域名点击「开始体检」。工具通过 DoH（RFC 8484）并行查询 8 类记录：SPF TXT、常见 DKIM 选择器（default/selector1/selector2/dkim/mail/s1/s2/k1/k2/google/20230601）、_dmarc DMARC、_mta-sts MTA-STS、_smtp._tls TLS-RPT、default._bimi BIMI、MX，并对 MX 指向的服务器 IP 查询 7 个 DNSBL（Spamhaus ZEN、Spamhaus DBL、Barracuda、SpamCop、SURBL、SORBS、CBL）。结果按 8 项评分汇总为百分制健康分与等级，附逐项解读与修复建议。</p>
+            </div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准与公开规范实现：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DNS 查询：RFC 8484（DNS Queries over HTTPS）、RFC 1035（DNS 协议）</li>
+                    <li>SPF：RFC 7208（Sender Policy Framework）</li>
+                    <li>DKIM：RFC 6376（DomainKeys Identified Mail）</li>
+                    <li>DMARC：RFC 7489（Domain-based Message Authentication, Reporting, and Conformance）</li>
+                    <li>MTA-STS：RFC 8461（SMTP MTA Strict Transport Security）</li>
+                    <li>TLS-RPT：RFC 8460（SMTP TLS Reporting）</li>
+                    <li>BIMI：AuthIndicators BIMI 规范（Brand Indicators for Message Identification）</li>
+                    <li>黑名单：Spamhaus ZEN/DBL、Barracuda Reputation、SpamCop、SURBL、SORBS、CBL 公开查询协议</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+<script>
+(function(){
+'use strict';
+var DOH = 'https://dns.alidns.com/resolve';
+var SELECTORS = ['default','selector1','selector2','dkim','mail','s1','s2','k1','k2','google','20230601'];
+var DNSBLS = [
+    {name:'Spamhaus ZEN', suffix:'zen.spamhaus.org'},
+    {name:'Spamhaus DBL', suffix:'dbl.spamhaus.org'},
+    {name:'Barracuda', suffix:'b.barracudacentral.org'},
+    {name:'SpamCop', suffix:'bl.spamcop.net'},
+    {name:'SURBL', suffix:'multi.surbl.org'},
+    {name:'SORBS', suffix:'dnsbl.sorbs.net'},
+    {name:'CBL', suffix:'cbl.abuseat.org'}
+];
+function dohQuery(name, type) {
+    return fetch(DOH + '?name=' + encodeURIComponent(name) + '&type=' + type, {
+        headers: { 'accept': 'application/dns-json' }
+    }).then(function(r){ return r.json(); }).catch(function(){ return null; });
+}
+function getTXT(name) {
+    return dohQuery(name, 16).then(function(j){
+        if (!j || j.Status !== 0) return [];
+        var out = [];
+        (j.Answer || []).forEach(function(a){
+            if (a.type === 16 && a.data) {
+                var t = a.data;
+                if (t.charAt(0) === '"' && t.charAt(t.length-1) === '"') t = t.slice(1, -1);
+                out.push(t);
+            }
+        });
+        return out;
+    });
+}
+function getMX(name) {
+    return dohQuery(name, 15).then(function(j){
+        if (!j || j.Status !== 0) return [];
+        var out = [];
+        (j.Answer || []).forEach(function(a){
+            if (a.type === 15 && a.exchange) out.push({pref: a.priority, host: a.exchange.replace(/\.$/,'')});
+        });
+        return out;
+    });
+}
+function getA(name) {
+    return dohQuery(name, 1).then(function(j){
+        if (!j || j.Status !== 0) return [];
+        var out = [];
+        (j.Answer || []).forEach(function(a){ if (a.type === 1 && a.data) out.push(a.data); });
+        return out;
+    });
+}
+function findSPF(txts) {
+    for (var i=0;i<txts.length;i++){ if (/^v=spf1\s/i.test(txts[i])) return txts[i]; }
+    return null;
+}
+function parseDMARC(rec) {
+    var r = { p: null, sp: null, pct: 100, rua: null };
+    if (!rec) return r;
+    var parts = rec.split(';');
+    parts.forEach(function(part){
+        var kv = part.trim().split('=', 2);
+        if (kv.length === 2) {
+            var k = kv[0].trim().toLowerCase();
+            var v = kv[1].trim();
+            if (k === 'p') r.p = v;
+            else if (k === 'sp') r.sp = v;
+            else if (k === 'pct') r.pct = parseInt(v, 10) || 100;
+            else if (k === 'rua') r.rua = v;
+        }
+    });
+    return r;
+}
+function spfEnd(spf) {
+    if (!spf) return null;
+    var m = spf.match(/([-~+?])all\s*$/i);
+    return m ? m[1].toLowerCase() : null;
+}
+function reverseIP(ip) {
+    return ip.split('.').reverse().join('.');
+}
+function checkDNSBL(ips) {
+    var promises = [];
+    var results = [];
+    ips.forEach(function(ip){
+        var rev = reverseIP(ip);
+        DNSBLS.forEach(function(bl){
+            promises.push(
+                dohQuery(rev + '.' + bl.suffix, 1).then(function(j){
+                    var hit = j && j.Status === 0 && j.Answer && j.Answer.length > 0;
+                    if (hit) results.push({ip: ip, bl: bl.name, detail: j.Answer[0].data});
+                })
+            );
+        });
+    });
+    return Promise.all(promises).then(function(){ return results; });
+}
+function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function grade(score) {
+    if (score >= 90) return {g:'A', c:'#28a745', t:'优秀', d:'接近最佳实践，继续保持并定期复查'};
+    if (score >= 75) return {g:'B', c:'#5cb85c', t:'良好', d:'个别项待完善，按建议补齐即可'};
+    if (score >= 60) return {g:'C', c:'#f0ad4e', t:'一般', d:'存在缺失项，建议尽快补齐'};
+    if (score >= 40) return {g:'D', c:'#e67e22', t:'较差', d:'存在明显风险，应立即修复'};
+    return {g:'F', c:'#c00', t:'危险', d:'域名极易被伪造或投递严重受损，需紧急处置'};
+}
+var btn = document.getElementById('check-btn');
+var input = document.getElementById('domain-input');
+var result = document.getElementById('result');
+btn.addEventListener('click', function(){ run(); });
+input.addEventListener('keydown', function(e){ if (e.key === 'Enter') run(); });
+function run() {
+    var domain = input.value.trim().toLowerCase();
+    if (!domain) { result.innerHTML = '<p style="color:#c00">请输入域名。</p>'; return; }
+    domain = domain.replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+    result.innerHTML = '<p style="color:#666">正在体检 <strong>' + esc(domain) + '</strong>（8 项检查 + 黑名单扫描）…</p>';
+
+    var checks = { spf: null, dkim: null, dmarc: null, mta: null, tlsrpt: null, bimi: null, mx: null };
+    var tasks = {
+        spf: getTXT(domain).then(function(t){ checks.spf = findSPF(t); }),
+        dmarc: getTXT('_dmarc.' + domain).then(function(t){
+            for (var i=0;i<t.length;i++){ if (/^v=DMARC1/i.test(t[i])) { checks.dmarc = t[i].replace(/^"|"$/g,''); break; } }
+        }),
+        mta: getTXT('_mta-sts.' + domain).then(function(t){
+            for (var i=0;i<t.length;i++){ if (/^v=STSv1/i.test(t[i])) { checks.mta = t[i].replace(/^"|"$/g,''); break; } }
+        }),
+        tlsrpt: getTXT('_smtp._tls.' + domain).then(function(t){
+            for (var i=0;i<t.length;i++){ if (/^v=TLSRPTv1/i.test(t[i])) { checks.tlsrpt = t[i].replace(/^"|"$/g,''); break; } }
+        }),
+        bimi: getTXT('default._bimi.' + domain).then(function(t){
+            for (var i=0;i<t.length;i++){ if (/^v=BIMI1/i.test(t[i])) { checks.bimi = t[i].replace(/^"|"$/g,''); break; } }
+        }),
+        mx: getMX(domain).then(function(m){ checks.mx = m; })
+    };
+
+    // DKIM：查常见选择器（并行的第一轮）
+    var dkimFound = null;
+    var dkimTask = Promise.all(SELECTORS.map(function(sel){
+        return getTXT(sel + '._domainkey.' + domain).then(function(t){
+            if (!dkimFound && t.length > 0) dkimFound = sel + '._domainkey.' + domain;
+        });
+    })).then(function(){ checks.dkim = dkimFound; });
+    tasks.dkim = dkimTask;
+
+    Promise.all([
+        Promise.all(Object.keys(tasks).map(function(k){ return tasks[k]; })),
+        dkimTask
+    ]).then(function(){
+        // 黑名单：取 MX host 的 A 记录（最多 2 个 host）
+        var mxHosts = (checks.mx || []).slice(0, 2).map(function(m){ return m.host; });
+        var ipsPromise;
+        if (mxHosts.length === 0) {
+            ipsPromise = getA(domain);
+        } else {
+            ipsPromise = Promise.all(mxHosts.map(function(h){ return getA(h); })).then(function(arr){
+                var seen = {}, out = [];
+                arr.forEach(function(ipList){
+                    ipList.forEach(function(ip){ if (!seen[ip]) { seen[ip] = 1; out.push(ip); } });
+                });
+                return out.slice(0, 3);
+            });
+        }
+        return ipsPromise.then(function(ips){ return checkDNSBL(ips).then(function(bl){ return {ips: ips, bl: bl}; }); });
+    }).then(function(blResult){
+        var score = 0;
+        var rows = [];
+        // SPF
+        if (checks.spf) {
+            var end = spfEnd(checks.spf);
+            var spfScore = end === '-' ? 12.5 : (end === '~' ? 9 : (end === '?' ? 4 : 6));
+            score += spfScore;
+            rows.push({item:'SPF（RFC 7208）', status: end === '-' ? '优' : (end === '~' ? '良' : '弱'), score: spfScore, full: 12.5, detail: '<code>' + esc(checks.spf) + '</code>'});
+        } else {
+            rows.push({item:'SPF（RFC 7208）', status:'缺失', score: 0, full: 12.5, detail:'未找到 v=spf1 记录，发信源无授权'});
+        }
+        // DKIM
+        if (checks.dkim) {
+            score += 12.5;
+            rows.push({item:'DKIM（RFC 6376）', status:'存在', score: 12.5, full: 12.5, detail:'选择器 ' + esc(checks.dkim) + ' 存在公钥记录'});
+        } else {
+            rows.push({item:'DKIM（RFC 6376）', status:'未检出', score: 0, full: 12.5, detail:'常见选择器均无记录；DKIM 选择器不可枚举，请确认发信服务商实际选择器（如 Google=google、Microsoft=selector1/2）'});
+        }
+        // DMARC
+        if (checks.dmarc) {
+            var d = parseDMARC(checks.dmarc);
+            var dScore = (d.p === 'reject' || d.p === 'quarantine') ? 12.5 : 6;
+            score += dScore;
+            rows.push({item:'DMARC（RFC 7489）', status: d.p === 'reject' ? '优' : (d.p === 'quarantine' ? '良' : '监控'), score: dScore, full: 12.5, detail: 'p=' + esc(String(d.p).toUpperCase()) + (d.sp ? '，sp=' + esc(String(d.sp).toUpperCase()) : '') + (d.pct < 100 ? '，pct=' + d.pct + '%' : '')});
+        } else {
+            rows.push({item:'DMARC（RFC 7489）', status:'缺失', score: 0, full: 12.5, detail:'未找到 _dmarc 记录，无统一处置策略'});
+        }
+        // MTA-STS
+        if (checks.mta) {
+            score += 12.5;
+            rows.push({item:'MTA-STS（RFC 8461）', status:'存在', score: 12.5, full: 12.5, detail:'<code>' + esc(checks.mta) + '</code>'});
+        } else {
+            rows.push({item:'MTA-STS（RFC 8461）', status:'缺失', score: 0, full: 12.5, detail:'未找到 _mta-sts TXT，传输层无强制 TLS 声明'});
+        }
+        // TLS-RPT
+        if (checks.tlsrpt) {
+            score += 12.5;
+            rows.push({item:'TLS-RPT（RFC 8460）', status:'存在', score: 12.5, full: 12.5, detail:'<code>' + esc(checks.tlsrpt) + '</code>'});
+        } else {
+            rows.push({item:'TLS-RPT（RFC 8460）', status:'缺失', score: 0, full: 12.5, detail:'未找到 _smtp._tls TXT，无传输失败报告'});
+        }
+        // BIMI
+        if (checks.bimi) {
+            score += 12.5;
+            rows.push({item:'BIMI', status:'存在', score: 12.5, full: 12.5, detail:'<code>' + esc(checks.bimi) + '</code>（可选增强项）'});
+        } else {
+            rows.push({item:'BIMI', status:'缺失', score: 0, full: 12.5, detail:'未找到 default._bimi TXT（可选增强项，不影响投递）'});
+        }
+        // MX
+        if (checks.mx && checks.mx.length > 0) {
+            score += 12.5;
+            rows.push({item:'MX（RFC 1035）', status:'存在', score: 12.5, full: 12.5, detail: checks.mx.slice(0,3).map(function(m){ return 'pref ' + m.pref + ' ' + m.host; }).join('；')});
+        } else {
+            rows.push({item:'MX（RFC 1035）', status:'缺失', score: 0, full: 12.5, detail:'未找到 MX 记录，域名无法接收邮件'});
+        }
+        // 黑名单
+        var blScore = 12.5;
+        blResult.bl.forEach(function(b){ blScore -= 4; });
+        if (blScore < 0) blScore = 0;
+        score += blScore;
+        rows.push({item:'黑名单（7 DNSBL）', status: blResult.bl.length === 0 ? '未收录' : '被收录 ' + blResult.bl.length + ' 个', score: blScore, full: 12.5, detail: blResult.bl.length === 0
+            ? '7 个主流黑名单均未收录' + (blResult.ips.length ? '（检查 IP：' + blResult.ips.join(', ') + '）' : '')
+            : blResult.bl.map(function(b){ return b.bl + '（IP ' + b.ip + '）'; }).join('；')});
+        score = Math.round(score * 10) / 10;
+        var g = grade(score);
+
+        var h = '';
+        // 评分卡
+        h += '<div style="border:2px solid ' + g.c + ';border-radius:10px;padding:20px;margin:12px 0;background:#fff">';
+        h += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
+        h += '<div style="width:88px;height:88px;border-radius:50%;border:6px solid ' + g.c + ';display:flex;flex-direction:column;align-items:center;justify-content:center">';
+        h += '<span style="font-size:24px;font-weight:bold;color:' + g.c + '">' + score + '</span>';
+        h += '<span style="font-size:11px;color:#888">分</span></div>';
+        h += '<div style="flex:1;min-width:200px">';
+        h += '<div style="font-size:22px;font-weight:bold;color:' + g.c + '">等级 ' + g.g + ' · ' + g.t + '</div>';
+        h += '<div style="font-size:13px;color:#888;margin-top:4px">' + esc(domain) + ' · ' + g.d + '</div></div></div></div>';
+        // 明细表
+        h += '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">';
+        h += '<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">检查项</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">状态</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">得分</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">明细</td></tr>';
+        rows.forEach(function(r){
+            var sc = r.score >= 10 ? '#28a745' : (r.score >= 5 ? '#f0ad4e' : '#c00');
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;">' + r.item + '</td>';
+            h += '<td style="padding:8px 12px;border:1px solid #ddd;">' + r.status + '</td>';
+            h += '<td style="padding:8px 12px;border:1px solid #ddd;color:' + sc + ';font-weight:bold">' + r.score + ' / ' + r.full + '</td>';
+            h += '<td style="padding:8px 12px;border:1px solid #ddd;font-size:12.5px;word-break:break-all">' + r.detail + '</td></tr>';
+        });
+        h += '</table>';
+        // 修复建议
+        h += '<div style="background:#f5f7fa;border-left:3px solid #003366;padding:14px 18px;margin:12px 0 0">';
+        h += '<h3 style="margin:0 0 8px;font-size:15px;color:#003366">修复建议</h3><ul style="font-size:14px;color:#555;line-height:1.8;padding-left:20px;margin:0">';
+        if (!checks.spf) h += '<li>添加 SPF：<code>v=spf1 include:发信服务商 ~all</code>，稳定后升级 <code>-all</code></li>';
+        if (checks.spf && spfEnd(checks.spf) === '?') h += '<li>SPF 以 ?all 结束等于无防护，升级为 <code>~all</code> → <code>-all</code></li>';
+        if (!checks.dkim) h += '<li>为发信域名配置 DKIM 签名（RFC 6376），向发信服务商获取选择器与公钥</li>';
+        if (!checks.dmarc) h += '<li>添加 DMARC：<code>v=DMARC1; p=none; rua=mailto:dmarc@您的域名</code>，观察后升级 <code>p=quarantine</code> → <code>p=reject</code></li>';
+        if (checks.dmarc && parseDMARC(checks.dmarc).p === 'none') h += '<li>DMARC 处于 p=none 监控模式，确认无影响后升级到 <code>p=quarantine</code> → <code>p=reject</code></li>';
+        if (!checks.mta) h += '<li>配置 MTA-STS（RFC 8461）：发布 <code>_mta-sts</code> TXT + <code>/.well-known/mta-sts.txt</code> 策略</li>';
+        if (!checks.tlsrpt) h += '<li>配置 TLS-RPT（RFC 8460）：发布 <code>_smtp._tls</code> TXT 接收传输失败报告</li>';
+        if (checks.mx && checks.mx.length === 1) h += '<li>MX 只有单条记录，建议增加冗余 MX 提高可用性</li>';
+        if (blResult.bl.length > 0) h += '<li>域名/发信 IP 被 ' + blResult.bl.length + ' 个黑名单收录：向对应机构提交移除申请，排查垃圾邮件投诉来源</li>';
+        if (score >= 90) h += '<li>当前配置为最佳实践，建议定期复查 rua 聚合报告与 TLS-RPT 报告</li>';
+        h += '</ul></div>';
+        result.innerHTML = h;
+    }).catch(function(err){
+        result.innerHTML = '<p style="color:#c00">体检失败：' + esc(err && err.message ? err.message : String(err)) + '。请检查网络后重试。</p>';
+    });
+}
+})();
+</script>
+<!--#include virtual="/partials/footer.html" -->
+</body>
+</html>
