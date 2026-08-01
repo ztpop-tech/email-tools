@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPF Record Lookup — Online SPF Checker | ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net Email Knowledge Base">
+<meta property="og:title" content="SPF Record Checker — Online Lookup & Verify">
+<meta property="og:description" content="Free online SPF record lookup: enter a domain, query and parse its SPF TXT record in real time, break down each mechanism (ip4/ip6/include/mx/a/all modifiers), check the 10-lookup DNS limit, and get compliance and security advice.">
+<meta name="description" content="Free online SPF record lookup tool: enter a domain to instantly query and parse its SPF TXT record, break down mechanisms (ip4/ip6/include/mx/a/all modifiers), check the 10-lookup DNS limit, and get compliance and security advice.">
+<link rel="canonical" href="https://www.ztpop.net/tools/spf-checker-en.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/spf-checker-en.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"SPF Record Checker"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "SPF Record Checker", "url": "https://www.ztpop.net/tools/spf-checker-en.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "Free online SPF record lookup: enter a domain to instantly query and parse its SPF TXT record, break down each mechanism (ip4/ip6/include/mx/a/all modifiers), check the 10-lookup DNS limit (RFC 7208), and get compliance and security advice.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is the SPF Record Checker?", "acceptedAnswer": {"@type": "Answer", "text": "The SPF Record Checker is a free browser-based tool that queries DNS records in real time via DNS-over-HTTPS (DoH) to a public resolver, with no software installation required. Queries run locally in your browser; domain records are never uploaded to our servers."}}, {"@type": "Question", "name": "How do I use the SPF Record Checker?", "acceptedAnswer": {"@type": "Answer", "text": "Enter a domain (e.g. ztpop.net) and click “Check SPF”. The tool queries the domain’s TXT records via DoH, filters records starting with v=spf1, and parses each mechanism. If no SPF record exists it warns “No SPF record found” with configuration advice. Below the result it also estimates DNS query count, helping you judge how close you are to the RFC 7208 10-lookup limit."}}, {"@type": "Question", "name": "How soon do query results take effect?", "acceptedAnswer": {"@type": "Answer", "text": "DNS lookups depend on public resolver caching. If you just changed records at your DNS provider, wait for the TTL (typically 5 minutes to several hours) before results update. If no record is found, retry later or confirm with dig/nslookup first."}}, {"@type": "Question", "name": "What’s the difference between the SPF Record Checker and the Generator?", "acceptedAnswer": {"@type": "Answer", "text": "The Generator creates DNS records; the Checker (Lookup) verifies existing records. Recommended workflow: generate with the Generator → publish to DNS → verify with the Checker."}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">SPF Record Checker</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">Free online tool · DNS-over-HTTPS live lookup · runs in your browser, no data upload</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">SPF (Sender Policy Framework, RFC 7208) uses DNS TXT records to declare which server IPs are authorized to send mail for your domain. The receiving MTA queries the sender domain’s SPF record and compares the connection source IP to decide if the sender is authorized. SPF is the first line of the email authentication trio (SPF/DKIM/DMARC); misconfigurations (e.g. too many includes exceeding the lookup limit) can cause legitimate mail to be rejected or bounced with 554.</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">Domain</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    
+                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">Check SPF Record</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">Enter a domain (e.g. example.com); the tool resolves its TXT records and locates the SPF record (starting with v=spf1).</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">Features</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>Real-time DNS lookup: TXT queries via DNS-over-HTTPS (DoH) to a public resolver, independent of local DNS cache</li>
+<li>Mechanism breakdown: splits the SPF record into ip4/ip6/include/mx/a mechanisms and + - ~ ? qualifiers, explaining each</li>
+<li>10-lookup limit check: counts DNS lookups for include/mx/a per RFC 7208 §4.6.4 and warns about permerror when exceeded</li>
+<li>Missing-record detection: auto-identifies missing SPF records, wrong version prefixes, missing all modifier, and other common issues</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">How to Use</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">Enter a domain (e.g. ztpop.net) and click “Check SPF”. The tool queries the domain’s TXT records via DoH, filters records starting with v=spf1, and parses each mechanism. If no SPF record exists it warns “No SPF record found” with configuration advice. Below the result it also estimates DNS query count, helping you judge how close you are to the RFC 7208 10-lookup limit.</p>
+            </div>
+
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Why Check Regularly</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">SPF (Sender Policy Framework) is the first line of email authentication: it declares which servers are allowed to send mail for your domain. A missing or misconfigured SPF record is one of the top reasons mail is classified as spam or bounced by receivers.</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">Per RFC 7208, after receiving a message the receiving system queries the sender domain’s SPF record and compares it with the actual connection IP. A failed lookup (no record) or failed comparison (unauthorized IP) yields an authentication result of fail, triggering the receiver’s anti-spam policy.</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">Checking SPF regularly helps you catch lost records (e.g. after DNS migration), mechanism errors (e.g. wrong ip4 ranges), and the most subtle problem — exceeding the 10-lookup DNS limit, which makes the SPF result permerror, effectively invalidating the entire record.</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Interpreting Results</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Result</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Meaning</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Risk Level</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">pass</td><td style="padding:8px 12px;border:1px solid #ddd;">Sending IP is in the SPF allow list; authentication passed</td><td style="padding:8px 12px;border:1px solid #ddd;">None</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">fail / hardfail</td><td style="padding:8px 12px;border:1px solid #ddd;">Sending IP is explicitly unauthorized; reject or quarantine</td><td style="padding:8px 12px;border:1px solid #ddd;">High</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">softfail</td><td style="padding:8px 12px;border:1px solid #ddd;">Sending IP not authorized but policy is lenient (~all)</td><td style="padding:8px 12px;border:1px solid #ddd;">Medium</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">neutral</td><td style="padding:8px 12px;border:1px solid #ddd;">Record exists but no explicit policy declared (?all)</td><td style="padding:8px 12px;border:1px solid #ddd;">Medium</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">permerror</td><td style="padding:8px 12px;border:1px solid #ddd;">Syntax error or DNS lookup limit exceeded; whole record invalid</td><td style="padding:8px 12px;border:1px solid #ddd;">High</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">temperror</td><td style="padding:8px 12px;border:1px solid #ddd;">Temporary DNS failure; retry later</td><td style="padding:8px 12px;border:1px solid #ddd;">Low</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">none</td><td style="padding:8px 12px;border:1px solid #ddd;">No SPF record for the domain</td><td style="padding:8px 12px;border:1px solid #ddd;">High</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Common Misconfigurations & Fixes</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>No SPF configured</strong>：Add a TXT record; minimal config v=spf1 mx ~all authorizes only MX servers</li>
+<li><strong>Missing all modifier</strong>：SPF must end with -all / ~all / ?all; otherwise the policy is incomplete and spoofing is possible</li>
+<li><strong>10-lookup limit exceeded</strong>：Each include adds lookups; over 10 (RFC 7208 §4.6.4) requires merging or simplifying mechanisms</li>
+<li><strong>Wrong ip4 range</strong>：Confirm the sender’s public IP matches the record; list all IPs for NAT/multi-line setups</li>
+<li><strong>Mismatch with DKIM/DMARC</strong>：SPF only covers the sending identity; combine it with DKIM signing and DMARC policy for a complete authentication chain</li>
+</ul>
+</div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">Technical Standards</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">This tool follows the IETF standards below; lookup and parsing logic match the RFC definitions:</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DNS lookup: RFC 8484 (DNS Queries over HTTPS), RFC 1035 (DNS protocol)</li>
+                    <li>Record parsing: SPF parsing: RFC 7208 §4 (mechanisms & modifiers), §4.6.4 (DNS lookup limit)</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 Reference Documents</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7208" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7208 — SPF standard</a></li>
+            <li><a href="https://dmarcian.com/spf-survey/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarcian SPF mechanism explainer</a></li>
+            <li><a href="https://www.cloudflare.com/learning/email-security/what-is-spf/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Cloudflare Learn: What is SPF</a></li>
+        </ul>
+    </div>
+</div>
+
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var btn = document.getElementById('check-btn');
+    var result = document.getElementById('result');
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    function keyValTable(rows) {
+        var h = '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">' +
+            '<tr style="background:#f0f4f8"><th style="padding:8px 12px;border:1px solid #ddd;text-align:left">Tag</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">Value</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">Description</th></tr>';
+        rows.forEach(function(r) {
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;word-break:break-all">' + esc(r[1]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd">' + r[2] + '</td></tr>';
+        });
+        return h + '</table>';
+    }
+
+    function parseTxtRecords(answers) {
+        var txts = [];
+        (answers || []).forEach(function(a) {
+            if (a.type === 16) txts.push(a.data);
+        });
+        return txts;
+    }
+
+    function dohQuery(qname, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=TXT';
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+
+    btn.addEventListener('click', function() {
+        var domain = document.getElementById('domain-input').value.trim().toLowerCase();
+        var selector = document.getElementById('selector-input') ? document.getElementById('selector-input').value.trim() : '';
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', 'Please enter a valid domain, e.g. example.com');
+            return;
+        }
+        var qname = domain + '. ';
+        result.innerHTML = '<div style="color:#666;font-size:14px;padding:8px 0">Querying <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">' + esc(qname) + '</code> ...</div>';
+        dohQuery(qname, function(err, j) {
+            if (err) {
+                result.innerHTML = statusBox('err', 'DNS lookup failed: ' + esc(err.message) + '. Please check your network and retry.');
+                return;
+            }
+            var txts = parseTxtRecords(j.Answer);
+            
+            if (txts.length === 0) {
+                result.innerHTML = statusBox('warn', 'No SPF record found (no TXT record starting with v=spf1).') +
+                    statusBox('err', 'This domain has no SPF deployed; mail claiming to be from it cannot pass SPF validation and spoofing risk is high. Configure an SPF record now (use our <a href="/tools/spf-generator.html" style="color:#0066cc">SPF Generator</a>）。');
+                return;
+            }
+            var spf = null;
+            for (var i = 0; i < txts.length; i++) {
+                if (txts[i].indexOf('v=spf1') === 0) { spf = txts[i]; break; }
+            }
+            if (!spf) {
+                result.innerHTML = statusBox('warn', 'No SPF record found. All TXT records for the domain:') + txts.map(function(t){return '<pre style="background:#1a1a2e;color:#e0e0e0;padding:12px;border-radius:6px;font-size:13px;overflow-x:auto">' + esc(t) + '</pre>';}).join('');
+                return;
+            }
+            var html = statusBox('ok', '<b>✓ SPF record found</b> (starting with <code>v=spf1</code>)');
+            html += '<pre style="background:#1a1a2e;color:#e0e0e0;padding:14px;border-radius:6px;font-size:13.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">' + esc(spf) + '</pre>';
+            // parse mechanisms
+            var parts = spf.split(/\s+/);
+            var rows = [];
+            var dnsQueries = 1; // initial TXT query
+            var hasAll = false;
+            for (var i = 1; i < parts.length; i++) {
+                var p = parts[i];
+                if (!p) continue;
+                var m = p.match(/^([+\-~?]?)([a-z0-9]+)(?::(.*))?$/i);
+                if (!m) { rows.push([p, '—', 'Unrecognized mechanism']); continue; }
+                var qual = m[1] || '+';
+                var mech = m[2].toLowerCase();
+                var arg = m[3] || '';
+                var qmap = { '+': 'Pass', '-': 'Fail', '~': 'SoftFail', '?': 'Neutral' };
+                var desc = '';
+                if (mech === 'all') { desc = 'Matches all sources (must be last). ' + qmap[qual]; hasAll = true; }
+                else if (mech === 'include') { desc = 'Includes another domain’s SPF record (costs 1 DNS lookup).'; dnsQueries++; }
+                else if (mech === 'ip4') { desc = 'Allowed IPv4 address/range.'; }
+                else if (mech === 'ip6') { desc = 'Allowed IPv6 address/range.'; }
+                else if (mech === 'mx') { desc = 'Servers pointed to by MX records (costs 1 lookup if resolved).'; dnsQueries++; }
+                else if (mech === 'a') { desc = 'Domain’s A/AAAA records (costs 1 lookup if resolved).'; dnsQueries++; }
+                else if (mech === 'ptr') { desc = 'PTR reverse lookup (not recommended by RFC 7208, poor performance).'; }
+                else if (mech === 'exists') { desc = 'Matches by A-record existence (costs 1 lookup).'; dnsQueries++; }
+                else if (mech === 'redirect') { desc = 'Redirects to another domain’s SPF (costs 1 lookup).'; dnsQueries++; }
+                else { desc = 'Unknown mechanism'; }
+                rows.push([(qual === '+' ? '+' : qual) + mech + (arg ? ':' + arg : ''), arg || '—', desc]);
+            }
+            html += keyValTable(rows);
+            if (!hasAll) html += statusBox('warn', '⚠ Record is missing the <code>all</code> terminator (required by RFC 7208 §4.7). Unmatched senders get a Neutral result; anti-spoofing effectiveness is zero.');
+            if (dnsQueries > 10) html += statusBox('err', '⚠ Estimated DNS lookups: about ' + dnsQueries + ', exceeding the 10-lookup limit of RFC 7208 §4.6.4 — this causes permerror. Simplify include/mx mechanisms.');
+            else html += statusBox('ok', 'Estimated DNS lookups: ' + dnsQueries + ' (RFC 7208 §4.6.4 limit: 10)' + (dnsQueries > 7 ? '; near the limit, consider simplifying' : '; compliant'));
+            result.innerHTML = html;
+
+        });
+    });
+})();
+</script>
+</body>
+</html>

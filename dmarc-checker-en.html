@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMARC Record Lookup — Online DMARC Checker | ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net Email Knowledge Base">
+<meta property="og:title" content="DMARC Record Checker — Online Lookup & Verify">
+<meta property="og:description" content="Free online DMARC record lookup: enter a domain, query the _dmarc.<domain> DMARC TXT record in real time, parse v/p/pct/rua/ruf/sp/fo/adkim/aspf tags, assess policy strength (none/quarantine/reject) and get security advice.">
+<meta name="description" content="Free online DMARC record lookup tool: enter a domain to instantly query the _dmarc.<domain> DMARC TXT record, parse v/p/pct/rua/ruf/sp/fo/adkim/aspf tags, assess policy strength (none/quarantine/reject) and get security advice.">
+<link rel="canonical" href="https://www.ztpop.net/tools/dmarc-checker-en.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/dmarc-checker-en.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"DMARC Record Checker"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "DMARC Record Checker", "url": "https://www.ztpop.net/tools/dmarc-checker-en.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "Free online DMARC record lookup: enter a domain to instantly query the _dmarc.<domain> DMARC TXT record, parse v/p/pct/rua/ruf/sp/fo/adkim/aspf tags, assess policy strength (none/quarantine/reject) and get security advice.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is the DMARC Record Checker?", "acceptedAnswer": {"@type": "Answer", "text": "The DMARC Record Checker is a free browser-based tool that queries DNS records in real time via DNS-over-HTTPS (DoH) to a public resolver, with no software installation required. Queries run locally in your browser; domain records are never uploaded to our servers."}}, {"@type": "Question", "name": "How do I use the DMARC Record Checker?", "acceptedAnswer": {"@type": "Answer", "text": "DMARC records always live at _dmarc.<domain>. Enter the domain and click check; the tool runs a DoH TXT query at that location and parses every tag. Pay attention to the p tag (policy) and rua tag (report address). If “No DMARC record found” is returned, the domain has no DMARC — any mail claiming to be from it cannot be blocked by DMARC validation. If p=none, it is only in monitoring mode; consider tightening gradually to quarantine/reject."}}, {"@type": "Question", "name": "How soon do query results take effect?", "acceptedAnswer": {"@type": "Answer", "text": "DNS lookups depend on public resolver caching. If you just changed records at your DNS provider, wait for the TTL (typically 5 minutes to several hours) before results update. If no record is found, retry later or confirm with dig/nslookup first."}}, {"@type": "Question", "name": "What’s the difference between the DMARC Record Checker and the Generator?", "acceptedAnswer": {"@type": "Answer", "text": "The Generator creates DNS records; the Checker (Lookup) verifies existing records. Recommended workflow: generate with the Generator → publish to DNS → verify with the Checker."}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">DMARC Record Checker</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">Free online tool · DNS-over-HTTPS live lookup · runs in your browser, no data upload</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">DMARC (Domain-based Message Authentication, Reporting & Conformance, RFC 7489) builds on SPF and DKIM. Via the DNS _dmarc.&lt;domain&gt; record it declares the domain’s mail handling policy and receives authentication result reports from external mail systems (rua aggregate reports, ruf failure reports). Gradual DMARC deployment (p=none → quarantine → reject) is an internationally accepted practice; querying a DMARC record quickly tells you whether a domain is protected.</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">Domain</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    
+                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">Check DMARC Record</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">Enter a domain (e.g. example.com); the tool queries the TXT record at _dmarc.example.com (where DMARC records always live).</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">Features</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>Standard location: always queries the TXT record at _dmarc.&lt;domain&gt;, per RFC 7489</li>
+<li>Full tag parsing: v/p/pct/rua/ruf/sp/fo/adkim/aspf explained, including policy percentage and subdomain policy</li>
+<li>Policy strength rating: none (monitor only) / quarantine / reject</li>
+<li>Alignment check: shows adkim/aspf alignment modes (relaxed r / strict s) and DKIM/SPF alignment requirements</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">How to Use</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">DMARC records always live at _dmarc.<domain>. Enter the domain and click check; the tool runs a DoH TXT query at that location and parses every tag. Pay attention to the p tag (policy) and rua tag (report address). If “No DMARC record found” is returned, the domain has no DMARC — any mail claiming to be from it cannot be blocked by DMARC validation. If p=none, it is only in monitoring mode; consider tightening gradually to quarantine/reject.</p>
+            </div>
+
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Why Check Regularly</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">DMARC (Domain-based Message Authentication, Reporting and Conformance, RFC 7489) builds on SPF and DKIM. It defines how receivers should handle mail when authentication fails, and how results are reported to the domain owner.</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">A domain without DMARC gives up control over spoofed mail — attackers can impersonate your domain for phishing while receivers have no unified policy to block it. The p=none / quarantine / reject tiers are designed exactly for gradual deployment.</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">When checking DMARC, besides the policy tags (p / sp), verify the rua/ruf report addresses are valid (invalid addresses lose reports), pct matches your deployment phase, and alignment modes (adkim/aspf) match your actual SPF/DKIM setup.</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Interpreting Results</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Tag</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Meaning</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Risk Note</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">p=none</td><td style="padding:8px 12px;border:1px solid #ddd;">Monitor only; no action taken; mail delivered as usual</td><td style="padding:8px 12px;border:1px solid #ddd;">Low (initial deployment)</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">p=quarantine</td><td style="padding:8px 12px;border:1px solid #ddd;">Mail failing authentication goes to spam</td><td style="padding:8px 12px;border:1px solid #ddd;">Medium</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">p=reject</td><td style="padding:8px 12px;border:1px solid #ddd;">Mail failing authentication is rejected</td><td style="padding:8px 12px;border:1px solid #ddd;">High (ensure config is correct)</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">sp=</td><td style="padding:8px 12px;border:1px solid #ddd;">Subdomain policy; covers DMARC handling for subdomains</td><td style="padding:8px 12px;border:1px solid #ddd;">Medium</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">rua=</td><td style="padding:8px 12px;border:1px solid #ddd;">Aggregate report address (must be a valid mailbox)</td><td style="padding:8px 12px;border:1px solid #ddd;">Medium</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">pct=</td><td style="padding:8px 12px;border:1px solid #ddd;">Policy application percentage (1-100) for gradual rollout</td><td style="padding:8px 12px;border:1px solid #ddd;">Low</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Common Misconfigurations & Fixes</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>No DMARC record</strong>：Start with p=none; watch reports for 1-2 weeks to confirm no legitimate mail is affected</li>
+<li><strong>Invalid rua address</strong>：Ensure the report mailbox exists and can receive mail, otherwise no authentication stats</li>
+<li><strong>adkim/aspf alignment failure</strong>：Ensure the DKIM signing domain matches the From domain (relaxed) or exactly matches (strict)</li>
+<li><strong>p=reject false positives</strong>：Confirm SPF/DKIM pass rates (via rua reports) before escalating the policy</li>
+<li><strong>pct underused</strong>：Start at pct=10 for gradual rollout, increase after reviewing reports, then 100%</li>
+</ul>
+</div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">Technical Standards</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">This tool follows the IETF standards below; lookup and parsing logic match the RFC definitions:</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DNS lookup: RFC 8484 (DNS Queries over HTTPS), RFC 1035 (DNS protocol)</li>
+                    <li>Record parsing: DMARC: RFC 7489 §6 (DNS record), §6.3 (tag definitions)</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 Reference Documents</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc7489" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 7489 — DMARC standard</a></li>
+            <li><a href="https://dmarc.org/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarc.org official documentation</a></li>
+            <li><a href="https://support.google.com/a/answer/2466563" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">Google Workspace Help: DMARC</a></li>
+        </ul>
+    </div>
+</div>
+
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var btn = document.getElementById('check-btn');
+    var result = document.getElementById('result');
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    function keyValTable(rows) {
+        var h = '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">' +
+            '<tr style="background:#f0f4f8"><th style="padding:8px 12px;border:1px solid #ddd;text-align:left">Tag</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">Value</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">Description</th></tr>';
+        rows.forEach(function(r) {
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;word-break:break-all">' + esc(r[1]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd">' + r[2] + '</td></tr>';
+        });
+        return h + '</table>';
+    }
+
+    function parseTxtRecords(answers) {
+        var txts = [];
+        (answers || []).forEach(function(a) {
+            if (a.type === 16) txts.push(a.data);
+        });
+        return txts;
+    }
+
+    function dohQuery(qname, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=TXT';
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+
+    btn.addEventListener('click', function() {
+        var domain = document.getElementById('domain-input').value.trim().toLowerCase();
+        var selector = document.getElementById('selector-input') ? document.getElementById('selector-input').value.trim() : '';
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', 'Please enter a valid domain, e.g. example.com');
+            return;
+        }
+        var qname = '_dmarc.' + domain + '. ';
+        result.innerHTML = '<div style="color:#666;font-size:14px;padding:8px 0">Querying <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">' + esc(qname) + '</code> ...</div>';
+        dohQuery(qname, function(err, j) {
+            if (err) {
+                result.innerHTML = statusBox('err', 'DNS lookup failed: ' + esc(err.message) + '. Please check your network and retry.');
+                return;
+            }
+            var txts = parseTxtRecords(j.Answer);
+            
+            if (txts.length === 0) {
+                result.innerHTML = statusBox('err', 'No DMARC record found at <code>_dmarc.' + esc(domain) + '</code>.') +
+                    statusBox('warn', 'This domain has no DMARC; any mail claiming to be from it cannot be blocked by DMARC. Use our <a href="/tools/dmarc-generator.html" style="color:#0066cc">DMARC Generator</a> to generate a record and deploy gradually (p=none → quarantine → reject). See <a href="/kb/dmarc-policy-gradual.html" style="color:#0066cc">DMARC gradual policy guide</a>）。');
+                return;
+            }
+            var dmarc = null;
+            for (var i = 0; i < txts.length; i++) {
+                if (txts[i].indexOf('v=DMARC1') === 0) { dmarc = txts[i]; break; }
+            }
+            if (!dmarc) {
+                result.innerHTML = statusBox('warn', 'There is a TXT record here but it is not a DMARC record (does not start with v=DMARC1):') + txts.map(function(t){return '<pre style="background:#1a1a2e;color:#e0e0e0;padding:12px;border-radius:6px;font-size:13px">' + esc(t) + '</pre>';}).join('');
+                return;
+            }
+            var html = statusBox('ok', '<b>✓ DMARC record found</b>');
+            html += '<pre style="background:#1a1a2e;color:#e0e0e0;padding:14px;border-radius:6px;font-size:13.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">' + esc(dmarc) + '</pre>';
+            var tags = {};
+            dmarc.split(';').forEach(function(s) {
+                var i = s.indexOf('=');
+                if (i > 0) tags[s.slice(0, i).trim().toLowerCase()] = s.slice(i + 1).trim();
+            });
+            var rows = [];
+            var policy = (tags['p'] || '').toLowerCase();
+            var policyDesc = { 'none': 'Monitor only (no blocking, collects reports)', 'quarantine': 'Quarantine (to spam)', 'reject': 'Reject (bounce)' };
+            if (tags['v']) rows.push(['v', tags['v'], 'Version (should be DMARC1)']);
+            if (tags['p']) rows.push(['p', tags['p'], 'Main-domain policy: ' + (policyDesc[policy] || 'unknown')]);
+            if (tags['sp']) rows.push(['sp', tags['sp'], 'Subdomain policy (defaults to p)']);
+            if (tags['pct']) rows.push(['pct', tags['pct'], 'Policy application percentage (' + tags['pct'] + '% of mail gets the policy)']);
+            if (tags['rua']) rows.push(['rua', tags['rua'], 'Aggregate report address']);
+            if (tags['ruf']) rows.push(['ruf', tags['ruf'], 'Forensic report (failure details) address']);
+            if (tags['fo']) rows.push(['fo', tags['fo'], 'Forensic report trigger (0=all fail, 1=any fail, d/s=DKIM/SPF)']);
+            if (tags['adkim']) rows.push(['adkim', tags['adkim'], 'DKIM alignment (r=relaxed, s=strict)']);
+            if (tags['aspf']) rows.push(['aspf', tags['aspf'], 'SPF alignment (r=relaxed, s=strict)']);
+            html += keyValTable(rows);
+            var level = policy === 'reject' ? 3 : policy === 'quarantine' ? 2 : policy === 'none' ? 1 : 0;
+            if (level === 0) html += statusBox('err', '⚠ Missing the <code>p=</code> policy tag; record is invalid (required by RFC 7489).');
+            else if (level === 1) html += statusBox('warn', 'Policy is <code>none</code>: monitoring only. Review rua reports for 1-2 weeks, then tighten toward quarantine → reject.');
+            else if (level === 2) html += statusBox('warn', 'Policy is <code>quarantine</code>: unauthenticated mail goes to spam. Consider upgrading to reject once stable.');
+            else html += statusBox('ok', 'Policy is <code>reject</code>: strongest protection; unauthenticated mail is rejected.');
+            if (!tags['rua']) html += statusBox('warn', '⚠ Missing <code>rua=</code>; no aggregate reports can be received. Add one.');
+            result.innerHTML = html;
+
+        });
+    });
+})();
+</script>
+</body>
+</html>

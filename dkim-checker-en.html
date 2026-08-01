@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DKIM Record Lookup — Online DKIM Checker | ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net Email Knowledge Base">
+<meta property="og:title" content="DKIM Record Checker — Online Lookup & Verify">
+<meta property="og:description" content="Free online DKIM record lookup: enter a domain and selector, query the DKIM public key record in real time, parse k= key type, p= public key, s= service type tags, and verify the record can be used for DKIM signature verification.">
+<meta name="description" content="Free online DKIM record lookup tool: enter a domain and selector to instantly query the DKIM public key record, parse k= key type, p= public key, s= service type tags, and verify the record is usable for DKIM verification.">
+<link rel="canonical" href="https://www.ztpop.net/tools/dkim-checker-en.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/dkim-checker-en.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"DKIM Record Checker"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "DKIM Record Checker", "url": "https://www.ztpop.net/tools/dkim-checker-en.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "Free online DKIM record lookup: enter a domain and selector to instantly query the DKIM public key record, parse k= key type, p= public key, s= service type tags, and verify the record is usable for DKIM signature verification.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is the DKIM Record Checker?", "acceptedAnswer": {"@type": "Answer", "text": "The DKIM Record Checker is a free browser-based tool that queries DNS records in real time via DNS-over-HTTPS (DoH) to a public resolver, with no software installation required. Queries run locally in your browser; domain records are never uploaded to our servers."}}, {"@type": "Question", "name": "How do I use the DKIM Record Checker?", "acceptedAnswer": {"@type": "Answer", "text": "DKIM records are located by “selector + domain”. The selector is set by your sending service (Tencent Cloud email push defaults to s1, Google Workspace to google, self-hosted OpenDKIM is customizable). Enter the domain and selector, click check, and the tool builds &lt;selector&gt;._domainkey.&lt;domain&gt;  and runs a DoH TXT query, parsing the v/k/p/s/t tags and assessing public key strength. On failure, first confirm the selector spelling, then check whether DNS has propagated (wait for TTL)."}}, {"@type": "Question", "name": "How soon do query results take effect?", "acceptedAnswer": {"@type": "Answer", "text": "DNS lookups depend on public resolver caching. If you just changed records at your DNS provider, wait for the TTL (typically 5 minutes to several hours) before results update. If no record is found, retry later or confirm with dig/nslookup first."}}, {"@type": "Question", "name": "What’s the difference between the DKIM Record Checker and the Generator?", "acceptedAnswer": {"@type": "Answer", "text": "The Generator creates DNS records; the Checker (Lookup) verifies existing records. Recommended workflow: generate with the Generator → publish to DNS → verify with the Checker."}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">DKIM Record Checker</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">Free online tool · DNS-over-HTTPS live lookup · runs in your browser, no data upload</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">DKIM (DomainKeys Identified Mail, RFC 6376) uses digital signatures to prove mail was not tampered with in transit and binds it to the sending domain. The signer signs with a private key; receivers fetch the public key from &lt;selector&gt;._domainkey.&lt;domain&gt;  to verify. DKIM record lookup is the first step in troubleshooting issues like mail landing in spam or bounces with 554 — a missing public key or wrong selector are the two main causes of DKIM verification failure.</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">Domain</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <div style="flex:0 0 auto"><input type="text" id="selector-input" placeholder="Selector, e.g. default" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:200px"></div>
+                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">Check DKIM Record</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">Enter a domain and DKIM selector (provided by your sending service, e.g. default, google, s1); the tool queries &lt;selector&gt;._domainkey.&lt;domain&gt;  TXT records.</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">Features</h2>
+                <ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li>Selector+domain lookup: queries TXT records at &lt;selector&gt;._domainkey.&lt;domain&gt; per DKIM DNS naming</li>
+<li>Tag parsing: automatically parses v= k= p= s= t= tags, highlighting public key length and format validity</li>
+<li>Key strength: classifies RSA 2048/1024-bit keys (RFC 8301 recommends 1024+ bits)</li>
+<li>Multi-selector: query several selectors in a row to compare which ones exist</li>
+                </ul>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">How to Use</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">DKIM records are located by “selector + domain”. The selector is set by your sending service (Tencent Cloud email push defaults to s1, Google Workspace to google, self-hosted OpenDKIM is customizable). Enter the domain and selector, click check, and the tool builds &lt;selector&gt;._domainkey.&lt;domain&gt;  and runs a DoH TXT query, parsing the v/k/p/s/t tags and assessing public key strength. On failure, first confirm the selector spelling, then check whether DNS has propagated (wait for TTL).</p>
+            </div>
+
+            <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Why Check Regularly</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">DKIM (DomainKeys Identified Mail, RFC 6376) uses digital signatures to verify whether a message was tampered with in transit and binds the message to its sending domain. It does not directly judge sender identity; it provides evidence of “content integrity + domain association”.</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">Typical DKIM failure scenarios: private key not migrated after changing mail servers, expired public key records in DNS (TTL elapsed), or a selector that does not match the signature header. These failures rarely error out immediately — they quietly degrade reputation and push mail to spam.</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">Checking DKIM records with this tool confirms the public key is published correctly in DNS, the key length meets security standards (RFC 8301 recommends 1024+ bits; 2048 recommended), and the record format matches the signing algorithm (rsa-sha256 etc.).</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Interpreting Results</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Check</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Pass Criteria</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Risk</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">Public key record exists</td><td style="padding:8px 12px;border:1px solid #ddd;">TXT record for selector._domainkey is resolvable</td><td style="padding:8px 12px;border:1px solid #ddd;">None</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">Key length</td><td style="padding:8px 12px;border:1px solid #ddd;">≥1024 bits (RFC 8301); 2048 recommended</td><td style="padding:8px 12px;border:1px solid #ddd;">Medium</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">Record format</td><td style="padding:8px 12px;border:1px solid #ddd;">Starts with v=DKIM1 and contains p= public key field</td><td style="padding:8px 12px;border:1px solid #ddd;">High</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">Selector match</td><td style="padding:8px 12px;border:1px solid #ddd;">s= selector in signature header matches queried selector</td><td style="padding:8px 12px;border:1px solid #ddd;">High</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">TXT record count</td><td style="padding:8px 12px;border:1px solid #ddd;">Only one DKIM record under the same selector</td><td style="padding:8px 12px;border:1px solid #ddd;">Medium</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Common Misconfigurations & Fixes</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>Public key record lost</strong>：Republish the key: after generating a new key pair, paste the p= field into the selector._domainkey TXT record</li>
+<li><strong>Key too short</strong>：Regenerate a 2048-bit RSA key (some DNS providers limit TXT length; split if needed)</li>
+<li><strong>Selector mismatch</strong>：Ensure the selector configured on the signing server exactly matches the published one</li>
+<li><strong>Record truncated</strong>：TXT records are limited to 255 chars/segment; split long keys per standard and wrap in quotes</li>
+<li><strong>Rotation incomplete</strong>：Publish the new public key before switching private keys; wait for TTL to expire before changing signing config to avoid verification failures</li>
+</ul>
+</div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">Technical Standards</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">This tool follows the IETF standards below; lookup and parsing logic match the RFC definitions:</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>DNS lookup: RFC 8484 (DNS Queries over HTTPS), RFC 1035 (DNS protocol)</li>
+                    <li>Record parsing: DKIM: RFC 6376 §3.6.1 (DNS naming), RFC 8301 (key strength), RFC 8463 (ED25519)</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 Reference Documents</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc6376" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 6376 — DKIM standard</a></li>
+            <li><a href="https://dmarcian.com/what-is-dkim/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">dmarcian DKIM explained</a></li>
+            <li><a href="http://www.opendkim.org/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">OpenDKIM documentation</a></li>
+        </ul>
+    </div>
+</div>
+
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+(function() {
+    'use strict';
+    var btn = document.getElementById('check-btn');
+    var result = document.getElementById('result');
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+
+    function keyValTable(rows) {
+        var h = '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">' +
+            '<tr style="background:#f0f4f8"><th style="padding:8px 12px;border:1px solid #ddd;text-align:left">Tag</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">Value</th>' +
+            '<th style="padding:8px 12px;border:1px solid #ddd;text-align:left">Description</th></tr>';
+        rows.forEach(function(r) {
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace">' + esc(r[0]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;word-break:break-all">' + esc(r[1]) + '</td>' +
+                '<td style="padding:8px 12px;border:1px solid #ddd">' + r[2] + '</td></tr>';
+        });
+        return h + '</table>';
+    }
+
+    function parseTxtRecords(answers) {
+        var txts = [];
+        (answers || []).forEach(function(a) {
+            if (a.type === 16) txts.push(a.data);
+        });
+        return txts;
+    }
+
+    function dohQuery(qname, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=TXT';
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+
+    btn.addEventListener('click', function() {
+        var domain = document.getElementById('domain-input').value.trim().toLowerCase();
+        var selector = document.getElementById('selector-input') ? document.getElementById('selector-input').value.trim() : '';
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', 'Please enter a valid domain, e.g. example.com');
+            return;
+        }
+        var qname = selector + '._domainkey.' + domain + '. ';
+        result.innerHTML = '<div style="color:#666;font-size:14px;padding:8px 0">Querying <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">' + esc(qname) + '</code> ...</div>';
+        dohQuery(qname, function(err, j) {
+            if (err) {
+                result.innerHTML = statusBox('err', 'DNS lookup failed: ' + esc(err.message) + '. Please check your network and retry.');
+                return;
+            }
+            var txts = parseTxtRecords(j.Answer);
+            
+            if (txts.length === 0) {
+                result.innerHTML = statusBox('err', 'No DKIM record found at <code>' + esc(qname) + '</code>.') +
+                    statusBox('warn', 'Check: (1) the selector is correct (provided by your sending service, e.g. default/google/s1); (2) DNS has propagated (wait for TTL). Use our <a href="/tools/dkim-generator.html" style="color:#0066cc">DKIM Generator</a> to generate a key pair and records.');
+                return;
+            }
+            var dkim = txts[0];
+            var html = statusBox('ok', '<b>✓ DKIM record found</b> (' + txts.length + ' TXT records; using the first)');
+            html += '<pre style="background:#1a1a2e;color:#e0e0e0;padding:14px;border-radius:6px;font-size:13.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">' + esc(dkim) + '</pre>';
+            var tags = {};
+            dkim.split(';').forEach(function(s) {
+                var i = s.indexOf('=');
+                if (i > 0) tags[s.slice(0, i).trim().toLowerCase()] = s.slice(i + 1).trim();
+            });
+            var rows = [];
+            var pubkey = tags['p'] || '';
+            if (pubkey) {
+                rows.push(['p', pubkey.length > 40 ? pubkey.slice(0, 40) + '…' : pubkey, 'Public key (Base64). Length ~' + pubkey.length + ' chars']);
+                var bits = pubkey.length >= 392 ? '≥2048 bits (strong)' : pubkey.length >= 196 ? '1024 bits (not recommended since RFC 8301)' : 'Weak';
+                rows.push(['Key strength', bits, 'Estimated from public key Base64 length']);
+            }
+            if (tags['v']) rows.push(['v', tags['v'], 'Version (should be DKIM1)']);
+            if (tags['k']) rows.push(['k', tags['k'], 'Key type (mainly rsa)']);
+            if (tags['s']) rows.push(['s', tags['s'], 'Service type (* or email)']);
+            if (tags['t']) rows.push(['t', tags['t'], 'Flags (y=testing mode, s=strict)']);
+            if (tags['h']) rows.push(['h', tags['h'], 'Signature hash algorithm (sha1/sha256)']);
+            html += keyValTable(rows);
+            if (!tags['p']) html += statusBox('err', '⚠ Record is missing the <code>p=</code> public key tag; DKIM verification will fail.');
+            else if (tags['k'] === 'ed25519') html += statusBox('ok', 'ED25519 key (RFC 8463), modern algorithm.');
+            else if (pubkey.length < 196) html += statusBox('warn', '⚠ Public key appears to be below 1024 bits; upgrade to 2048 bits (RFC 8301).');
+            result.innerHTML = html;
+
+        });
+    });
+})();
+</script>
+</body>
+</html>
