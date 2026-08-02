@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>新一代开源邮件基础设施盘点：KumoMTA、Stalwart 与 mail-auth（2026） - 知识库 · ztpop 邮件技术知识库</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<link rel="stylesheet" href="/css/kb-article.css?v=3">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="article:section" content="邮件服务器架构与运维" />
+<meta property="article:published_time" content="2026-08-02T17:45:00+08:00">
+<meta name="description" content="盘点 2026 年新一代开源邮件基础设施三件套：Rust 编写的高性能外发 MTA KumoMTA（对标 Momentum/PowerMTA）、一体化邮件与协作服务器 Stalwart（IMAP/JMAP/SMTP/CalDAV，内置 DMARC/DKIM2/SPF/ARC）、Rust 邮件认证库 mail-auth。含定位对比、选型建议与 RFC 依据。" />
+<meta name="description.en" content="Survey of next-gen open-source email infrastructure 2026: KumoMTA (Rust high-performance outbound MTA), Stalwart (all-in-one mail & collaboration server with DMARC/DKIM2/SPF/ARC), and mail-auth (Rust DKIM/SPF/DMARC library).">
+    <link rel="canonical" href="https://www.ztpop.net/kb/open-source-mail-infrastructure-2026.html" />
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "新一代开源邮件基础设施盘点：KumoMTA、Stalwart 与 mail-auth（2026）",
+  "description": "盘点 2026 年新一代开源邮件基础设施三件套：Rust 编写的高性能外发 MTA KumoMTA（对标 Momentum/PowerMTA）、一体化邮件与协作服务器 Stalwart（IMAP/JMAP/SMTP/CalDAV，内置 DMARC/DKIM2/SPF/ARC）、Rust 邮件认证库 mail-auth。含定位对比、选型建议与 RFC 依据。",
+  "author": {
+    "@type": "Person",
+    "name": "ztpop.net 邮件技术顾问",
+    "jobTitle": "邮件系统运维工程师"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "昆仑邮件系统",
+    "url": "https://www.ztpop.net/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.ztpop.net/images/logo.webp"
+    },
+    "sameAs": [
+      "https://www.ztpop.net",
+      "https://ztpop.net"
+    ]
+  },
+  "datePublished": "2026-08-02",
+  "dateModified": "2026-08-02T17:45:00+08:00",
+  "keywords": [
+    "开源邮件服务器",
+    "KumoMTA",
+    "Stalwart",
+    "mail-auth",
+    "Rust MTA",
+    "自建邮件系统",
+    "DKIM2",
+    "JMAP"
+  ],
+  "articleSection": "邮件服务器架构与运维",
+  "url": "https://www.ztpop.net/kb/open-source-mail-infrastructure-2026.html",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://www.ztpop.net/kb/open-source-mail-infrastructure-2026.html"
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [
+      ".article-header h1",
+      ".article-body > p:first-of-type"
+    ],
+    "xpath": [
+      "/html/body/article//h1",
+      "/html/body/article//p[1]"
+    ]
+  },
+  "isPartOf": {
+    "@type": "CollectionPage",
+    "@id": "https://www.ztpop.net/kb/"
+  }
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header container">
+        <a href="/"><div class="mg-logo"><img src="/images/logo.webp" width="108" height="57" alt="昆仑邮件系统"></div></a>
+        <div class="mg-nav">
+                        <ul class="nav-list">
+                <li class="nav-li"><a href="/">首页</a></li>
+                <li class="nav-li"><a href="#">产品和服务</a>
+                    <ul class="sub-nav-list">
+                        <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
+                    </ul>
+                </li>
+                <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
+                <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                <li class="nav-li"><a href="/support.html">支持</a></li>
+                <li class="nav-li"><a href="/kb/">知识库</a></li>
+                
+                <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+</ul>
+        </div>
+    </div>
+</header>
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">首页</a></li>
+        <li><a href="/kb/">知识库</a></li>
+        <li><span aria-current="page">新一代开源邮件基础设施盘点：KumoMTA、Stalwart 与 mail-auth（2026） - 知识库 · ztpop 邮件技术知识库</span></li>
+      </ol>
+    </nav>
+
+
+<article>
+<div class="article-body"><div class="article-header"><h1>新一代开源邮件基础设施盘点：KumoMTA、Stalwart 与 mail-auth（2026）</h1>
+    <div class="article-meta"><time datetime="2026-08-02T17:45:00+08:00">发布于 2026-08-02</time></div>
+    <div class="summary" itemprop="description">2026 年的开源邮件基础设施正在经历一轮 Rust 化重构。传统选型（Postfix + Dovecot + OpenDKIM + Rspamd 的组合）依然可靠，但新一代项目已经覆盖了从高性能外发 MTA（KumoMTA）、一体化邮件与协作服务器（Stalwart）到认证协议库（mail-auth）的完整链路。本文基于各项目官方仓库与 IETF RFC，盘点三个代表性项目的定位、能力与选型边界，并给出与既有 Postfix 生态的对照关系。</div>
+</div>
+
+<p>
+开源邮件服务器领域在 2020 年代后半段出现了显著的技术代际变化。传统栈以 Postfix（RFC 5321 传输代理）、Dovecot（IMAP/POP3 投递）、OpenDKIM/OpenDMARC（认证）、Rspamd（过滤）多组件拼装为主；新一代项目则普遍采用 Rust 编写，追求单一二进制、内置认证与过滤、以及对 JMAP（RFC 8620/8621）等现代协议的原生支持。本文盘点的三个项目分别代表外发性能、一体化服务器、认证库三个细分方向，均以官方 GitHub 仓库数据为准（截至 2026-07-31）。
+</p>
+<p>
+<strong>
+一、KumoMTA：为高容量外发而生的开源 MTA
+</strong>
+</p>
+<p>
+KumoMTA（GitHub: KumoCorp/kumomta，Rust，Apache-2.0）是首个从零构建的开源高性能 MTA，明确对标 Momentum、PowerMTA、Halon 等商业外发 MTA。项目由一批有数十年邮件行业经验的工程师创立，社区由全球最大的几家发件方支持。其定位非常明确：面向「有高容量发送环境经验、熟悉 DevOps 实践」的邮件运营专业人员，而非通用小型邮件服务器。
+</p>
+<p>
+与 Postfix 这类通用 MTA 不同，KumoMTA 的核心设计围绕外发吞吐与投递控制展开：Lua 脚本驱动的策略引擎（可编程控制路由、节流、队列策略）、内置对 TLS（RFC 3207）、DKIM（RFC 6376）签名、DMARC（RFC 7489）对齐检测的深度集成，以及对大规模队列管理的优化。它的典型使用场景是营销邮件、事务邮件与通知邮件的规模化外发，替代自建 Postfix 集群在吞吐与可编程性上的不足。最新发布版本 2026.06.23-f3af1cd0（2026-06-23），项目活跃度保持每日提交。
+</p>
+<p>
+选型边界：KumoMTA 是纯 MTA（传输层），不包含邮箱存储与 IMAP/POP3 访问；入站接收能力也非其重点。它适合与 Dovecot、Stalwart 或商业存储层组合，构成「外发 MTA + 存储/访问」的分离式架构。KumoMTA 官方 FAQ 亦明确其定位为外发场景优先。
+</p>
+<p>
+<strong>
+二、Stalwart：一体化邮件与协作服务器
+</strong>
+</p>
+<p>
+Stalwart（GitHub: stalwartlabs/stalwart，Rust，AGPL-3.0，13.9k+ stars）是当前增长最快的开源邮件服务器之一，宣称「Secure, scalable mail & collaboration server with comprehensive protocol support」——单一二进制同时提供 SMTP（RFC 5321）、IMAP4rev2/rev1（RFC 9051/3501）、POP3（RFC 1939）、JMAP（RFC 8620/8621）、CalDAV（RFC 4791）、CardDAV（RFC 6352）与 WebDAV（RFC 4918）服务。最新版本 v0.16.15（2026-07-27）。
+</p>
+<p>
+对邮件认证体系的完整内置是其突出优势：SMTP 服务内建 DMARC（RFC 7489）、DKIM v1（RFC 6376）、DKIM2（draft-ietf-dkim-dkim2-spec，即上文所述新一代签名协议）与 ARC（RFC 8617）认证，支持 DANE（RFC 6698）、MTA-STS（RFC 8461）与 TLS-RPT（RFC 8460）传输安全，并具备自动化 DKIM 密钥轮换。值得注意：Stalwart 在 v0.16.x 系列已率先支持 DKIM2 与 DMARCbis（RFC 9989/9990/9991）——这是 2026 年邮件认证体系升级的风向标，对希望提前验证 DKIM2 兼容性的组织极具参考价值。
+</p>
+<p>
+防垃圾与防钓鱼同样内建：DNSBL 检查、灰名单（greylisting）、垃圾陷阱（spam traps）、统计式垃圾分类器（支持协同过滤与通讯录集成）、基于 LLM 的垃圾邮件分析与同形字（homographic）URL 钓鱼防护、发件人信誉监控（按 IP/ASN/域/邮箱地址）。存储层可插拔：RocksDB、FoundationDB、PostgreSQL、MySQL、SQLite、S3 兼容、Azure 与 Redis；全文搜索支持 17 种语言并可对接 Meilisearch/Elasticsearch/OpenSearch。管理上支持自动 DNS 管理、autoconfig/autodiscover 账户自动发现。
+</p>
+<p>
+选型边界：Stalwart 适合希望以单一组件替代「Postfix + Dovecot + 认证组件 + 过滤组件 + 日历/通讯录服务」多件套的自建场景，尤其适合信创环境下的自托管与中小规模部署。其 AGPL-3.0 许可对商业集成有传染性约束，商业闭源分发需评估；内部自用与 SaaS 提供（AGPL 允许）通常不受影响。
+</p>
+<p>
+<strong>
+三、mail-auth：Rust 邮件认证协议库
+</strong>
+</p>
+<p>
+mail-auth（GitHub: stalwartlabs/mail-auth，Rust，Apache-2.0/MIT 双许可，v0.8.0）是 Stalwart 团队开源的 DKIM、SPF 与 DMARC 库，同时也是 Stalwart 服务器认证模块的底层实现。它提供 DKIM 签名与验证（RFC 6376）、SPF 校验（RFC 7208，含 10 次 DNS 查询上限与宏展开）、DMARC 评估（RFC 7489）的完整 Rust API，被设计为可嵌入任意 Rust 邮件系统。
+</p>
+<p>
+对开发者而言，mail-auth 的价值在于把邮件认证协议的实现复杂度（DNS 查询管理、规范化算法、base64 解析、策略评估状态机）封装为类型安全的库，避免各项目重复实现导致的兼容性差异。对运维者而言，理解 mail-auth 的能力边界有助于判断基于 Rust 的邮件系统（包括 Stalwart 自身）在认证处理上的行为。
+</p>
+<p>
+<strong>
+四、三者关系与选型对照
+</strong>
+</p>
+<table><caption>新一代开源邮件基础设施定位对照（2026-07）</caption>
+<thead>
+<tr>
+<th scope="col">项目</th>
+<th scope="col">语言/许可</th>
+<th scope="col">定位</th>
+<th scope="col">内置认证</th>
+<th scope="col">典型场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KumoMTA</td>
+<td>Rust / Apache-2.0</td>
+<td>高性能外发 MTA（对标 PowerMTA）</td>
+<td>DKIM/DMARC 对齐、TLS</td>
+<td>营销/事务邮件规模化外发</td>
+</tr>
+<tr>
+<td>Stalwart</td>
+<td>Rust / AGPL-3.0</td>
+<td>一体化邮件+协作服务器</td>
+<td>SPF/DKIM/DKIM2/DMARC/ARC/DANE/MTA-STS</td>
+<td>自托管、信创替代、全协议整合</td>
+</tr>
+<tr>
+<td>mail-auth</td>
+<td>Rust / Apache-2.0+MIT</td>
+<td>DKIM/SPF/DMARC 协议库</td>
+<td>（库，供宿主调用）</td>
+<td>Rust 邮件系统开发</td>
+</tr>
+<tr>
+<td>Postfix + Dovecot（传统栈）</td>
+<td>C / IBM 公共许可等</td>
+<td>通用 MTA + 存储访问</td>
+<td>需外接 OpenDKIM/OpenDMARC</td>
+<td>通用自建、已存量大部署</td>
+</tr>
+</tbody>
+</table>
+<p>
+组合建议：高容量外发业务可采「KumoMTA 做外发 + Stalwart 或 Dovecot 做存储与访问」；一体化自托管可直接采用 Stalwart 单组件；需要深度定制认证逻辑的 Rust 项目可嵌入 mail-auth。三者与 DMARCbis（RFC 9989/9990/9991）、DKIM2 的兼容进度是 2026 年选型的重要考量维度——目前 Stalwart 的跟进速度最快。
+</p>
+<p>
+<strong>
+五、对国内自建与信创场景的意义
+</strong>
+</p>
+<p>
+国内企业自建邮件系统与信创替代（国产 CPU/OS 适配）需求持续增长。Rust 系新项目的可移植性（跨 x86/ARM 编译）与单二进制部署特性，使其在信创硬件（鲲鹏、飞腾等 ARM 平台）上具备天然优势。需要提醒的是：信创合规场景仍需对照 GB/T 37002-2026《网络安全技术 电子邮件系统安全技术规范》评估功能覆盖（如国密 SM2/SM3/SM4 支持需自行集成 GM/T 系列算法）；开源项目自身的安全维护责任、许可证合规（AGPL 传染性）、以及供应链安全（依赖审计）是选型前必须完成的尽职调查项。
+</p>
+<p>
+<strong>
+六、延伸阅读
+</strong>
+</p>
+<p>
+本文聚焦 2026 年新一代生态。传统栈的深度运维参考本站既有文章：<a href="/kb/postfix-architecture-deep-dive.html">Postfix 架构深度解析</a>、<a href="/kb/dovecot-imap-server-architecture.html">Dovecot IMAP 服务器架构</a>；认证体系基础见 <a href="/kb/dkim2-chain-of-custody.html">DKIM2 监管链签名机制深度解读</a> 与 <a href="/kb/dmarcbis-rfc9989-overview.html">DMARCbis RFC 9989 概览</a>；安全基线见 <a href="/kb/postfix-dovecot-hardening.html">Postfix/Dovecot 加固实践</a>。
+</p>
+<div class="kb-related">
+<h3>相关主题</h3>
+<ul>
+<li><a href="/kb/postfix-architecture-deep-dive.html">Postfix 架构深度解析：从主进程模型到队列机制</a></li>
+<li><a href="/kb/dovecot-imap-server-architecture.html">Dovecot IMAP 服务器架构解析</a></li>
+<li><a href="/kb/dkim2-chain-of-custody.html">DKIM2 监管链签名机制深度解读</a></li>
+<li><a href="/kb/dmarcbis-rfc9989-overview.html">DMARCbis RFC 9989 概览：DMARC 2.0 的核心变更</a></li>
+<li><a href="/kb/postfix-dovecot-hardening.html">Postfix/Dovecot 安全加固实践</a></li>
+</ul>
+</div>
+</div>
+
+<div class="article-cta">
+    <h3>需要评估开源邮件服务器选型或信创替代方案？</h3>
+    <p>昆仑邮件系统提供自建邮件系统选型评估、开源生态对照与信创合规部署咨询，欢迎联系我们。</p>
+    <p>联系电话：<a href="tel:4008000210">400-800-0210</a> · 邮箱：<a href="mailto:marketing@ztpop.com">marketing@ztpop.com</a></p>
+</div>
+
+<div class="ref-block">
+<h3>技术标准与参考依据</h3>
+<ul>
+<li>RFC 5321 — Simple Mail Transfer Protocol</li>
+<li>RFC 6376 — DomainKeys Identified Mail (DKIM) Signatures</li>
+<li>RFC 7208 — Sender Policy Framework (SPF) for Authorizing Use of Domains in Email</li>
+<li>RFC 7489 — Domain-based Message Authentication, Reporting, and Conformance (DMARC)</li>
+<li>RFC 8617 — Authenticated Received Chain (ARC) Protocol</li>
+<li>RFC 8461 — SMTP MTA Strict Transport Security (MTA-STS)</li>
+<li>RFC 6698 — The DNS-Based Authentication of Named Entities (DANE) TLSA</li>
+<li>RFC 9051 — IMAP4rev2 / RFC 3501 — IMAP4rev1</li>
+<li>RFC 8620 — The JSON Meta Application Protocol (JMAP) / RFC 8621 — JMAP for Mail</li>
+<li>RFC 4791 — CalDAV / RFC 6352 — CardDAV / RFC 4918 — WebDAV</li>
+<li>GB/T 37002-2026 — 网络安全技术 电子邮件系统安全技术规范</li>
+<li>KumoCorp/kumomta — GitHub 官方仓库（Apache-2.0，Rust）</li>
+<li>stalwartlabs/stalwart — GitHub 官方仓库（AGPL-3.0，Rust）</li>
+<li>stalwartlabs/mail-auth — GitHub 官方仓库（Apache-2.0/MIT，Rust）</li>
+</ul>
+</div>
+<div class="citation-block">
+  <h3>引用本文</h3>
+  <p class="citation-format">ztpop.net 知识库编辑. "新一代开源邮件基础设施盘点：KumoMTA、Stalwart 与 mail-auth（2026）" <em>ztpop.net 知识库</em>.</p>
+  <p class="citation-license">本站技术文章采用 CC-BY 4.0 许可，可自由引用，仅需标注来源 ztpop.net。</p>
+</div>
+
+</article>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://www.ztpop.net/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "知识库",
+      "item": "https://www.ztpop.net/kb/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "新一代开源邮件基础设施盘点：KumoMTA、Stalwart 与 mail-auth（2026）"
+    }
+  ]
+}
+</script>
+
+<div class="article-footer">
+    <p>本文由 ztpop.net 知识库编辑发布。了解更多邮件技术实践，请访问知识库或联系 zhangtao@ztpop.net。</p>
+    <p class="article-license">本站技术文章采用 CC-BY 4.0 许可，可自由引用，仅需标注来源 <a href="https://www.ztpop.net">ztpop.net</a>。</p>
+  </div>
+
+<section class="kb-related" data-geo-related="1">
+  <h3>相关阅读 · 邮件服务器架构与运维</h3>
+  <div class="kb-related-grid">
+      <a class="kb-related-card" href="/kb/postfix-architecture-deep-dive.html">Postfix 架构深度解析 · ztpop 邮件技术知识库</a>
+      <a class="kb-related-card" href="/kb/dovecot-imap-server-architecture.html">Dovecot IMAP 服务器架构解析 · ztpop 邮件技术知识库</a>
+      <a class="kb-related-card" href="/kb/dkim2-chain-of-custody.html">DKIM2 监管链签名机制深度解读 · ztpop 邮件技术知识库</a>
+      <a class="kb-related-card" href="/kb/dmarcbis-rfc9989-overview.html">DMARCbis RFC 9989 概览 · ztpop 邮件技术知识库</a>
+  </div>
+</section>
+<!--#include virtual="/partials/footer.html" -->
+</body>
+</html>
