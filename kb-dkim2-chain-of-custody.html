@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DKIM2 监管链签名机制深度解读：链式托管、重放防护与 DSN 安全 - 知识库 · ztpop 邮件技术知识库</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<link rel="stylesheet" href="/css/kb-article.css?v=3">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="article:section" content="电子邮件认证与协议规范" />
+<meta property="article:published_time" content="2026-08-02T17:30:00+08:00">
+<meta name="description" content="基于 IETF 草案 draft-clayton-dkim2-spec（Standards Track，作者来自 Yahoo/Google/Fastmail）深度解读 DKIM2 监管链签名机制：Message-Instance 头部、DKIM2-Signature 头部、链式托管（chain of custody）、Recipe 修改代数、重放防护（exploded/donotexplode 标志）、DSN 退信安全与背散射消除。" />
+<meta name="description.en" content="In-depth analysis of DKIM2 regulatory chain signatures based on IETF draft-clayton-dkim2-spec: Message-Instance header, DKIM2-Signature header, chain of custody, recipe algebra, replay protection (exploded/donotexplode flags), and DSN bounce security.">
+    <link rel="canonical" href="https://www.ztpop.net/kb/dkim2-chain-of-custody.html" />
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "DKIM2 监管链签名机制深度解读：链式托管、重放防护与 DSN 安全",
+  "description": "基于 IETF 草案 draft-clayton-dkim2-spec（Standards Track，作者来自 Yahoo/Google/Fastmail）深度解读 DKIM2 监管链签名机制：Message-Instance 头部、DKIM2-Signature 头部、链式托管（chain of custody）、Recipe 修改代数、重放防护（exploded/donotexplode 标志）、DSN 退信安全与背散射消除。",
+  "author": {
+    "@type": "Person",
+    "name": "ztpop.net 邮件技术顾问",
+    "jobTitle": "邮件系统运维工程师"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "昆仑邮件系统",
+    "url": "https://www.ztpop.net/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.ztpop.net/images/logo.webp"
+    },
+    "sameAs": [
+      "https://www.ztpop.net",
+      "https://ztpop.net"
+    ]
+  },
+  "datePublished": "2026-08-02",
+  "dateModified": "2026-08-02T17:30:00+08:00",
+  "keywords": [
+    "DKIM2",
+    "监管链签名",
+    "chain of custody",
+    "邮件认证",
+    "DKIM 重放",
+    "背散射",
+    "RFC 6376",
+    "邮件安全"
+  ],
+  "articleSection": "电子邮件认证与协议规范",
+  "url": "https://www.ztpop.net/kb/dkim2-chain-of-custody.html",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://www.ztpop.net/kb/dkim2-chain-of-custody.html"
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [
+      ".article-header h1",
+      ".article-body > p:first-of-type"
+    ],
+    "xpath": [
+      "/html/body/article//h1",
+      "/html/body/article//p[1]"
+    ]
+  },
+  "isPartOf": {
+    "@type": "CollectionPage",
+    "@id": "https://www.ztpop.net/kb/"
+  }
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header container">
+        <a href="/"><div class="mg-logo"><img src="/images/logo.webp" width="108" height="57" alt="昆仑邮件系统"></div></a>
+        <div class="mg-nav">
+                        <ul class="nav-list">
+                <li class="nav-li"><a href="/">首页</a></li>
+                <li class="nav-li"><a href="#">产品和服务</a>
+                    <ul class="sub-nav-list">
+                        <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
+                    </ul>
+                </li>
+                <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
+                <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                <li class="nav-li"><a href="/support.html">支持</a></li>
+                <li class="nav-li"><a href="/kb/">知识库</a></li>
+                
+                <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+</ul>
+        </div>
+    </div>
+</header>
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">首页</a></li>
+        <li><a href="/kb/">知识库</a></li>
+        <li><span aria-current="page">DKIM2 监管链签名机制深度解读：链式托管、重放防护与 DSN 安全 - 知识库 · ztpop 邮件技术知识库</span></li>
+      </ol>
+    </nav>
+
+
+<article>
+<div class="article-body"><div class="article-header"><h1>DKIM2 监管链签名机制深度解读：链式托管、重放防护与 DSN 安全</h1>
+    <div class="article-meta"><time datetime="2026-08-02T17:30:00+08:00">发布于 2026-08-02</time></div>
+    <div class="summary" itemprop="description">DKIM2（DomainKeys Identified Mail Signatures v2）是 IETF 正在制定的下一代邮件认证协议，主规范 draft-clayton-dkim2-spec 已进入 Standards Track 流程（截至 2026-03 rev 08，作者来自 Yahoo、Google、Fastmail）。与 DKIM1（RFC 6376）最大的不同在于：DKIM2 引入 Message-Instance 与 DKIM2-Signature 双头部体系，用「监管链签名」（chain of custody）让每一个处理邮件的中间系统记录自己对邮件的修改并重新签名，从而彻底解决 DKIM 重放攻击、转发破坏签名、背散射三大长期顽疾。本文基于草案原文逐节解读其签名机制、链式托管算法与退信安全设计。</div>
+</div>
+
+<p>
+DKIM2 是邮件认证协议十余年来最重要的一次变革。它的设计目标不是修补 DKIM1（RFC 6376）的局部缺陷，而是重构「谁处理过这封邮件、各自做了什么修改」的证明体系。在 DKIM1 体系下，邮件列表追加退订尾注、安全网关改写链接、转发服务修改 Return-Path，都会破坏原始 DKIM 签名，进而导致 DMARC（RFC 7489）评估失败——这是 2010 年代以来邮件投递领域最棘手的结构性问题。ARC（RFC 8617）曾试图用「中间人声明认证快照」的方式缓解，但其信任模型要求收件方信任中间人的声明，实际部署效果不佳，IETF DMARC 工作组已在起草废弃 ARC 的文档。DKIM2 换了一条完全不同的路：不要求任何信任，只要求每一个修改邮件的实体把自己的改动记录成可逆的「配方」（recipe），下游可以撤销这些改动、一路还原到原始发件人的签名。
+</p>
+<p>
+<strong>
+一、DKIM2 头部体系：Message-Instance 与 DKIM2-Signature
+</strong>
+</p>
+<p>
+DKIM2 用两个新头部承载全部签名逻辑（draft-clayton-dkim2-spec-08 第 9、10 节）：
+</p>
+<p>
+<strong>
+1. Message-Instance（消息实例，mi- 前缀标签）
+</strong>
+</p>
+<p>
+Message-Instance 头部记录邮件的「当前内容指纹」以及（当发生修改时）还原上一版本所需的配方。核心标签如下：
+</p>
+<p>
+· <code>v=</code>（必填）：实例版本号。原始发件人写 1，后续每个修改者写「当前最大版本号 + 1」。草案明确规定：版本号出现空洞（gap）必须视为整封邮件无法验证（MUST be treated as making the whole message impossible to verify）；<br>
+· <code>h=</code>（必填）：邮件当前正文与头部字段的哈希值，base64 编码的 JSON 对象（键为算法标识，当前为 "sha256"）；<br>
+· <code>r=</code>（可选）：配方（recipes）——允许下游重建上一版本消息的 JSON 对象，同样 base64 编码。v=1 的 Message-Instance 也可以携带配方（记录邮件进入 DKIM2 生态前所做的修改），其余实例 SHOULD 至少携带一个配方。
+</p>
+<pre>
+<code>
+Message-Instance: v=1; h=eyJzaGEyNTYiOiAieHh4eCJ9
+Message-Instance: v=2; h=eyJzaGEyNTYiOiAieXl5eSJ9;
+  r=eyJyZWNpcGVzIjpbeyJ0eXBlIjoiYXBwZW5kIiwidmFsdWUiOiJcbiJ9XX0
+</code>
+</pre>
+<p>
+<strong>
+2. DKIM2-Signature（签名头部，sig- 前缀标签）
+</strong>
+</p>
+<p>
+DKIM2-Signature 承载签名与取钥数据。草案特别说明：该头部刻意不设版本号——因为历史经验（从 IMF 起）表明版本号一旦发布就几乎不可能更改，若未来需要不兼容的变更，直接命名为 DKIM3 即可。核心标签：
+</p>
+<p>
+· <code>i=</code>（必填）：签名序号，原始发件人为 1，每经一跳 +1。序号空洞视为整封邮件未签名；<br>
+· <code>v=</code>（必填）：本签名对应的最高 Message-Instance 版本号，让验证者确定是哪个实体做了哪次修订；<br>
+· <code>d=</code>（必填）：签名关联域名，用于 DNS 取公钥；d= 域名必须与 mf= 标签中域名的最右侧标签精确匹配（即 mf= 域名必须等于 d= 域名或是其子域）；<br>
+· <code>m=</code>（必填）：base64 编码的 JSON，记录签名 MTA 传输时的 SMTP MAIL FROM 与 RCPT TO 信封参数——这是重放防护与 DSN 安全的关键数据；<br>
+· <code>s=</code>（必填）：base64 编码的 JSON，含一个或多个签名值（RSA-SHA256 键 "rsa"、Ed25519-SHA256 键 "ed25519"），支持多算法并存；<br>
+· <code>t=</code>（必填）：签名时间戳（Unix 秒）。实现 MAY 忽略时间戳在未来或超过 14 天的签名；<br>
+· <code>f=</code>（可选）：标志位（逗号分隔），见下节；<br>
+· <code>n=</code>（可选）：Nonce，长度不得超过 64 字符，可用于索引 DSN 处理。
+</p>
+<p>
+<strong>
+二、签名覆盖范围：只签头部，正文由 Message-Instance 哈希覆盖
+</strong>
+</p>
+<p>
+与 DKIM1 直接对正文和选定头部做哈希不同，DKIM2 的签名计算范围是「所有 Message-Instance 头部 + 所有 DKIM2-Signature 头部」本身（draft-clayton-dkim2-spec-08 第 11.5 节）。正文与其余头部字段的完整性由最高版本（v=）Message-Instance 中的哈希值覆盖。签名时不直接给出被签哈希值——这样为未来不便于暴露哈希值的签名方案保留了灵活性。
+</p>
+<p>
+签名规范化（canonicalization）步骤与 DKIM1 类似但更严格：头部字段名转小写；展开续行（RFC 5322 folding）；所有 WSP 序列折叠为单个 SP；删除行尾 WSP 与冒号两侧 WSP；然后按「Message-Instance 按 v= 升序、DKIM2-Signature 按 i= 升序」排列，最后附加一个「s= 为空」的不完整 DKIM2-Signature（即本系统正在创建的那一个），对拼接结果计算哈希并签名。
+</p>
+<p>
+算法要求（第 3 节）：签名方与验证方 MUST 实现 SHA-256；验证方 MUST 同时实现 RSA-SHA256 与 Ed25519-SHA256（RFC 8032 §5.1 PureEdDSA）；RSA 公钥指数必须为 65537，签名方 RSA 密钥至少 1024 位，验证方须能处理 1024-2048 位。多个签名并存时，验证方必须全部检查（第 12.4 节）——其设计理由在于：当某签名算法被证实存在缺陷时，签名方会用第二种未破算法兜底，验证方若发现「一个通过、一个失败」应能阻止攻击。
+</p>
+<p>
+<strong>
+三、监管链（chain of custody）：重放攻击的根治方案
+</strong>
+</p>
+<p>
+DKIM 重放攻击（DKIM replay）是当前生态最恶劣的漏洞之一：攻击者在信誉良好的服务上创建一封一次性邮件发给自己，然后原封不动地「重放」给成千上万个收件人。由于内容未被修改，原始 DKIM 签名依然验证通过，邮件因此获得比实际发件人更高的投递优先级。DKIM1 对此毫无办法——签名里没有信封信息，无法区分「发给我的这封」与「被复制的这封」。
+</p>
+<p>
+DKIM2 的解法是把信封收件人与发件人写进签名（m= 标签），并建立监管链：每一跳转发都会追加一个 DKIM2-Signature，验证方通过「松弛域匹配」检查相邻签名的衔接关系（draft-clayton-dkim2-spec-08 第 11.3 节）：
+</p>
+<p>
+· 除 i=1 的实例外，每个 DKIM2-Signature 记录的 MAIL FROM 域，必须能与下一低序号签名的 RCPT TO 域匹配；<br>
+· 每个签名自身的 d= 签名域也必须与 mf= 的 MAIL FROM 域松弛匹配；<br>
+· 松弛匹配规则：仅比较域名部分（忽略 local-part 与 @）；若不精确匹配，则从左到右逐标签剥除 MAIL FROM 域名再比较，直至无标签剩余即不匹配。这一设计允许既有的「回弹处理」子域（如 bounce.example.com 作为 MAIL FROM）继续工作。
+</p>
+<p>
+当转发导致 mf= 变化、监管链即将断裂时，签名方 MUST 额外生成一个 DKIM2-Signature 来「补链」——即制造一份记录邮件从一域传给另一域的凭证。这意味着转发系统需要持有某个与 RCPT TO 域相关的私钥；草案给出了两种可行做法：转发方自建私钥并将公钥（及选择器）交给域名所有者发布 DNS 记录，或转发方在自己控制的 DNS 子域发布公钥、域名所有者只需发布一条 CNAME 指向它。
+</p>
+<p>
+配合标志位（f= 标签）体系，监管链形成完整的重放判定逻辑（第 10 节）：
+</p>
+<p>
+· <code>exploded</code>（报告类）：本邮件（由 Message-Instance 哈希唯一标识）被发送给多个地址。收到该标志的 MTA MAY 据此区分恶意重放与邮件列表的合法群发；若所有 DKIM2-Signature 中都没有 exploded 标志，MTA MAY 假定同一封邮件只应存在一份副本；<br>
+· <code>donotexplode</code>（请求类）：签名方请求不要将本邮件发给多个收件人。忽略该请求的系统 MUST NOT 将自己产生的副本转发到其控制范围之外的任何 MTA；<br>
+· <code>donotmodify</code>（请求类）：签名方请求不要修改本邮件。忽略该请求的系统 MUST NOT 将邮件转发到控制范围之外；<br>
+· <code>feedback</code>（请求类）：签名方请求收件人反馈对该邮件的处理意见（如是否判为垃圾邮件）；未出现该标志则明确表示不需要反馈。
+</p>
+<p>
+<strong>
+四、Recipe 修改代数：撤销中间人改动
+</strong>
+</p>
+<p>
+当转发方修改了正文或头部（成为 Reviser，draft-clayton-dkim2-spec-08 第 2.3 节），它必须计算新哈希并追加一个新的 Message-Instance，其 r= 配方允许下游重建前一版本。验证方若只关心原始形态，可以按顺序应用全部配方、只校验一个哈希值——中间哈希的正确性与此评估无关（第 12.6 节）。配方定义在配套草案 draft-gondwana-dkim2-modification-alegbra（《A method for describing changes made to an email》）中，草案要求配方不得重叠（overlaps），以确保可逆性。配套的 draft-gondwana-dkim2-header（《DKIM2 Header Definitions》）定义了头部的具体语法。
+</p>
+<p>
+这一设计与 ARC 的本质区别在于：ARC 的中间人声明「我收到时验证通过」（需要收件方信任中间人）；DKIM2 的中间人声明「我具体做了什么修改」（不需要信任——任何修改都可被撤销、可被验证、可被追溯）。如果某个修改是恶意的（如注入垃圾链接），收件方可以依据自身策略处置，而无需求助于原始发件域的信誉。
+</p>
+<p>
+<strong>
+五、DSN 退信安全：消除背散射
+</strong>
+</p>
+<p>
+背散射（backscatter）是异步退信的副产品：垃圾邮件伪造无辜用户的地址作为 MAIL FROM，收件服务器无法即时拒绝时产生的退信会轰炸无辜用户。DKIM2 从机制上解决这个问题（第 13 节）：
+</p>
+<p>
+· DSN MUST 发送给「实际投递了邮件的 MTA」——即取最高序号 DKIM2-Signature 的 mf= 标签作为退信目标，沿 MTA 链逐跳回传，伪造地址不再收到退信；<br>
+· 若 mf= 为 null（<code>mf=&lt;&gt;</code>），MUST NOT 发送 DSN（防止退信风暴）；<br>
+· 入站退信认证：收到的 DKIM2 签名退信（内含 message/rfc822 原邮件）必须验证——DSN 的签名域应与被退回邮件最后签名（最高 i=）的 rt= 收件人域对齐；被退回邮件的最后签名应来自接收退信的系统自身（检查其 d= 与 mf=）；内嵌邮件的头部（含正文时含正文）必须可验证。验证失败则 MUST NOT 继续传播该 DSN；<br>
+· 退信传播（第 13.1.1 节）：Forwarder 收到 DSN 后可选择沿 mf= 链继续回传（递增跳数、补充 Message-Instance 与 DKIM2-Signature），或利用 Message-Instance 配方重建「投递到本转发器时」的邮件形态再生成 DSN——后者可避免向上游暴露转发目标细节。
+</p>
+<p>
+对 ESP 而言，这意味着「延迟退信」从「被滥用的漏洞」变成「可信的合规信号」：邮箱服务商可以在接受邮件后判定垃圾邮件并延迟退信给实际发件链上的上一跳，合规团队由此获得精确到「哪封邮件进了哪个收件人的垃圾箱」的数据。但代价是入站退信流量将大幅增长——多数 ESP 的入站管道容量严重不足，这是 DKIM2 落地时最现实的工程挑战。
+</p>
+<p>
+<strong>
+六、验证器行为与 SMTP 交互约定
+</strong>
+</p>
+<p>
+验证结果分为三态：SUCCESS / PERMFAIL（永久失败，如签名验证失败、哈希不匹配）/ TEMPFAIL（临时失败，如 DNS 超时）（第 12.1 节）。关键约定：
+</p>
+<p>
+· 取钥失败语义：DNS 查询失败 → TEMPFAIL（key unavailable）；记录不存在 → PERMFAIL（no key for signature）；多条公钥记录 → PERMFAIL（more than one key returned）；公钥语法错误 → PERMFAIL（key syntax error）；p= 为空 → 密钥已撤销，PERMFAIL（key revoked）；<br>
+· 未知标签 MUST NOT 导致验证失败（前向兼容）；但对标签格式与取值 MUST 严格校验，宽松接受是错误策略（第 12.2 节）；<br>
+· 接收方 SHOULD 先校验最高序号（最新）签名及其关联 Message-Instance，再决定是否接受邮件；若未通过且不想要该邮件，最佳策略是在 SMTP 会话期间以 5xx 拒绝（此后禁止再生成 DSN）；TEMPFAIL 时用 4xx 让发件 MTA 重试；<br>
+· 拒绝码约定：签名缺失或验证失败的拒绝 SHOULD 用 550/5.7.x；仅当外部服务（如密钥服务器）不可用时才允许 4xx（如 <code>451 4.7.5 Unable to verify signature - key server unavailable</code>）；密码学签名验证失败 MUST NOT 触发 4xx 响应；<br>
+· 验证方 SHOULD 将最新签名的 MAIL FROM 与 SMTP 会话实际值精确比对（含 local-part，转小写，不使用松弛匹配），并确认会话中所有 RCPT TO 都出现在最新签名中——允许签名记录比实际会话多（群发场景），但不允许少；<br>
+· 验证结果可用 RFC 8601 Authentication-Results 头部传递，但该头部必须插在既有 DKIM2-Signature / 认证状态头部之前——且任何后续签名生成都会把 Authentication-Results 计入「对邮件的修改」。
+</p>
+<p>
+<strong>
+七、传输规范化与 EAI 预留
+</strong>
+</p>
+<p>
+DKIM2 的签名前提是「网络正常格式」（ASCII 文本、CRLF 行分隔）。草案第 14 节要求：对将用 base64 或 quoted-printable 编码传输的邮件，签名方 MUST 在编码之后计算哈希，验证方 MUST 在解码之前将值纳入哈希；但哈希 MUST 在 SMTP dot-stuffing（行首句点转义）之前计算。裸 CR 或 LF 等本地行分隔符 MUST 在签名前转换为 CRLF，且这种转换应作用于实际发送给收件人的版本。EAI（RFC 6530）与 IANA 注册章节目前为 TBA（待定），表明规范仍在演进中。
+</p>
+<p>
+<strong>
+八、对部署者的意义与现状
+</strong>
+</p>
+<p>
+截至 2026 年 3 月的 rev 08，DKIM2 已有可工作的参考实现，参与开发的主要邮箱服务商接近测试部署就绪，多语言库与 milters 已开始出现。对品牌发件人，部署几乎透明——DKIM2 重用 DKIM 密钥（选择器机制与 DNS 发布方式兼容），多数发件人无需改动。真正需要提前准备的是 ESP、邮件基础设施公司与邮箱服务商：签名代码需支持新头部与标志；投递阶段需过渡期双签名（DKIM1 + DKIM2，类似当年 DomainKeys → DKIM 的过渡）；入站管道需扩容以承接延迟退信流量；地址剔除策略（收到退信后是否从发送列表移除）与客户投递率报告口径（24 小时后投递率从 99% 降至 95% 如何向客户解释）都需要行业共同制定规范。
+</p>
+<p>
+<strong>
+九、与现有协议的关系
+</strong>
+</p>
+<p>
+DKIM2 继承了 DKIM1 的「签名域 + DNS 公钥」模型（d= 与选择器语义延续 RFC 6376），也借鉴了 ARC（RFC 8617）的链式思路，但把信任模型从「声明」改为「可撤销的修改记录」。DMARC 的演进方向（RFC 9989/9990/9991，即 DMARCbis 系列）与 DKIM2 共同构成下一代认证体系——DMARCbis 负责策略与报告，DKIM2 负责签名与链式托管，两者在部署上互补。对邮件系统管理员而言，理解 DKIM2 的监管链机制，是迎接 2026-2027 年邮件认证体系升级的关键准备。
+</p>
+<div class="kb-related">
+<h3>相关主题</h3>
+<ul>
+<li><a href="/kb/dkim2-main.html">DKIM2：它对邮件的未来意味着什么？（Laura Atkins 解读中文翻译）</a></li>
+<li><a href="/kb/dkim2-async-bounce-verp.html">DKIM2、异步退信与 VERP：ESP 需要做好的准备</a></li>
+<li><a href="/kb/dmarcbis-rfc9989-overview.html">DMARCbis RFC 9989 概览：DMARC 2.0 的核心变更</a></li>
+<li><a href="/kb/dkim-guide.html">DKIM 邮件签名机制深度解析 — RFC 6376</a></li>
+<li><a href="/kb/rfc8463-dkim-ed25519.html">RFC 8463 DKIM 的 ed25519 签名</a></li>
+</ul>
+</div>
+</div>
+
+<div class="article-cta">
+    <h3>需要为您的企业邮件系统做好 DKIM2 升级准备？</h3>
+    <p>昆仑邮件系统提供邮件认证体系（SPF/DKIM/DMARC/DKIM2）评估与部署方案，欢迎联系我们获取咨询。</p>
+    <p>联系电话：<a href="tel:4008000210">400-800-0210</a> · 邮箱：<a href="mailto:marketing@ztpop.com">marketing@ztpop.com</a></p>
+</div>
+
+<div class="ref-block">
+<h3>技术标准与参考依据</h3>
+<ul>
+<li>IETF Internet-Draft draft-clayton-dkim2-spec-08 — DomainKeys Identified Mail Signatures v2 (DKIM2)，2026-03，Standards Track（作者：R. Clayton/Yahoo、W. Chuang/Google、B. Gondwana/Fastmail）</li>
+<li>IETF Internet-Draft draft-gondwana-dkim2-header — DKIM2 Header Definitions（rev 05）</li>
+<li>IETF Internet-Draft draft-gondwana-dkim2-modification-alegbra — A method for describing changes made to an email（rev 04）</li>
+<li>IETF Internet-Draft draft-robinson-dkim2-bounce-processing — DKIM2 Procedures for bounce processing（rev 01）</li>
+<li>RFC 6376 — DomainKeys Identified Mail (DKIM) Signatures（DKIM1）</li>
+<li>RFC 7489 — Domain-based Message Authentication, Reporting, and Conformance (DMARC)</li>
+<li>RFC 8617 — Authenticated Received Chain (ARC) Protocol</li>
+<li>RFC 8032 — Ed25519 and Ed448 signatures（PureEdDSA）</li>
+<li>RFC 3461 — Simple Mail Transfer Protocol (SMTP) Service Extension for Delivery Status Notifications</li>
+<li>RFC 8601 — Message Header Field for Indicating Message Authentication Status</li>
+</ul>
+</div>
+<div class="citation-block">
+  <h3>引用本文</h3>
+  <p class="citation-format">ztpop.net 知识库编辑. "DKIM2 监管链签名机制深度解读：链式托管、重放防护与 DSN 安全" <em>ztpop.net 知识库</em>.</p>
+  <p class="citation-license">本站技术文章采用 CC-BY 4.0 许可，可自由引用，仅需标注来源 ztpop.net。</p>
+</div>
+
+</article>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://www.ztpop.net/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "知识库",
+      "item": "https://www.ztpop.net/kb/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "DKIM2 监管链签名机制深度解读：链式托管、重放防护与 DSN 安全"
+    }
+  ]
+}
+</script>
+
+<div class="article-footer">
+    <p>本文由 ztpop.net 知识库编辑发布。了解更多邮件技术实践，请访问知识库或联系 zhangtao@ztpop.net。</p>
+    <p class="article-license">本站技术文章采用 CC-BY 4.0 许可，可自由引用，仅需标注来源 <a href="https://www.ztpop.net">ztpop.net</a>。</p>
+  </div>
+
+<section class="kb-related" data-geo-related="1">
+  <h3>相关阅读 · 邮件认证与防伪造（SPF/DKIM/DMARC）</h3>
+  <div class="kb-related-grid">
+      <a class="kb-related-card" href="/topics/email-auth.html">主题枢纽：邮件认证与防伪造（SPF/DKIM/DMARC）</a>
+      <a class="kb-related-card" href="/kb/dkim2-main.html">DKIM2：它对邮件的未来意味着什么？ · ztpop 邮件技术知识库</a>
+      <a class="kb-related-card" href="/kb/dkim2-async-bounce-verp.html">DKIM2、异步退信与 VERP：ESP 需要做好的准备 · ztpop 邮件技术知识库</a>
+      <a class="kb-related-card" href="/kb/dmarcbis-rfc9989-overview.html">DMARCbis RFC 9989 概览 · ztpop 邮件技术知识库</a>
+  </div>
+</section>
+<!--#include virtual="/partials/footer.html" -->
+</body>
+</html>
