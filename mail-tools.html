@@ -115,7 +115,7 @@
       "name": "DNSBL 黑名单查询怎么用？",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "输入发信服务器 IP，查询其在 Spamhaus、Barracuda 等主流 DNSBL 黑名单中的收录状态。IP 被列入黑名单会导致大批量邮件被拒收，需要向对应组织申诉解除。"
+        "text": "输入发信服务器 IP 或域名，查询其在 Spamhaus、Barracuda、UCEPROTECT 等 21 个主流 DNSBL 黑名单中的收录状态（IP 查询自动匹配 IP 类，域名查询自动匹配域名/URI 类）。IP 被列入黑名单会导致大批量邮件被拒收，需要向对应组织申诉解除。"
       }
     },
     {
@@ -149,12 +149,14 @@
                         <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
                         <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
                         <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
                     </ul>
                 </li>
+                <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
                 <li class="nav-li"><a href="/solution.html">解决方案</a></li>
                 <li class="nav-li"><a href="/support.html">支持</a></li>
                 <li class="nav-li"><a href="/kb/">知识库</a></li>
-                <li class="nav-li"><a href="/standards/">标准与工具</a></li>
+                
                 <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
                 <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
                 <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
@@ -217,15 +219,35 @@
   <button onclick="checkDNSBL()">查询</button>
  </div>
  <div id="dnsbl-config" style="margin-bottom:16px;">
-  <div style="font-size:13px;color:#666;margin-bottom:8px;">选择要查询的黑名单：</div>
+  <div style="font-size:13px;color:#666;margin-bottom:8px;">选择要查询的黑名单（IP 查询仅用 IP 类，域名查询仅用域名/URI 类，自动过滤）：<button id="dnsbl-all" type="button" style="margin-left:8px;padding:2px 10px;font-size:12px;cursor:pointer;border:1px solid #003366;background:#fff;color:#003366;border-radius:4px">全选</button> <button id="dnsbl-reset" type="button" style="padding:2px 10px;font-size:12px;cursor:pointer;border:1px solid #ccc;background:#fff;color:#555;border-radius:4px">恢复默认</button></div>
   <div id="dnsbl-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:#555;">
-   <label><input type="checkbox" checked data-list="zen.spamhaus.org"> Spamhaus ZEN</label>
-   <label><input type="checkbox" checked data-list="dbl.spamhaus.org"> Spamhaus DBL</label>
-   <label><input type="checkbox" checked data-list="b.barracudacentral.org"> Barracuda</label>
-   <label><input type="checkbox" checked data-list="bl.spamcop.net"> SpamCop</label>
-   <label><input type="checkbox" checked data-list="multi.surbl.org"> SURBL</label>
-   <label><input type="checkbox" checked data-list="dnsbl.sorbs.net"> SORBS</label>
-   <label><input type="checkbox" checked data-list="cbl.abuseat.org"> CBL</label>
+   <div style="width:100%;font-size:12px;color:#888;font-weight:600;">IP 类（查询发信 IP）</div>
+   <label><input type="checkbox" checked data-list="zen.spamhaus.org" data-type="ip"> Spamhaus ZEN</label>
+   <label><input type="checkbox" data-list="sbl.spamhaus.org" data-type="ip"> Spamhaus SBL</label>
+   <label><input type="checkbox" data-list="xbl.spamhaus.org" data-type="ip"> Spamhaus XBL</label>
+   <label><input type="checkbox" data-list="pbl.spamhaus.org" data-type="ip"> Spamhaus PBL</label>
+   <label><input type="checkbox" checked data-list="b.barracudacentral.org" data-type="ip"> Barracuda</label>
+   <label><input type="checkbox" checked data-list="bl.spamcop.net" data-type="ip"> SpamCop</label>
+   <label><input type="checkbox" checked data-list="dnsbl.sorbs.net" data-type="ip"> SORBS</label>
+   <label><input type="checkbox" checked data-list="cbl.abuseat.org" data-type="ip"> CBL</label>
+   <label><input type="checkbox" data-list="dnsbl-1.uceprotect.net" data-type="ip"> UCEPROTECT L1</label>
+   <label><input type="checkbox" data-list="dnsbl-2.uceprotect.net" data-type="ip"> UCEPROTECT L2</label>
+   <label><input type="checkbox" data-list="dnsbl-3.uceprotect.net" data-type="ip"> UCEPROTECT L3</label>
+   <label><input type="checkbox" data-list="dnsbl.invaluement.com" data-type="ip"> Invaluement</label>
+   <label><input type="checkbox" data-list="bl.spamrats.com" data-type="ip"> SpamRats</label>
+   <label><input type="checkbox" data-list="justspam.org" data-type="ip"> JustSpam</label>
+   <label><input type="checkbox" data-list="hostkarma.junkemailfilter.com" data-type="ip"> JunkEmailFilter</label>
+   <label><input type="checkbox" data-list="psbl.surriel.com" data-type="ip"> PSBL</label>
+   <label><input type="checkbox" data-list="bl.blocklist.de" data-type="ip"> Blocklist.de</label>
+   <label><input type="checkbox" data-list="dnsbl.dronebl.org" data-type="ip"> DroneBL</label>
+   <div style="width:100%;font-size:12px;color:#888;font-weight:600;">域名类（查询发信域名）</div>
+   <label><input type="checkbox" checked data-list="dbl.spamhaus.org" data-type="domain"> Spamhaus DBL</label>
+   <label><input type="checkbox" data-list="dbl.spameatingmonkey.net" data-type="domain"> SpamEatingMonkey DBL</label>
+   <div style="width:100%;font-size:12px;color:#888;font-weight:600;">URI 类（查询邮件内链接域名）</div>
+   <label><input type="checkbox" checked data-list="multi.surbl.org" data-type="uri"> SURBL</label>
+   <label><input type="checkbox" data-list="uribl.spameatingmonkey.net" data-type="uri"> SpamEatingMonkey URI</label>
+   <div style="width:100%;font-size:12px;color:#888;font-weight:600;">白名单（命中=信誉良好）</div>
+   <label><input type="checkbox" data-list="list.dnswl.org" data-type="wl"> DNSWL（白名单）</label>
   </div>
  </div>
  <div id="dnsbl-loading" class="tool-loading">⏳ 正在查询黑名单...</div>
@@ -449,19 +471,26 @@
         var input = document.getElementById('dnsbl-input').value.trim();
         var result = document.getElementById('dnsbl-result');
         if (!input) { result.innerHTML = statusBox('err', '请输入 IP 地址或域名。'); return; }
+        var isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(input);
+        var needType = isIP ? 'ip' : (input.indexOf('.') > 0 ? 'domain' : null);
         var lists = [];
         document.querySelectorAll('#dnsbl-checkboxes input[type=checkbox]').forEach(function(c) {
-            if (c.checked) lists.push(c.getAttribute('data-list'));
+            if (!c.checked) return;
+            var t = c.getAttribute('data-type');
+            if (needType === 'ip' && (t === 'ip' || t === 'wl')) lists.push({ list: c.getAttribute('data-list'), type: t });
+            else if (needType === 'domain' && (t === 'domain' || t === 'uri' || t === 'wl')) lists.push({ list: c.getAttribute('data-list'), type: t });
+            else if (!needType) lists.push({ list: c.getAttribute('data-list'), type: t });
         });
-        if (!lists.length) { result.innerHTML = statusBox('err', '请至少选择一个黑名单。'); return; }
-        var isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(input);
+        var skipped = document.querySelectorAll('#dnsbl-checkboxes input[type=checkbox]:checked').length - lists.length;
+        if (!lists.length) { result.innerHTML = statusBox('err', '所选黑名单不适用于该查询类型（IP 查询需 IP 类，域名查询需域名/URI 类）。'); return; }
         var base;
         if (isIP) base = input.split('.').reverse().join('.');
         else base = input;
         document.getElementById('dnsbl-loading').style.display = 'block';
         result.innerHTML = '';
         var done = 0;
-        lists.forEach(function(list) {
+        lists.forEach(function(item) {
+            var list = item.list;
             var qname = base + '.' + list;
             dohQuery(qname, 'A', function(err, j) {
                 done++;
@@ -470,30 +499,46 @@
                     listed = true;
                     aRecord = j.Answer[0].data;
                 }
+                var isWL = item.type === 'wl';
                 var row = document.createElement('div');
-                row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-radius:6px;margin-bottom:6px;font-size:13.5px;' +
-                    (listed ? 'background:#fdecea;border:1px solid #f5c6cb' : 'background:#f0fdf4;border:1px solid #c8e6c9');
-                row.innerHTML = '<span>' + esc(list) + '</span>' +
-                    (listed ? '<span style="color:#a94442;font-weight:600">🔴 已列入（' + esc(aRecord) + '）</span>' : '<span style="color:#2e7d32">🟢 未列入</span>');
+                var hitColor = isWL ? '#0066cc' : '#a94442';
+                var bg = listed ? (isWL ? '#e8f4fd' : '#fdecea') : '#f0fdf4';
+                var bd = listed ? (isWL ? '#b8d4f0' : '#f5c6cb') : '#c8e6c9';
+                row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-radius:6px;margin-bottom:6px;font-size:13.5px;background:' + bg + ';border:1px solid ' + bd;
+                var statusTxt;
+                if (isWL) statusTxt = listed ? '<span style="color:' + hitColor + ';font-weight:600">🟦 白名单命中（' + esc(aRecord) + '）</span>' : '<span style="color:#2e7d32">⚪ 未在白名单</span>';
+                else statusTxt = listed ? '<span style="color:' + hitColor + ';font-weight:600">🔴 已列入（' + esc(aRecord) + '）</span>' : '<span style="color:#2e7d32">🟢 未列入</span>';
+                row.innerHTML = '<span>' + esc(list) + '</span>' + statusTxt;
                 result.appendChild(row);
                 if (done === lists.length) {
                     document.getElementById('dnsbl-loading').style.display = 'none';
                     if (!result.querySelector('.dnsbl-summary')) {
                         var listedCount = result.querySelectorAll('span[style*="a94442"]').length;
+                        var wlCount = result.querySelectorAll('span[style*="0066cc"]').length;
                         var sum = document.createElement('div');
                         sum.className = 'dnsbl-summary';
                         sum.style.cssText = 'margin-top:10px;font-size:13.5px;color:#666';
-                        sum.innerHTML = listedCount ? statusBox('warn', '检测到 ' + listedCount + ' 个黑名单收录该地址。' +
-                            '需登录对应黑名单网站提交移除申请（delist），通常 24-72 小时生效。') :
-                            statusBox('pass', '所选 ' + lists.length + ' 个黑名单均未收录该地址。');
+                        var tip = (isIP ? '' : '域名查询不适用于 IP 类黑名单，') + (skipped > 0 ? '已自动跳过 ' + skipped + ' 个不适用类型。' : '');
+                        if (listedCount) sum.innerHTML = statusBox('warn', '检测到 ' + listedCount + ' 个黑名单收录该地址。' +
+                            '需登录对应黑名单网站提交移除申请（delist），通常 24-72 小时生效。' + tip);
+                        else sum.innerHTML = statusBox('pass', '所选黑名单均未收录该地址。' + tip + (wlCount ? '（白名单命中 ' + wlCount + ' 个，信誉良好）' : ''));
                         result.appendChild(sum);
                     }
                 }
             });
         });
     };
+    document.getElementById('dnsbl-all') && document.getElementById('dnsbl-all').addEventListener('click', function() {
+        document.querySelectorAll('#dnsbl-checkboxes input[type=checkbox]').forEach(function(c) { c.checked = true; });
+    });
+    document.getElementById('dnsbl-reset') && document.getElementById('dnsbl-reset').addEventListener('click', function() {
+        var def = ['zen.spamhaus.org', 'b.barracudacentral.org', 'bl.spamcop.net', 'dnsbl.sorbs.net', 'cbl.abuseat.org', 'dbl.spamhaus.org', 'multi.surbl.org'];
+        document.querySelectorAll('#dnsbl-checkboxes input[type=checkbox]').forEach(function(c) {
+            c.checked = def.indexOf(c.getAttribute('data-list')) >= 0;
+        });
+    });
 
-    // ========== SMTP 错误码速查 ==========
+// ========== SMTP 错误码速查 ==========
     var SMTP_CODES = [
         { code: '220', cls: '2xx', desc: '服务就绪', detail: 'SMTP 服务器就绪，可开始会话。' },
         { code: '221', cls: '2xx', desc: '服务关闭传输通道', detail: '服务器即将关闭连接。' },
