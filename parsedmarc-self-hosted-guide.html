@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>parsedmarc 自托管教程：开源 DMARC/TLS-RPT 报告处理系统部署指南 · ztpop 邮件技术知识库</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<link rel="stylesheet" href="/css/kb-article.css?v=3">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="article:section" content="邮件认证与防伪造">
+<meta property="article:published_time" content="2026-08-03T02:30:00+08:00">
+<meta name="description" content="parsedmarc 是 DMARC 聚合/失败报告（RFC 7489/9990/9991）与 SMTP TLS 报告（RFC 8460）的开源解析器，可自托管替代商业 DMARC 报告服务。本文提供 Debian/Ubuntu 安装、systemd 服务化、Elasticsearch/Kibana 可视化与邮箱监控的完整部署指南。" />
+<meta name="description.en" content="Self-hosted parsedmarc deployment guide: DMARC aggregate/failure report parsing (RFC 7489/9990/9991), SMTP TLS reporting (RFC 8460), IMAP monitoring, and Elasticsearch/Kibana dashboards.">
+    <link rel="canonical" href="https://www.ztpop.net/kb/parsedmarc-self-hosted-guide.html" />
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "parsedmarc 自托管教程：开源 DMARC/TLS-RPT 报告处理系统部署指南",
+  "description": "parsedmarc 是 DMARC 聚合/失败报告（RFC 7489/9990/9991）与 SMTP TLS 报告（RFC 8460）的开源解析器，可自托管替代商业 DMARC 报告服务。本文提供 Debian/Ubuntu 安装、systemd 服务化、Elasticsearch/Kibana 可视化与邮箱监控的完整部署指南。",
+  "author": {
+    "@type": "Person",
+    "name": "ztpop.net 邮件技术顾问",
+    "jobTitle": "邮件系统运维工程师"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "昆仑邮件系统",
+    "url": "https://www.ztpop.net/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.ztpop.net/images/logo.webp"
+    },
+    "sameAs": [
+      "https://www.ztpop.net",
+      "https://ztpop.net"
+    ]
+  },
+  "datePublished": "2026-08-03",
+  "dateModified": "2026-08-03T02:30:00+08:00",
+  "keywords": [
+    "parsedmarc",
+    "DMARC",
+    "TLS-RPT",
+    "RFC 7489",
+    "RFC 9990",
+    "RFC 9991",
+    "RFC 8460",
+    "自托管",
+    "邮件认证与防伪造"
+  ],
+  "articleSection": "邮件认证与防伪造",
+  "url": "https://www.ztpop.net/kb/parsedmarc-self-hosted-guide.html",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://www.ztpop.net/kb/parsedmarc-self-hosted-guide.html"
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [
+      ".article-header h1",
+      ".article-body > p:first-of-type"
+    ],
+    "xpath": [
+      "/html/body/article//h1",
+      "/html/body/article//p[1]"
+    ]
+  },
+  "isPartOf": {
+    "@type": "CollectionPage",
+    "@id": "https://www.ztpop.net/kb/"
+  }
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header container">
+        <a href="/"><div class="mg-logo"><img src="/images/logo.webp" width="108" height="57" alt="昆仑邮件系统"></div></a>
+        <div class="mg-nav">
+            <ul class="nav-list">
+                <li class="nav-li"><a href="/">首页</a></li>
+                <li class="nav-li"><a href="#">产品和服务</a>
+                    <ul class="sub-nav-list">
+                        <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
+                    </ul>
+                </li>
+                <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
+                <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                <li class="nav-li"><a href="/support.html">支持</a></li>
+                <li class="nav-li"><a href="/kb/">知识库</a></li>
+                <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+</ul>
+        </div>
+    </div>
+</header>
+<article>
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">首页</a></li>
+        <li><a href="/kb/">知识库</a></li>
+        <li><span aria-current="page">parsedmarc 自托管教程 · ztpop 邮件技术知识库</span></li>
+      </ol>
+    </nav>
+
+<div class="article-body"><div class="article-header"><h1>parsedmarc 自托管教程：开源 DMARC/TLS-RPT 报告处理系统部署指南</h1>
+    <div class="article-meta"><time datetime="2026-08-03T02:30:00+08:00">发布于 2026-08-03</time></div>
+    <div class="summary" itemprop="description">用开源 parsedmarc 替代商业 DMARC 报告服务，掌握邮件认证数据的完整生命周期</div>
+
+<p class="meta">用开源 parsedmarc 替代商业 DMARC 报告服务，掌握邮件认证数据的完整生命周期</p></div>
+
+<h2>1. parsedmarc 是什么</h2>
+
+<p>parsedmarc 是 domainaware 维护的 Python 模块与命令行工具，用于解析 DMARC 报告。配合 Elasticsearch 与 Kibana（或 Splunk）使用时，它是 Agari Brand Protection、Dmarcian、OnDMARC、ProofPoint Email Fraud Defense、Valimail 等商业 DMARC 报告处理服务的自托管开源替代方案。项目由单一开发者维护，支持通过 GitHub Sponsors 赞助。</p>
+
+<p>parsedmarc 覆盖的输入类型包括：</p>
+
+<ul>
+<li><strong>DMARC 聚合报告（rua）</strong>：兼容旧草案与 1.0 schema（RFC 7489），以及最终 DMARC 标准 RFC 9989 的 RFC 9990 新 schema。</li>
+<li><strong>DMARC 失败报告（ruf，原取证报告）</strong>：RFC 6591 与 RFC 9991 两种格式。</li>
+<li><strong>SMTP TLS 报告</strong>：RFC 8460（TLS-RPT）的 TLS 报告。</li>
+</ul>
+
+<p>它可以从 IMAP 收件箱、Microsoft Graph 或 Gmail API 读取报告邮件，透明处理 gzip 或 zip 压缩附件，输出一致的 JSON/CSV 数据结构；可选将结果发送至 Elasticsearch、OpenSearch、Splunk、PostgreSQL（配合预置仪表盘），也可输出至 Apache Kafka、Amazon S3、Azure Log Analytics（Microsoft Sentinel）、Graylog（GELF）、syslog 或 HTTP webhook。</p>
+
+<h2>2. 与商业服务的对比定位</h2>
+
+<p>商业 DMARC 报告服务（Dmarcian、EasyDMARC、PowerDMARC 等）的核心价值是「解析报告 + 可视化解读」。自托管 parsedmarc 用开源组件复刻了这条链路：</p>
+
+<table>
+<tr><th>能力</th><th>商业 SaaS</th><th>parsedmarc 自托管</th></tr>
+<tr><td>解析 rua/ruf 报告</td><td>内置</td><td>内置（含 RFC 9990/9991 新格式）</td></tr>
+<tr><td>TLS-RPT 处理</td><td>部分支持</td><td>内置（RFC 8460）</td></tr>
+<tr><td>可视化</td><td>云端仪表盘</td><td>Kibana/Splunk 仪表盘</td></tr>
+<tr><td>数据主权</td><td>报告送第三方</td><td>完全本地</td></tr>
+<tr><td>运维成本</td><td>订阅费</td><td>服务器 + Elasticsearch 资源</td></tr>
+</table>
+
+<p>选择自托管的典型场景：报告数据敏感不愿外送（金融/政务）、已有 Elasticsearch 基础设施、批量域名需要无限制处理、或预算限制。商业服务的优势则是零运维与开箱即用的策略建议。</p>
+
+<h2>3. 安装 parsedmarc（Debian/Ubuntu）</h2>
+
+<h3>3.1 系统依赖</h3>
+
+<p>parsedmarc 需要 Python 3.10 或更新版本。官方文档支持的版本为 3.10–3.14（3.14 需 imapclient≥3.1.0）。Debian 系安装依赖：</p>
+
+<pre><code>sudo apt-get install -y python3-pip python3-venv python3-dev libxml2-dev libxslt-dev</code></pre>
+
+<p>CentOS/RHEL/Rocky Linux 对应：<code>sudo dnf install -y python3 python3-pip python3-devel libxml2-devel libxslt-devel</code>。</p>
+
+<h3>3.2 创建专用系统用户与虚拟环境</h3>
+
+<p>官方推荐创建专用系统用户并以 <code>/opt/parsedmarc</code> 为家目录，使目录所有权正确：</p>
+
+<pre><code>sudo useradd --system --create-home --home-dir /opt/parsedmarc \
+    --shell /usr/sbin/nologin --skel /dev/null parsedmarc
+sudo -u parsedmarc python3 -m venv /opt/parsedmarc/venv
+sudo -u parsedmarc /opt/parsedmarc/venv/bin/pip install --upgrade pip
+sudo -u parsedmarc /opt/parsedmarc/venv/bin/pip install --upgrade parsedmarc</code></pre>
+
+<p>升级 parsedmarc 时重跑最后一条命令并重启服务即可。可选依赖：解析 Outlook .msg 文件需安装 <code>msgconvert</code>（Debian 系 <code>sudo apt-get install libemail-outlook-message-perl</code>）。</p>
+
+<h3>3.3 IP 地理数据库</h3>
+
+<p>parsedmarc 内置 IPinfo Lite 数据库（CC BY-SA 4.0），启动时自动从 GitHub 刷新（watch 模式下收到 SIGHUP 也刷新），设置 <code>offline</code> 标志可禁用。默认无需任何 IP 数据库配置。若偏好 MaxMind GeoLite2，需在配置中显式指定 <code>ip_db_path</code>（自某版本起不再自动探测系统路径，以避免无关发行版包静默覆盖内置库导致 ASN 富化失效）。</p>
+
+<h2>4. 配置 parsedmarc</h2>
+
+<p>parsedmarc 6.0.0 起大部分 CLI 选项迁移至 INI 配置文件，用 <code>-c</code> 指定：</p>
+
+<pre><code>parsedmarc -c /etc/parsedmarc.ini</code></pre>
+
+<p>最小可用的 IMAP 监控配置示例（官方 example.ini 简化）：</p>
+
+<pre><code>[general]
+save_aggregate = True
+save_failure = True
+
+[imap]
+host = imap.example.com
+user = dmarc@example.com
+password = 你的密码
+
+[mailbox]
+watch = True
+delete = False</code></pre>
+
+<p>输出至 Elasticsearch（配合 Kibana 仪表盘）时追加：</p>
+
+<pre><code>[elasticsearch]
+hosts = 127.0.0.1:9200
+ssl = False</code></pre>
+
+<p>其他输出目标（按需启用）：<code>[opensearch]</code>、<code>[splunk_hec]</code>（Splunk HEC）、<code>[s3]</code>、<code>[syslog]</code>、<code>[gelf]</code>（Graylog）、<code>[webhook]</code>（含 aggregate_url/failure_url/smtp_tls_url）。</p>
+
+<h2>5. 命令行解析报告文件</h2>
+
+<p>未配置邮箱监控时，可直接解析报告文件、邮件或目录：</p>
+
+<pre><code>parsedmarc -o /var/lib/parsedmarc/output report.xml.gz
+parsedmarc -r -o /var/lib/parsedmarc/output /var/spool/dmarc/</code></pre>
+
+<p>常用选项：<code>-r</code> 递归扫描目录；<code>-o</code> 输出目录（JSON/CSV 文件写入处）；<code>--aggregate-json-filename</code> / <code>--failure-json-filename</code> 自定义输出文件名；<code>--offline</code> 不做在线地理定位/DNS 查询；<code>--no-prettify-json</code> 单行输出 JSON；<code>-n</code> 指定 DNS 服务器；<code>-t</code> 设置 DNS 超时（默认 2.0 秒）；<code>--dns-retries</code> 设置重试次数。设置 <code>archive_directory</code> 后，成功处理的报告文件会被移动到 <code>&lt;archive_directory&gt;/&lt;年&gt;/&lt;月&gt;/&lt;Aggregate|Failure|SMTP-TLS&gt;/</code>。</p>
+
+<h2>6. 接入 DMARC 报告流</h2>
+
+<p>让解析器收到报告的第一步是把 DMARC 记录的 <code>rua</code>（聚合）与 <code>ruf</code>（失败）指向专属邮箱：</p>
+
+<pre><code>v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com; ruf=mailto:dmarc@example.com; fo=1</code></pre>
+
+<p>官方文档提示：如需并行测试两个报告解析方案，rua/ruf 标签中可用逗号分隔最多两个 mailto URI。若邮件服务器是 Microsoft Exchange，需确保补丁不低于 Exchange 2010 UR22（KB4295699）/ 2013 CU21（KB4099855）/ 2016 CU11（KB4134118）。</p>
+
+<p>部署在代理后的系统需在 <code>/etc/environment</code> 配置 <code>http_proxy</code> / <code>https_proxy</code> 环境变量，parsedmarc 才会通过代理访问外部服务。</p>
+
+<h2>7. 监控与可视化</h2>
+
+<p>watch 模式下（<code>[mailbox] watch = True</code>），parsedmarc 周期性检查配置的 IMAP 邮箱，新报告到达即自动解析入库。数据写入 Elasticsearch 后，官方提供 Kibana 仪表盘（docs/source/kibana.md）展示：</p>
+
+<ul>
+<li>DMARC 合规总览：按域、按日期的通过率趋势。</li>
+<li>来源 IP 聚合：识别未授权发送源与可能仿冒域名的服务器。</li>
+<li>对齐分析：SPF/DKIM 对齐比例，定位未对齐的合法发件通道。</li>
+<li>失败样本：ruf 报告中的具体消息头部（strip_attachment_payloads 可去除附件载荷）。</li>
+<li>TLS-RPT 视图：TLS 失败类型分布（证书问题/协商失败等）。</li>
+</ul>
+
+<p>推荐将 Kibana 仪表盘与 ztpop.net 的 <a href="/tools/dmarc-xml-parser.html">DMARC XML 报告解析器</a> 配合使用：前者做持续监控与历史趋势，后者适合对单份报告做快速人工核查。单次快速验证也可以用 <a href="/tools/spf-deep-diagnose.html">SPF 深度诊断</a> 与 <a href="/tools/domain-health-score.html">域名健康评分</a> 确认认证记录本身是否正确。</p>
+
+<h2>8. 常见问题</h2>
+
+<p><strong>Q：parsedmarc 需要 Elasticsearch 才能用吗？</strong> 不需要。最小部署只解析并输出 JSON/CSV 文件；Elasticsearch/OpenSearch/Splunk/PostgreSQL 是可选的可视化后端。</p>
+
+<p><strong>Q：rua 和 ruf 报告格式有什么不同？</strong> rua 聚合报告是 XML（gzip/zip 压缩），汇总一段时间内的认证结果统计；ruf 失败报告是原始消息样本（通常含附件），用于分析具体失败原因。parsedmarc 对两者输出统一结构的数据。</p>
+
+<p><strong>Q：能处理 RFC 9990/9991 新格式吗？</strong> 能。parsedmarc 已支持最终 DMARC 标准（RFC 9989）对应的 RFC 9990 聚合报告 schema 与 RFC 9991 失败报告格式，以及旧版草案格式。</p>
+
+<p><strong>Q：报告邮箱用什么协议接入？</strong> IMAP（imapclient）、Microsoft Graph 与 Gmail API 三种方式均可；邮件服务器为 Exchange 时需满足官方列出的最低补丁版本。</p>
+
+<p><strong>Q：数据安全如何保证？</strong> 完全自托管意味着报告与解析结果不出本地网络；生产环境建议为 Elasticsearch 启用 TLS 与认证，并用专用低权限邮箱账号收取报告。</p>
+
+<div class="ref-block">
+<h3>技术标准依据</h3>
+<ul>
+<li><a href="https://github.com/domainaware/parsedmarc" rel="nofollow noopener" target="_blank">domainaware/parsedmarc 官方仓库与文档（README / installation / usage / example.ini）</a></li>
+<li>RFC 7489 — Domain-based Message Authentication, Reporting, and Conformance (DMARC)</li>
+<li>RFC 9989 / RFC 9990 / RFC 9991 — DMARCbis：最终 DMARC 标准、聚合报告 schema、失败报告格式</li>
+<li>RFC 8460 — SMTP TLS Reporting (TLS-RPT)</li>
+<li>RFC 6591 — Authentication Failure Reporting Using the Abuse Reporting Format</li>
+</ul>
+</div>
+
+</div>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "parsedmarc 需要 Elasticsearch 才能用吗？",
+      "acceptedAnswer": {"@type": "Answer", "text": "不需要。最小部署只解析并输出 JSON/CSV 文件；Elasticsearch/OpenSearch/Splunk/PostgreSQL 是可选的可视化后端。"}
+    },
+    {
+      "@type": "Question",
+      "name": "rua 和 ruf 报告格式有什么不同？",
+      "acceptedAnswer": {"@type": "Answer", "text": "rua 聚合报告是 XML（gzip/zip 压缩），汇总统计认证结果；ruf 失败报告是原始消息样本。parsedmarc 对两者输出统一结构的数据。"}
+    },
+    {
+      "@type": "Question",
+      "name": "parsedmarc 能处理 RFC 9990/9991 新格式吗？",
+      "acceptedAnswer": {"@type": "Answer", "text": "能。已支持最终 DMARC 标准（RFC 9989）对应的 RFC 9990 聚合报告 schema 与 RFC 9991 失败报告格式，以及旧版草案格式。"}
+    }
+  ]
+}</script><div class="kb-related">
+  <h3>相关主题</h3>
+  <ul>
+<li><a href="/tools/dmarc-xml-parser.html">DMARC XML 报告解析器</a>：单份报告快速人工核查</li>
+<li><a href="/tools/domain-health-score.html">域名健康评分</a>：SPF/DKIM/DMARC 等八项体检</li>
+<li><a href="/tools/spf-deep-diagnose.html">SPF 深度诊断</a>：认证记录配置审计</li>
+<li><a href="/kb/dmarcbis-rfc9990-aggregate-reporting.html">DMARCbis RFC 9990 聚合报告</a>：新 schema 详解</li>
+<li><a href="/kb/dmarcbis-rfc9991-failure-reporting.html">DMARCbis RFC 9991 失败报告</a>：新格式详解</li>
+<li><a href="/kb/dmarc-aggregate-report-parsing.html">DMARC 聚合报告解析</a>：报告结构入门</li>
+  </ul>
+</div>
+</article>
+  <div class="article-cta" style="margin: 32px 0; padding: 16px 20px; background: #f0f7ff; border-left: 4px solid #003366; border-radius: 4px;">
+    <p style="margin: 0; font-size: 15px; line-height: 1.6;">
+      <strong>需要 DMARC 报告自托管方案落地？</strong> 昆仑邮件系统提供邮件认证合规咨询与部署支持，
+      欢迎联系我们获取方案：<a href="mailto:sales@ztpop.net">sales@ztpop.net</a> · 400-XXX-XXXX
+    </p>
+  </div>
+<section class="kb-related" data-geo-related="1">
+  <h3>相关阅读 · 邮件认证与防伪造</h3>
+  <div class="kb-related-grid">
+      <a class="kb-related-card" href="/topics/email-auth.html">邮件认证与防伪造主题中心</a>
+      <a class="kb-related-card" href="/kb/email-email-authentication-triad.html">认证三件套：SPF/DKIM/DMARC 体系</a>
+      <a class="kb-related-card" href="/kb/dmarcbis-changes-summary.html">DMARCbis 变更总览</a>
+      <a class="kb-related-card" href="/kb/espoofer-email-spoofing-protection.html">espoofer 仿冒攻击防护</a>
+  </div>
+</section>
+<!--#include virtual="/partials/footer.html" -->
+</body>
+</html>
