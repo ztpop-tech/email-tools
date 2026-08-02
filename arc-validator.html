@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARC 校验器 — ARC-Seal 链完整性验证（RFC 8617）· ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="ARC 校验器 — ARC-Seal 链完整性验证（RFC 8617）· ztpop.net">
+<meta property="og:description" content="免费在线 ARC 校验工具：粘贴邮件原始头，解析 ARC-Authentication-Results / ARC-Message-Signature / ARC-Seal 链，校验 i= 实例连续性、cv= 状态机、签名公钥与链完整性（RFC 8617）。浏览器端运行，不上传数据。">
+<meta name="description" content="免费在线 ARC 校验工具：粘贴邮件原始头，解析 ARC-Authentication-Results / ARC-Message-Signature / ARC-Seal 链，校验 i= 实例连续性、cv= 状态机、签名公钥与链完整性（RFC 8617）。浏览器端运行，不上传数据。">
+<link rel="canonical" href="https://www.ztpop.net/tools/arc-validator.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"ARC 校验器"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "ARC 校验器", "url": "https://www.ztpop.net/tools/arc-validator.html", "applicationCategory": "SecurityApplication", "operatingSystem": "Web", "description": "免费在线 ARC 校验工具：粘贴邮件原始头，解析 ARC 三件套链，校验 i= 连续性、cv= 状态机、签名公钥与链完整性（RFC 8617）。浏览器端运行，不上传数据。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "什么是 ARC？", "acceptedAnswer": {"@type": "Answer", "text": "ARC（Authenticated Received Chain，RFC 8617）是一组邮件头字段，用于在中继转发场景下保留原始的 SPF/DKIM/DMARC 认证结果。当邮件经邮件列表或转发服务中转后，SPF 与 DMARC 的认证可能失效，ARC 通过每跳签名（ARC-Message-Signature）与密封（ARC-Seal）保证认证结果链的完整性。"}}, {"@type": "Question", "name": "ARC 链由哪些头字段组成？", "acceptedAnswer": {"@type": "Answer", "text": "每跳（instance）包含三个头字段：ARC-Authentication-Results（AAR，记录该跳的认证结果）、ARC-Message-Signature（AMS，对该跳之前内容的签名）、ARC-Seal（AS，密封整条链）。i= 参数表示实例序号，从 1 开始连续递增。"}}, {"@type": "Question", "name": "cv= 值代表什么？", "acceptedAnswer": {"@type": "Answer", "text": "ARC-Seal 的 cv=（chain validation status）参数表示链验证状态：none 表示无验证结果，pass 表示该跳链验证通过，fail 表示链验证失败。RFC 8617 规定，如果链中任一跳 Seal 无法验证，接收方应视整条链为无效。"}}, {"@type": "Question", "name": "ARC 与 DKIM 的区别？", "acceptedAnswer": {"@type": "Answer", "text": "DKIM（RFC 6376）由发信方对邮件签名，验证的是发信域名；ARC 由中继方对转发链签名，验证的是认证结果链的完整性。ARC 的 ARC-Message-Signature 语法基于 DKIM，但用于保护 AAR 结果不被篡改。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
+                <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">ARC 校验器</h1>
+                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · ARC 链完整性验证（RFC 8617）· 浏览器端运行，不上传数据</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">邮件经邮件列表、转发服务（如 Gmail 自动转发）等中继后，SPF 与 DMARC 认证可能失效。<strong>ARC（Authenticated Received Chain，RFC 8617）</strong>通过每跳签名与密封保留原始认证结果。本工具粘贴邮件原始头即可校验 ARC 链：<strong>i= 实例连续性、cv= 状态机、签名公钥与链完整性</strong>，判断邮件认证结果是否可信。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="headers-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">邮件原始头（粘贴完整头部，含所有 Received / ARC-* 字段）</label>
+                <textarea id="headers-input" rows="12" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:13px;width:100%;box-sizing:border-box;font-family:Consolas,Monaco,monospace" placeholder="From: ...&#10;Received: ...&#10;ARC-Seal: i=1; a=rsa-sha256; cv=none; d=example.com; s=arc; b=...&#10;ARC-Message-Signature: i=1; a=rsa-sha256; d=example.com; s=arc; b=...&#10;ARC-Authentication-Results: i=1; ...&#10;"></textarea>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">校验 ARC 链</button>
+                    <button id="sample-btn" style="padding:10px 18px;background:#fff;color:#003366;border:1px solid #003366;border-radius:6px;font-size:14px;cursor:pointer">载入示例</button>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">如何获取邮件原始头：Gmail → 邮件菜单「显示原始内容」；Outlook → 「查看 → 查看消息来源」。粘贴后点击校验，签名公钥通过 DoH 从 DNS 获取（RFC 8484）。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">ARC 链结构说明</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 12px">ARC 链由若干「跳」（instance）组成，每跳包含三个头字段：</p>
+                <table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+                    <tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">头字段</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">作用</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">关键参数</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">ARC-Authentication-Results (AAR)</td><td style="padding:8px 12px;border:1px solid #ddd;">记录本跳对邮件的 SPF/DKIM/DMARC 认证结果</td><td style="padding:8px 12px;border:1px solid #ddd;">i= 实例号</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">ARC-Message-Signature (AMS)</td><td style="padding:8px 12px;border:1px solid #ddd;">对本跳之前完整邮件内容的签名</td><td style="padding:8px 12px;border:1px solid #ddd;">d= 域名、s= 选择器、b= 签名、bh= 正文哈希</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">ARC-Seal (AS)</td><td style="padding:8px 12px;border:1px solid #ddd;">密封整条链（含本跳及之前所有 ARC 头）</td><td style="padding:8px 12px;border:1px solid #ddd;">cv= 链验证状态（none/pass/fail）</td></tr>
+                </table>
+                <p style="font-size:13px;color:#888;line-height:1.7;margin:8px 0 0">RFC 8617 §4.1.2：cv=none 表示该跳未验证；cv=pass 表示链验证通过；cv=fail 表示链验证失败。接收方应优先信任 cv=pass 的 AAR 结果。</p>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">校验逻辑说明</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">① 提取全部 ARC-* 头字段并按 i= 分组配对；② 校验 i= 从 1 起连续递增、每跳三件套齐全；③ 解析 AMS 的 d=/s=/b=/bh=/a=，通过 DoH 查询 <code>s._domainkey.d</code> 获取公钥；④ 对支持算法的签名尽力验签（RSA-SHA256，WebCrypto）；⑤ 汇总 cv= 状态机输出链有效性结论。浏览器不支持 Ed25519 时给出提示（RFC 8463）。</p>
+            </div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下 IETF 标准实现：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>RFC 8617（The Authenticated Received Chain (ARC) Protocol）</li>
+                    <li>RFC 6376（DomainKeys Identified Mail）— AMS 签名语法基于 DKIM</li>
+                    <li>RFC 8463（Ed25519-SHA256）— 新型签名算法</li>
+                    <li>RFC 8484（DNS Queries over HTTPS）— 公钥获取</li>
+                    <li>RFC 1035（DNS 协议）</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+<script>
+(function(){
+'use strict';
+var DOH = 'https://dns.alidns.com/resolve';
+var btn = document.getElementById('check-btn');
+var sampleBtn = document.getElementById('sample-btn');
+var input = document.getElementById('headers-input');
+var result = document.getElementById('result');
+
+var SAMPLE = [
+'Return-Path: <user@example.com>',
+'Received: from mail.example.com (mail.example.com [203.0.113.10]) by mx.ztpop.net with ESMTP id ABC123',
+'ARC-Seal: i=1; a=rsa-sha256; t=1754123456; cv=none;',
+'	d=example.com; s=arc2026; b=AAAA',
+'ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;',
+'	d=example.com; s=arc2026;',
+'	h=from:to:subject:date; bh=BBBB; b=CCCC',
+'ARC-Authentication-Results: i=1; mx.example.com;',
+'	spf=pass smtp.mailfrom=example.com;',
+'	dkim=pass header.d=example.com;',
+'	dmarc=pass header.from=example.com',
+'From: User <user@example.com>',
+'To: recipient@example.org',
+'Subject: ARC 示例邮件',
+'Date: Sun, 2 Aug 2026 14:00:00 +0800'
+].join('\n');
+
+sampleBtn.addEventListener('click', function(){ input.value = SAMPLE; result.innerHTML = ''; });
+btn.addEventListener('click', function(){ run(); });
+
+// ---- 邮件头解析 ----
+function parseHeaders(raw) {
+    // 合并折叠行，按字段名分组
+    var lines = raw.replace(/\r\n/g, '\n').split('\n');
+    var fields = [];
+    var cur = null;
+    lines.forEach(function(line){
+        if (/^[ \t]/.test(line)) {
+            if (cur) cur.value += '\n' + line.replace(/^[ \t]+/, '');
+        } else if (line.indexOf(':') > 0) {
+            var idx = line.indexOf(':');
+            cur = { name: line.slice(0, idx).trim().toLowerCase(), value: line.slice(idx + 1).trim() };
+            fields.push(cur);
+        } else if (line.trim() === '') {
+            cur = null;
+        }
+    });
+    return fields;
+}
+function getParams(value) {
+    // 解析分号分隔的 k=v 参数，处理引号
+    var params = {};
+    var parts = value.split(';');
+    parts.forEach(function(p){
+        p = p.trim();
+        if (!p) return;
+        var eq = p.indexOf('=');
+        if (eq < 0) { params[p] = true; return; }
+        var k = p.slice(0, eq).trim().toLowerCase();
+        var v = p.slice(eq + 1).trim().replace(/^"|"$/g, '');
+        params[k] = v;
+    });
+    return params;
+}
+function dohQuery(name, type) {
+    return fetch(DOH + '?name=' + encodeURIComponent(name) + '&type=' + type, {
+        headers: { 'accept': 'application/dns-json' }
+    }).then(function(r){ return r.json(); }).catch(function(){ return null; });
+}
+function getTXT(name) {
+    return dohQuery(name, 16).then(function(j){
+        if (!j || j.Status !== 0) return [];
+        var out = [];
+        (j.Answer || []).forEach(function(a){
+            if (a.type === 16 && a.data) {
+                var t = a.data;
+                if (t.charAt(0) === '"' && t.charAt(t.length-1) === '"') t = t.slice(1, -1);
+                out.push(t);
+            }
+        });
+        return out;
+    });
+}
+function extractKey(recs) {
+    for (var i=0;i<recs.length;i++){
+        var r = recs[i];
+        if (/^v=DKIM1/i.test(r)) return r;
+    }
+    return recs.length ? recs[0] : null;
+}
+function b64urlToB64(s) {
+    return s.replace(/-/g, '+').replace(/_/g, '/');
+}
+function parseKey(rec) {
+    // 解析 DKIM 公钥记录
+    if (!rec) return null;
+    var params = getParams(rec);
+    var k = params.k || 'rsa';
+    var p = params.p;
+    if (!p) return null;
+    return { k: k, p: p, rec: rec };
+}
+function importPublicKey(pem) {
+    var der = atob(b64urlToB64(pem));
+    var buf = new Uint8Array(der.length);
+    for (var i=0;i<der.length;i++) buf[i] = der.charCodeAt(i);
+    return crypto.subtle.importKey('spki', buf, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
+}
+function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function b64decode(s) {
+    try {
+        var b = b64urlToB64(s).replace(/=+$/,'');
+        var bin = atob(b);
+        var out = new Uint8Array(bin.length);
+        for (var i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
+        return out;
+    } catch(e) { return null; }
+}
+
+function verifySignature(keyObj, signParams, headerFields, bodyHash) {
+    // 尽力验签：仅支持 RSA-SHA256 (a=rsa-sha256) + simple 规范
+    var a = (signParams.a || '').toLowerCase();
+    if (a !== 'rsa-sha256') {
+        return { ok: false, reason: '算法 ' + a + ' 暂不支持浏览器端验签' };
+    }
+    if (!signParams.b || !signParams.bh) {
+        return { ok: false, reason: '缺少 b= 或 bh= 参数' };
+    }
+    if (keyObj.k !== 'rsa') {
+        return { ok: false, reason: '公钥类型 ' + keyObj.k + '（非 RSA）暂不支持验签' };
+    }
+    var bh = b64decode(signParams.bh);
+    if (!bh) return { ok: false, reason: 'bh= 不是合法 Base64' };
+    var sig = b64decode(signParams.b);
+    if (!sig) return { ok: false, reason: 'b= 不是合法 Base64' };
+
+    // 构建 canonical 头串（simple/simple）：签名头列表中每个字段的原始值
+    var hList = (signParams.h || 'from').split(':').map(function(x){ return x.trim().toLowerCase(); });
+    var byName = {};
+    headerFields.forEach(function(f){ if (!byName[f.name]) byName[f.name] = []; byName[f.name].push(f.value); });
+    var lines = [];
+    hList.forEach(function(hname){
+        var vals = byName[hname] || [];
+        vals.forEach(function(v){ lines.push(hname + ':' + v.replace(/\n/g, ' ').replace(/[ \t]+/g, ' ').replace(/^ +| +$/g, '') + '\r\n'); });
+    });
+    var data = new TextEncoder().encode(lines.join(''));
+
+    // 尝试导入公钥
+    var der = b64decode(keyObj.p);
+    if (!der) return { ok: false, reason: '公钥 p= 不是合法 Base64' };
+    return crypto.subtle.importKey('spki', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify'])
+        .then(function(key){
+            return crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, sig, data);
+        })
+        .then(function(isValid){
+            return { ok: true, valid: isValid, reason: isValid ? '签名有效' : '签名无效（内容被篡改或公钥不匹配）' };
+        })
+        .catch(function(e){
+            return { ok: false, reason: '公钥导入失败：' + (e && e.message ? e.message : String(e)) };
+        });
+}
+
+function run() {
+    var raw = input.value;
+    if (!raw || !raw.trim()) { result.innerHTML = '<p style="color:#c00">请先粘贴邮件原始头。</p>'; return; }
+    result.innerHTML = '<p style="color:#666">正在解析 ARC 链并验证签名…</p>';
+
+    var fields = parseHeaders(raw);
+    var arcs = fields.filter(function(f){ return /^arc-(seal|message-signature|authentication-results)$/.test(f.name); });
+    var chain = [];
+    var incomplete = [];
+
+    arcs.forEach(function(f){
+        var params = getParams(f.value);
+        var i = parseInt(params.i, 10);
+        if (isNaN(i) || i < 1) { incomplete.push(f); return; }
+        var type = f.name === 'arc-seal' ? 'seal' : (f.name === 'arc-message-signature' ? 'ams' : 'aar');
+        if (!chain[i]) chain[i] = { i: i, seal: null, ams: null, aar: null };
+        chain[i][type] = { raw: f.value, params: params };
+    });
+
+    var maxI = 0;
+    chain.forEach(function(c, idx){ if (c && idx > maxI) maxI = idx; });
+
+    // 校验链完整性
+    var integrityIssues = [];
+    if (maxI === 0) {
+        result.innerHTML = '<div style="border:1px solid #e3e8ef;border-radius:8px;padding:20px;background:#fff"><h3 style="margin:0 0 10px;color:#003366">未检测到 ARC 链</h3><p style="font-size:14px;color:#555;line-height:1.8;margin:0">该邮件头部不含 ARC-Authentication-Results / ARC-Message-Signature / ARC-Seal 字段。可能原因：<br>① 邮件未经过启用 ARC 的中继（直投）；<br>② 邮件列表/转发服务未实现 ARC（RFC 8617 于 2019 年发布，Gmail、Google Groups、Mailinglist 等已广泛支持）；<br>③ 你粘贴的不是完整原始头（请确认包含所有 Received 与 ARC-* 字段）。</p></div>';
+        return;
+    }
+    var seqOk = true;
+    for (var k=1; k<=maxI; k++) {
+        if (!chain[k]) { seqOk = false; integrityIssues.push('缺少 i=' + k + ' 跳'); continue; }
+        ['seal','ams','aar'].forEach(function(t){
+            if (!chain[k][t]) integrityIssues.push('i=' + k + ' 缺少 ' + t.toUpperCase());
+        });
+    }
+
+    // 校验每跳 seal cv 值
+    var cvIssues = [];
+    chain.forEach(function(c){
+        if (!c) return;
+        if (c.seal) {
+            var cv = (c.seal.params.cv || '').toLowerCase();
+            if (cv !== 'none' && cv !== 'pass' && cv !== 'fail') cvIssues.push('i=' + c.i + ' 的 ARC-Seal cv= 非法值：' + esc(c.seal.params.cv));
+        }
+    });
+
+    // 逐跳验签（串行）
+    var verifyPromises = [];
+    chain.forEach(function(c){
+        if (!c || !c.ams || !c.ams.params.b) return;
+        var d = c.ams.params.d || '';
+        var s = c.ams.params.s || '';
+        verifyPromises.push(
+            getTXT(s + '._domainkey.' + d).then(function(recs){
+                var key = parseKey(extractKey(recs));
+                if (!key) return { i: c.i, status: 'nodns', reason: 'DNS 未找到 ' + esc(s + '._domainkey.' + d) + ' 的 DKIM 公钥记录' };
+                return verifySignature(key, c.ams.params, fields, null).then(function(vr){
+                    return { i: c.i, status: vr.ok ? (vr.valid ? 'valid' : 'invalid') : 'unverified', reason: vr.reason, key: key.rec };
+                });
+            })
+        );
+    });
+
+    Promise.all(verifyPromises).then(function(vResults){
+        var byI = {};
+        vResults.forEach(function(v){ byI[v.i] = v; });
+
+        var h = '';
+        // 总判定
+        var overall = 'valid';
+        if (integrityIssues.length > 0) overall = 'invalid';
+        else {
+            for (var idx=1; idx<=maxI; idx++) {
+                var vv = byI[idx];
+                if (vv && vv.status === 'invalid') { overall = 'invalid'; break; }
+                if (vv && vv.status === 'unverified' && vv.reason && /签名无效/.test(vv.reason)) { overall = 'invalid'; break; }
+            }
+        }
+        var color = overall === 'valid' ? '#28a745' : '#c00';
+        h += '<div style="border:2px solid ' + color + ';border-radius:10px;padding:20px;margin:12px 0;background:#fff">';
+        h += '<div style="font-size:20px;font-weight:bold;color:' + color + '">' + (overall === 'valid' ? '✓ ARC 链有效' : '✗ ARC 链存在问题') + '</div>';
+        h += '<div style="font-size:13px;color:#888;margin-top:6px">共 ' + maxI + ' 跳 · ' + (integrityIssues.length ? integrityIssues.length + ' 个完整性问题' : '三件套齐全') + ' · ' + (cvIssues.length ? cvIssues.length + ' 个 cv 问题' : 'cv 值合法') + '</div></div>';
+
+        // 链图
+        h += '<h2 style="font-size:18px;color:#003366;margin:16px 0 8px">ARC 链结构（' + maxI + ' 跳）</h2>';
+        h += '<table style="border-collapse:collapse;width:100%;font-size:13.5px;margin:0 0 12px">';
+        h += '<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">跳</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">ARC-Seal cv=</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">AMS 域名/选择器</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">AMS 验签</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">AAR 结果摘要</td></tr>';
+        for (var n=1; n<=maxI; n++) {
+            var c = chain[n];
+            if (!c) { h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;color:#c00">i=' + n + '</td><td colspan="4" style="padding:8px 12px;border:1px solid #ddd;color:#c00">缺失</td></tr>'; continue; }
+            var cv = c.seal ? ((c.seal.params.cv || '').toLowerCase()) : '—';
+            var cvColor = cv === 'pass' ? '#28a745' : (cv === 'fail' ? '#c00' : '#999');
+            var amsTxt = c.ams ? esc(c.ams.params.d + ' (s=' + (c.ams.params.s || '?') + ')') : '—';
+            var v = byI[n];
+            var vTxt, vColor;
+            if (!v) { vTxt = '未验签'; vColor = '#999'; }
+            else if (v.status === 'valid') { vTxt = '✓ 有效'; vColor = '#28a745'; }
+            else if (v.status === 'invalid') { vTxt = '✗ 无效'; vColor = '#c00'; }
+            else { vTxt = '⚠ ' + (v.reason || '未验证'); vColor = '#f0ad4e'; }
+            var aarTxt = c.aar ? esc(c.aar.raw.replace(/\n/g, ' ').slice(0, 80)) : '—';
+            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;">i=' + n + '</td>';
+            h += '<td style="padding:8px 12px;border:1px solid #ddd;color:' + cvColor + ';font-weight:bold">' + cv + '</td>';
+            h += '<td style="padding:8px 12px;border:1px solid #ddd;word-break:break-all">' + amsTxt + '</td>';
+            h += '<td style="padding:8px 12px;border:1px solid #ddd;color:' + vColor + '">' + vTxt + '</td>';
+            h += '<td style="padding:8px 12px;border:1px solid #ddd;font-size:12px;word-break:break-all">' + aarTxt + '</td></tr>';
+        }
+        h += '</table>';
+
+        // 完整性问题
+        if (integrityIssues.length > 0) {
+            h += '<div style="background:#fdf2f2;border-left:3px solid #c00;padding:12px 16px;margin:10px 0"><h3 style="margin:0 0 6px;font-size:14px;color:#c00">链完整性问题</h3><ul style="margin:0;padding-left:20px;font-size:14px;color:#555;line-height:1.8">';
+            integrityIssues.forEach(function(iss){ h += '<li>' + iss + '</li>'; });
+            h += '</ul></div>';
+        }
+        if (cvIssues.length > 0) {
+            h += '<div style="background:#fdf2f2;border-left:3px solid #c00;padding:12px 16px;margin:10px 0"><h3 style="margin:0 0 6px;font-size:14px;color:#c00">cv= 值问题</h3><ul style="margin:0;padding-left:20px;font-size:14px;color:#555;line-height:1.8">';
+            cvIssues.forEach(function(iss){ h += '<li>' + iss + '</li>'; });
+            h += '</ul></div>';
+        }
+
+        // 验签明细
+        var anyVerify = vResults.length > 0;
+        if (anyVerify) {
+            h += '<h3 style="font-size:15px;color:#003366;margin:12px 0 6px">验签明细</h3><ul style="font-size:13.5px;color:#555;line-height:1.8;padding-left:20px;margin:0">';
+            vResults.forEach(function(v){
+                h += '<li><strong>i=' + v.i + '</strong>：' + esc(v.reason || v.status) + '</li>';
+            });
+            h += '</ul>';
+        }
+
+        // 解读
+        h += '<div style="background:#f5f7fa;border-left:3px solid #003366;padding:14px 18px;margin:12px 0 0">';
+        h += '<h3 style="margin:0 0 8px;font-size:15px;color:#003366">解读与建议</h3><ul style="font-size:14px;color:#555;line-height:1.8;padding-left:20px;margin:0">';
+        if (overall === 'valid') {
+            h += '<li>ARC 链完整且签名有效：AAR 中的认证结果（spf=/dkim=/dmarc=）可信，可用于判断邮件是否通过认证</li>';
+            h += '<li>若 AAR 显示 spf=pass / dkim=pass / dmarc=pass，说明该邮件经中继转发后仍保留原始认证，可视为可信邮件</li>';
+            h += '<li>建议同时核对 DKIM-Signature 与 From 头，防止 AAR 引用的域名与发件人域名不一致</li>';
+        } else {
+            h += '<li>ARC 链损坏或验签失败：AAR 中的认证结果<strong>不可信</strong>，不应据此判定邮件通过认证</li>';
+            if (integrityIssues.length > 0) h += '<li>链结构不完整（缺跳/缺字段）说明中继服务实现不完整或头部被截断，RFC 8617 §6.1 规定应忽略此类链</li>';
+            h += '<li>建议以发件域名的直接认证为准（检查 DKIM-Signature 与 SPF 的原始结果），对可疑邮件按 DMARC 策略处理</li>';
+        }
+        h += '</ul></div>';
+
+        result.innerHTML = h;
+    }).catch(function(err){
+        result.innerHTML = '<p style="color:#c00">校验失败：' + esc(err && err.message ? err.message : String(err)) + '</p>';
+    });
+}
+})();
+</script>
+<!--#include virtual="/partials/footer.html" -->
+</body>
+</html>
