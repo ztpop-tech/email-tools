@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIMI SVG 校验器 — Logo 合规检查（AuthIndicators BIMI）· ztpop.net</title>
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="BIMI SVG 校验器 — Logo 合规检查（AuthIndicators BIMI）· ztpop.net">
+<meta property="og:description" content="免费在线 BIMI SVG 校验工具：检查品牌标识 SVG 是否符合 BIMI 规范（AuthIndicators BIMI 0.7）——扁平化、无脚本、无外部引用、最小尺寸、视图框与颜色数量等。粘贴 SVG 代码或上传文件，浏览器端运行，不上传数据。">
+<meta name="description" content="免费在线 BIMI SVG 校验工具：检查品牌标识 SVG 是否符合 BIMI 规范（AuthIndicators BIMI 0.7）——扁平化、无脚本、无外部引用、最小尺寸、视图框与颜色数量等。粘贴 SVG 代码或上传文件，浏览器端运行，不上传数据。">
+<link rel="canonical" href="https://www.ztpop.net/tools/bimi-svg-validator.html">
+<link rel="stylesheet" href="/css/main.css?v=23">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"BIMI SVG 校验器"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "BIMI SVG 校验器", "url": "https://www.ztpop.net/tools/bimi-svg-validator.html", "applicationCategory": "SecurityApplication", "operatingSystem": "Web", "description": "免费在线 BIMI SVG 校验工具：检查品牌标识 SVG 是否符合 BIMI 规范（AuthIndicators BIMI 0.7）——扁平化、无脚本、无外部引用、最小尺寸、视图框与颜色数量等。浏览器端运行，不上传数据。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "什么是 BIMI？", "acceptedAnswer": {"@type": "Answer", "text": "BIMI（Brand Indicators for Message Identification，品牌标识指示）允许在认证通过的邮件旁显示品牌 Logo。前置要求：发信域必须配置 DMARC（p=quarantine 或 p=reject），并通过 default._bimi TXT 记录指向 SVG 标识文件，可选配置 VMC 证书（Verified Mark Certificate）以显示完整徽章。"}}, {"@type": "Question", "name": "BIMI 对 SVG 文件有什么要求？", "acceptedAnswer": {"@type": "Answer", "text": "根据 AuthIndicators BIMI 规范：必须是纯 SVG 格式（不可用 PNG/JPG）；不能包含脚本、外部资源引用、动画或栅格图像；使用 SVG 的 tiny 子集（SVG Tiny 1.2）；必须包含 viewBox 且宽高比接近 1:1；建议最小尺寸为 512x512 像素；颜色数量有限制（VMC 认证 Logo 通常要求单色或特定色板）。"}}, {"@type": "Question", "name": "BIMI SVG 为什么不支持脚本和外部引用？", "acceptedAnswer": {"@type": "Answer", "text": "BIMI SVG 由邮箱服务商在收件端渲染，属于不可信内容。允许脚本或外部引用会引入安全风险（如跟踪、钓鱼、XSS）。因此规范强制要求：无 <script>、无 <image> 外部加载、无 @import、无 href 指向外部 URL，所有内容必须内联自包含。"}}, {"@type": "Question", "name": "BIMI 需要 VMC 证书吗？", "acceptedAnswer": {"@type": "Answer", "text": "VMC（Verified Mark Certificate）不是强制要求，但没有 VMC 时，多数邮箱服务商（如 Gmail）可能仅显示灰色默认图标或要求 VMC 才展示 Logo。获得 VMC 需要商标注册证明，由 CA 颁发。配置了 VMC 后，邮箱会显示带认证徽章的完整品牌标识。"}}]}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header">
+        <div class="mg-header-inner">
+            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
+            <nav class="mg-nav">
+                <ul class="nav-list">
+                    <li class="nav-li"><a href="/">首页</a></li>
+                    <li class="nav-li"><a href="#">产品和服务</a>
+                        <ul class="sub-nav-list">
+                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
+                <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                    <li class="nav-li"><a href="/support.html">支持</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                
+                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                    <li class="nav-li"><a href="/search.html"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</header>
+<main style="max-width:860px;margin:0 auto;padding:20px">
+    <article>
+        <div class="article-body">
+            <div class="article-header">
+                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">BIMI SVG 校验器</h1>
+                <p class="meta" style="font-size:14px;color:#888;margin:0 0 16px">免费在线工具 · Logo 合规检查（AuthIndicators BIMI）· 浏览器端运行，不上传数据</p>
+            </div>
+
+            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px"><strong>BIMI（Brand Indicators for Message Identification）</strong>在认证邮件旁显示品牌 Logo，但 SVG 文件必须符合规范（<strong>AuthIndicators BIMI</strong>）：纯 SVG、无脚本、无外部引用、含 viewBox、宽高比接近 1:1。本工具粘贴 SVG 代码或上传文件，逐项检查合规性并输出可执行的修复建议。</p>
+
+            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
+                <label for="svg-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">SVG 代码（粘贴）或上传文件</label>
+                <textarea id="svg-input" rows="10" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:13px;width:100%;box-sizing:border-box;font-family:Consolas,Monaco,monospace" placeholder='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">&#10;  <rect x="0" y="0" width="512" height="512" fill="#003366"/>&#10;  <circle cx="256" cy="256" r="150" fill="#ffffff"/>&#10;</svg>'></textarea>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">校验 SVG</button>
+                    <button id="sample-btn" style="padding:10px 18px;background:#fff;color:#003366;border:1px solid #003366;border-radius:6px;font-size:14px;cursor:pointer">载入合规示例</button>
+                    <label style="padding:10px 18px;background:#fff;color:#003366;border:1px solid #003366;border-radius:6px;font-size:14px;cursor:pointer">上传 .svg 文件<input type="file" id="file-input" accept=".svg,image/svg+xml" style="display:none"></label>
+                </div>
+                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">检查项：格式/根元素、viewBox、宽高比、脚本、外部引用、栅格图像、动画、颜色数量、尺寸。全部在浏览器本地完成。</p>
+            </div>
+
+            <div id="result" style="margin:16px 0"></div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">BIMI SVG 合规要求</h2>
+                <table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+                    <tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">要求</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">规范依据</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">纯 SVG 格式（不可 PNG/JPG）</td><td style="padding:8px 12px;border:1px solid #ddd;">AuthIndicators BIMI §Logo Requirements</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">必须包含 viewBox 且宽高比 ≈ 1:1</td><td style="padding:8px 12px;border:1px solid #ddd;">AuthIndicators BIMI §Logo Requirements</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">无 &lt;script&gt;、无事件处理（on* 属性）</td><td style="padding:8px 12px;border:1px solid #ddd;">SVG Tiny 1.2 子集，防脚本注入</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">无外部引用（&lt;image&gt; href、@import、外部 CSS）</td><td style="padding:8px 12px;border:1px solid #ddd;">防跟踪与资源注入</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">无动画（&lt;animate&gt;/&lt;animateTransform&gt;）</td><td style="padding:8px 12px;border:1px solid #ddd;">BIMI 要求静态 Logo</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">无栅格图像（&lt;image&gt;/&lt;foreignObject&gt;）</td><td style="padding:8px 12px;border:1px solid #ddd;">必须为矢量图形</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">建议最小 512×512 像素</td><td style="padding:8px 12px;border:1px solid #ddd;">邮箱服务商渲染要求（如 Gmail 至少 512px）</td></tr>
+                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">颜色数量有限（VMC 认证 Logo 需单色/特定色板）</td><td style="padding:8px 12px;border:1px solid #ddd;">VMC 证书签发要求</td></tr>
+                </table>
+                <p style="font-size:13px;color:#888;line-height:1.7;margin:8px 0 0">规范来源：AuthIndicators BIMI（BIMI Group 公开规范，SVG 部分基于 W3C SVG Tiny 1.2）。</p>
+            </div>
+
+            <div style="margin:24px 0 0">
+                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
+                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">① 将品牌 Logo 导出为 SVG（矢量工具导出，勿用位图转格式）；② 粘贴代码或上传文件；③ 点击「校验 SVG」查看合规清单。全部通过后，将文件托管到 HTTPS 域名（需带正确 Content-Type: image/svg+xml），并在 DNS 发布 <code>default._bimi.域名</code> TXT 记录（如 <code>v=BIMI1; l=https://cdn.example.com/logo.svg;</code>），同时确保 DMARC 为 p=quarantine 或 p=reject。</p>
+            </div>
+
+            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
+                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
+                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下公开规范实现：</p>
+                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
+                    <li>AuthIndicators BIMI（Brand Indicators for Message Identification，BIMI Group 规范，v0.7 草案）</li>
+                    <li>W3C SVG Tiny 1.2（Scalable Vector Graphics 子集规范）</li>
+                    <li>RFC 7489（DMARC，BIMI 前置要求）</li>
+                </ul>
+            </div>
+        </div>
+    </article>
+</main>
+<script>
+(function(){
+'use strict';
+var btn = document.getElementById('check-btn');
+var sampleBtn = document.getElementById('sample-btn');
+var fileInput = document.getElementById('file-input');
+var input = document.getElementById('svg-input');
+var result = document.getElementById('result');
+
+var SAMPLE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">\n' +
+'  <rect x="0" y="0" width="512" height="512" fill="#003366"/>\n' +
+'  <circle cx="256" cy="256" r="150" fill="#ffffff"/>\n' +
+'  <text x="256" y="290" font-family="Arial, sans-serif" font-size="120" fill="#003366" text-anchor="middle" font-weight="bold">Z</text>\n' +
+'</svg>';
+
+sampleBtn.addEventListener('click', function(){ input.value = SAMPLE; result.innerHTML = ''; });
+btn.addEventListener('click', function(){ validate(input.value); });
+fileInput.addEventListener('change', function(){
+    var f = fileInput.files[0];
+    if (!f) return;
+    if (f.size > 1024 * 1024) { result.innerHTML = '<p style="color:#c00">文件超过 1MB，请压缩后重试。</p>'; return; }
+    var reader = new FileReader();
+    reader.onload = function(e){ input.value = String(e.target.result); validate(input.value); };
+    reader.readAsText(f);
+});
+
+function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function validate(svgText) {
+    if (!svgText || !svgText.trim()) { result.innerHTML = '<p style="color:#c00">请先粘贴 SVG 代码或上传文件。</p>'; return; }
+    var s = svgText.trim();
+    result.innerHTML = '<p style="color:#666">正在检查 SVG 合规性…</p>';
+
+    var issues = [];
+    var warnings = [];
+    var passes = [];
+    var info = {};
+
+    // 1. 格式/根元素
+    var rootM = s.match(/<svg[\s>]/i);
+    if (!rootM) {
+        issues.push('不是有效的 SVG：未找到 <svg> 根元素（文件可能是 PNG/JPG 或其他格式）');
+    } else {
+        passes.push('SVG 格式正确（含 <svg> 根元素）');
+        var rootTag = s.slice(rootM.index, s.indexOf('>', rootM.index) + 1);
+        var xmlnsOk = /xmlns\s*=\s*["']http:\/\/www\.w3\.org\/2000\/svg["']/i.test(rootTag);
+        if (xmlnsOk) passes.push('xmlns 命名空间正确（http://www.w3.org/2000/svg）');
+        else warnings.push('建议显式声明 xmlns="http://www.w3.org/2000/svg" 以兼容部分渲染器');
+    }
+
+    // 2. viewBox
+    var vbM = s.match(/viewBox\s*=\s*["']([^"']+)["']/i);
+    if (vbM) {
+        var vb = vbM[1].trim().split(/[\s,]+/).map(Number);
+        if (vb.length === 4 && vb.every(function(n){ return !isNaN(n); })) {
+            var w = vb[2], h = vb[3];
+            if (w > 0 && h > 0) {
+                passes.push('viewBox 存在：' + vbM[1] + '（宽 ' + w + ' × 高 ' + h + '）');
+                info.w = w; info.h = h;
+                var ratio = Math.max(w, h) / Math.min(w, h);
+                if (ratio > 1.1) warnings.push('宽高比 ' + (w/h).toFixed(2) + ' 偏离 1:1（允许范围约 0.91–1.1），邮箱服务商可能缩放变形');
+                else passes.push('宽高比 ' + (w/h).toFixed(2) + ' 接近 1:1 ✓');
+            } else {
+                issues.push('viewBox 宽高必须为正数');
+            }
+        } else {
+            issues.push('viewBox 格式非法，应为 "minX minY width height" 四个数字');
+        }
+    } else {
+        issues.push('缺少 viewBox 属性（BIMI 规范强制要求）');
+    }
+
+    // 3. 尺寸
+    var wM = s.match(/<svg[\s>][^>]*\bwidth\s*=\s*["']([^"']+)["']/i);
+    var hM = s.match(/<svg[\s>][^>]*\bheight\s*=\s*["']([^"']+)["']/i);
+    var dw = wM ? parseFloat(wM[1]) : (info.w || 0);
+    var dh = hM ? parseFloat(hM[1]) : (info.h || 0);
+    if (dw >= 512 && dh >= 512) passes.push('尺寸 ' + dw + '×' + dh + ' 满足最小 512×512 建议');
+    else if (dw > 0 && dh > 0) warnings.push('尺寸 ' + dw + '×' + dh + ' 小于 512×512，Gmail 等服务商要求最小 512px');
+    else warnings.push('未检测到明确尺寸，建议显式 width/height 至少 512px');
+
+    // 4. 脚本
+    if (/<script[\s>]/i.test(s)) issues.push('包含 <script> 元素（BIMI 禁止脚本）');
+    if (/<foreignObject[\s>]/i.test(s)) issues.push('包含 <foreignObject>（可能嵌入 HTML/脚本，BIMI 禁止）');
+    var evtAttrs = s.match(/\son[a-z]+\s*=/gi);
+    if (evtAttrs && evtAttrs.length) issues.push('包含事件处理属性（如 ' + esc(evtAttrs.slice(0,3).join(', ')) + '），BIMI 禁止');
+
+    // 5. 外部引用
+    var extRefs = [];
+    var imgM = s.match(/<image[\s>]/gi);
+    if (imgM && imgM.length) {
+        extRefs.push(imgM.length + ' 个 <image> 元素（栅格/外部图像）');
+    }
+    if (/@import/i.test(s)) extRefs.push('CSS @import 外部样式');
+    if (/url\(\s*["']?https?:/i.test(s)) extRefs.push('url() 引用外部 HTTP(S) 资源');
+    if (/href\s*=\s*["']https?:/i.test(s)) extRefs.push('href 指向外部 URL');
+    if (extRefs.length) issues.push('存在外部引用：' + extRefs.join('；') + '（BIMI 要求完全自包含）');
+    else passes.push('无外部引用（完全自包含）✓');
+
+    // 6. 动画
+    var animM = s.match(/<animate[\s>]|<animateTransform[\s>]|<animateMotion[\s>]/gi);
+    if (animM && animM.length) issues.push('包含 ' + animM.length + ' 个动画元素（BIMI 要求静态 Logo）');
+    else passes.push('无动画元素 ✓');
+
+    // 7. 颜色数量
+    var colors = s.match(/(?:fill|stroke)\s*=\s*["']([^"']+)["']/gi) || [];
+    var unique = {};
+    colors.forEach(function(c){
+        var v = c.replace(/^(?:fill|stroke)\s*=\s*["']/, '').replace(/["']$/, '');
+        if (v && v !== 'none' && v !== 'transparent') unique[v] = 1;
+    });
+    var colorKeys = Object.keys(unique);
+    info.colorCount = colorKeys.length;
+    if (colorKeys.length === 0) warnings.push('未检测到 fill/stroke 颜色（Logo 可能全透明或依赖 CSS，建议显式指定颜色）');
+    else if (colorKeys.length <= 4) passes.push('颜色数量 ' + colorKeys.length + ' 个（' + colorKeys.join(', ') + '）满足 VMC 单色/低色板要求');
+    else warnings.push('颜色数量 ' + colorKeys.length + ' 个（' + colorKeys.join(', ') + '），VMC 认证 Logo 通常要求单色或 ≤4 色');
+
+    // 8. XML 合法性
+    var xmlDoc = null;
+    try {
+        var parser = new DOMParser();
+        xmlDoc = parser.parseFromString(s, 'image/svg+xml');
+        var perr = xmlDoc.getElementsByTagName('parsererror');
+        if (perr.length) issues.push('XML 解析错误：SVG 不是合法 XML（' + esc(perr[0].textContent.slice(0, 120)) + '）');
+        else passes.push('XML 解析合法 ✓');
+    } catch(e) {
+        issues.push('XML 解析异常：' + esc(e.message));
+    }
+
+    // 结果输出
+    var passCount = passes.length, warnCount = warnings.length, issueCount = issues.length;
+    var overall = issueCount === 0 ? (warnCount === 0 ? 'pass' : 'warn') : 'fail';
+    var color = overall === 'pass' ? '#28a745' : (overall === 'warn' ? '#f0ad4e' : '#c00');
+    var title = overall === 'pass' ? '✓ SVG 完全合规' : (overall === 'warn' ? '⚠ SVG 基本合规，有建议项' : '✗ SVG 不合规');
+
+    var h = '';
+    h += '<div style="border:2px solid ' + color + ';border-radius:10px;padding:20px;margin:12px 0;background:#fff">';
+    h += '<div style="font-size:20px;font-weight:bold;color:' + color + '">' + title + '</div>';
+    h += '<div style="font-size:13px;color:#888;margin-top:6px">通过 ' + passCount + ' 项 · 建议 ' + warnCount + ' 项 · 违规 ' + issueCount + ' 项</div></div>';
+
+    if (issues.length) {
+        h += '<div style="background:#fdf2f2;border-left:3px solid #c00;padding:12px 16px;margin:10px 0"><h3 style="margin:0 0 6px;font-size:14px;color:#c00">违规项（必须修复）</h3><ul style="margin:0;padding-left:20px;font-size:14px;color:#555;line-height:1.8">';
+        issues.forEach(function(i){ h += '<li>' + i + '</li>'; });
+        h += '</ul></div>';
+    }
+    if (warnings.length) {
+        h += '<div style="background:#fef9e7;border-left:3px solid #f0ad4e;padding:12px 16px;margin:10px 0"><h3 style="margin:0 0 6px;font-size:14px;color:#b8860b">建议项（推荐修复）</h3><ul style="margin:0;padding-left:20px;font-size:14px;color:#555;line-height:1.8">';
+        warnings.forEach(function(w){ h += '<li>' + w + '</li>'; });
+        h += '</ul></div>';
+    }
+    if (passes.length) {
+        h += '<div style="background:#f0f9f0;border-left:3px solid #28a745;padding:12px 16px;margin:10px 0"><h3 style="margin:0 0 6px;font-size:14px;color:#1e7e34">通过项</h3><ul style="margin:0;padding-left:20px;font-size:14px;color:#555;line-height:1.8">';
+        passes.forEach(function(p){ h += '<li>' + p + '</li>'; });
+        h += '</ul></div>';
+    }
+
+    // 修复指引
+    h += '<div style="background:#f5f7fa;border-left:3px solid #003366;padding:14px 18px;margin:12px 0 0">';
+    h += '<h3 style="margin:0 0 8px;font-size:15px;color:#003366">发布指引</h3><ul style="font-size:14px;color:#555;line-height:1.8;padding-left:20px;margin:0">';
+    h += '<li>将 SVG 托管到 HTTPS 域名（Content-Type 必须为 <code>image/svg+xml</code>）</li>';
+    h += '<li>DNS 发布：<code>default._bimi.域名 TXT "v=BIMI1; l=https://您的域名/logo.svg;"</code></li>';
+    h += '<li>前置条件：DMARC 必须为 <code>p=quarantine</code> 或 <code>p=reject</code>（RFC 7489）</li>';
+    h += '<li>需要完整徽章显示时，申请 VMC 证书（需商标注册证明）</li>';
+    if (overall !== 'pass') h += '<li>修复上述违规项后重新校验，全部通过再发布</li>';
+    h += '</ul></div>';
+
+    result.innerHTML = h;
+}
+})();
+</script>
+<!--#include virtual="/partials/footer.html" -->
+</body>
+</html>
