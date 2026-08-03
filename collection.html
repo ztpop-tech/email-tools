@@ -5,13 +5,16 @@
 <title>邮件技术在线工具箱 — 邮件 DNS 诊断与记录生成工具集合 · ztpop.net</title>
 <link rel="stylesheet" href="/css/main.css?v=23">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://dns.google" crossorigin>
+    <link rel="preconnect" href="https://cloudflare-dns.com" crossorigin>
 <meta property="og:site_name" content="ztpop.net 邮件技术知识库">
 <meta property="og:title" content="邮件技术在线工具箱 — 邮件 DNS 诊断与记录生成工具集合">
 <meta property="og:description" content="ztpop.net 邮件技术在线工具箱全集：10 项邮件 DNS 一键诊断（SPF/DKIM/DMARC/MX/PTR/BIMI/MTA-STS/TLS-RPT/DNSSEC/DANE）、SPF/DMARC/DKIM/MTA-STS/TLS-RPT 记录生成器、邮件头解析与 DNSBL 黑名单查询。全部工具浏览器端运行，零数据采集，技术依据 IETF RFC。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.ztpop.net/tools/collection.html">
 <meta name="description" content="ztpop.net 邮件技术在线工具箱全集：邮件 DNS 十项诊断、SPF/DMARC/DKIM/MTA-STS/TLS-RPT 记录生成器、邮件头解析、DNSBL 黑名单查询、SMTP 错误码速查、CIDR 计算等免费在线工具。纯前端运行，零注册零采集，技术依据 IETF RFC 7208/6376/7489/8461/8460/9608。">
-<link rel="canonical" href="https://www.ztpop.net/tools/collection.html">
+<link rel="canonical" href="https://www.ztpop.net/tools/collection.html"
+<link rel="alternate" hreflang="zh-CN" href="https://www.ztpop.net/tools/collection.html">>
 <script type="application/ld+json">{
   "@context": "https://schema.org",
   "@type": "CollectionPage",
@@ -67,6 +70,84 @@
         "position": 7,
         "name": "TLS-RPT 记录生成器",
         "url": "https://www.ztpop.net/tools/tls-rpt-generator.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 8,
+        "name": "SPF 记录检查器",
+        "url": "https://www.ztpop.net/tools/spf-checker.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 9,
+        "name": "DKIM 记录检查器",
+        "url": "https://www.ztpop.net/tools/dkim-checker.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 10,
+        "name": "DMARC 记录检查器",
+        "url": "https://www.ztpop.net/tools/dmarc-checker.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 11,
+        "name": "MTA-STS 记录检查器",
+        "url": "https://www.ztpop.net/tools/mta-sts-checker.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 12,
+        "name": "TLS-RPT 记录检查器",
+        "url": "https://www.ztpop.net/tools/tls-rpt-checker.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 13,
+        "name": "SPF 深度诊断工具",
+        "url": "https://www.ztpop.net/tools/spf-deep-diagnose.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 14,
+        "name": "邮箱地址语法验证器",
+        "url": "https://www.ztpop.net/tools/email-syntax-validator.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 15,
+        "name": "一次性邮箱检测器",
+        "url": "https://www.ztpop.net/tools/disposable-email-checker.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 16,
+        "name": "DMARC XML 报告解析器",
+        "url": "https://www.ztpop.net/tools/dmarc-xml-parser.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 17,
+        "name": "邮件伪造风险评估",
+        "url": "https://www.ztpop.net/tools/spoof-risk-checker.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 18,
+        "name": "域名健康评分",
+        "url": "https://www.ztpop.net/tools/domain-health-score.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 19,
+        "name": "ARC 校验器",
+        "url": "https://www.ztpop.net/tools/arc-validator.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 20,
+        "name": "BIMI SVG 校验器",
+        "url": "https://www.ztpop.net/tools/bimi-svg-validator.html"
       }
     ]
   }
@@ -108,14 +189,15 @@
                     <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
                     <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
                     <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
                 </ul>
             </li>
             <li class="nav-li"><a href="/solution.html">解决方案</a></li>
             <li class="nav-li"><a href="/support.html">支持</a></li>
-            <li class="nav-li"><a href="/kb/">知识库</a></li>
-                <li class="nav-li"><a href="/standards/">标准与工具</a></li>
+            <li class="nav-li"><a href="/kb/">知识库</a><ul class="sub-nav-list"><li class="sub-nav-li"><a href="/kb/">知识库首页</a></li><li class="sub-nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li></ul></li>
+                
             <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
-            <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+            
                     <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
         </ul></div>
     </div>
@@ -242,7 +324,19 @@
         
 
 
-    <h2>六、权威外部工具推荐</h2>
+    
+<h2>十七、邮件伪造风险评估</h2>
+<p><a href="/tools/spoof-risk-checker.html">邮件伪造风险评估器</a>：输入域名，查询 SPF（RFC 7208）与 DMARC（RFC 7489）记录，基于开源项目 Spoofy 经真实环境验证的判定矩阵，输出「完全可伪造 / 高 / 中 / 低 / 不可伪造」风险等级与加固建议。用于企业品牌保护自查与采购前供应商邮件安全评估。</p>
+
+<h2>十八、域名健康评分</h2>
+<p><a href="/tools/domain-health-score.html">域名健康评分</a>：对域名执行 8 项安全检查（SPF RFC 7208、DKIM RFC 6376、DMARC RFC 7489、MTA-STS RFC 8461、TLS-RPT RFC 8460、BIMI、MX RFC 1035、7 个主流 DNSBL 黑名单），聚合输出百分制健康分与 A-F 等级，逐项解读配置状态并给出修复建议。用于企业邮件安全基线评估与投递健康度自查。</p>
+
+<h2>十九、ARC 链校验</h2>
+<p><a href="/tools/arc-validator.html">ARC 校验器</a>：粘贴邮件原始头，解析 ARC 三件套链（ARC-Authentication-Results / ARC-Message-Signature / ARC-Seal），校验 i= 实例连续性、cv= 状态机（none/pass/fail）、AMS 签名公钥与链完整性（RFC 8617）。用于邮件列表/转发场景下认证结果链的可信度判断。</p>
+
+<h2>二十、BIMI SVG 合规校验</h2>
+<p><a href="/tools/bimi-svg-validator.html">BIMI SVG 校验器</a>：粘贴 SVG 代码或上传文件，检查品牌标识是否符合 AuthIndicators BIMI 规范——纯 SVG 格式、viewBox 与 1:1 宽高比、无脚本/事件处理、无外部引用、无动画/栅格图像、颜色数量与最小尺寸，输出违规/建议/通过清单与发布指引（default._bimi TXT 配置）。</p>
+<h2>六、权威外部工具推荐</h2>
     <p>除本站自研工具外，以下权威外部工具可作为补充（均为邮件安全/投递领域公认工具，用于交叉验证与深度分析）：</p>
     <div class="ref-block">
         <h3>投递质量与评分</h3>
