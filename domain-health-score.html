@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://dns.google" crossorigin>
+    <link rel="preconnect" href="https://cloudflare-dns.com" crossorigin>
 <title>域名健康评分 — 邮件安全 8 项体检 · ztpop.net</title>
 <meta property="og:site_name" content="ztpop.net 邮件技术知识库">
 <meta property="og:title" content="域名健康评分 — 邮件安全 8 项体检 · ztpop.net">
 <meta property="og:description" content="免费在线域名健康评分工具：8 项检查（SPF/DKIM/DMARC/MTA-STS/TLS-RPT/BIMI/MX/黑名单）聚合评分，输出百分制健康分与 A-F 等级，逐项解读配置状态并给出修复建议。基于 RFC 7208/6376/7489/8461/8460/1035 实现。浏览器端运行，不上传数据。">
 <meta name="description" content="免费在线域名健康评分工具：8 项检查（SPF/DKIM/DMARC/MTA-STS/TLS-RPT/BIMI/MX/黑名单）聚合评分，输出百分制健康分与 A-F 等级，逐项解读配置状态并给出修复建议。基于 RFC 7208/6376/7489/8461/8460/1035 实现。浏览器端运行，不上传数据。">
-<link rel="canonical" href="https://www.ztpop.net/tools/domain-health-score.html">
+<link rel="canonical" href="https://www.ztpop.net/tools/domain-health-score.html"
+<link rel="alternate" hreflang="zh-CN" href="https://www.ztpop.net/tools/domain-health-score.html">>
 <link rel="stylesheet" href="/css/main.css?v=23">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"域名健康评分"}]}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "域名健康评分", "url": "https://www.ztpop.net/tools/domain-health-score.html", "applicationCategory": "SecurityApplication", "operatingSystem": "Web", "description": "免费在线域名健康评分工具：8 项检查（SPF/DKIM/DMARC/MTA-STS/TLS-RPT/BIMI/MX/黑名单）聚合评分，输出百分制健康分与 A-F 等级，逐项解读配置状态并给出修复建议。浏览器端运行，不上传数据。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
@@ -30,14 +33,15 @@
                         <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
                         </ul>
                     </li>
-                    <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
+                    
                 <li class="nav-li"><a href="/solution.html">解决方案</a></li>
                     <li class="nav-li"><a href="/support.html">支持</a></li>
-                    <li class="nav-li"><a href="/kb/">知识库</a></li>
+                    <li class="nav-li"><a href="/kb/">知识库</a><ul class="sub-nav-list"><li class="sub-nav-li"><a href="/kb/">知识库首页</a></li><li class="sub-nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li></ul></li>
                 
                     <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
-                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
-                    <li class="nav-li"><a href="/search.html"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></a></li>
+                    
+                    <li class="nav-li"><a href="/ai/">AI 助手</a></li>
+                <li class="nav-li"><a href="/search.html"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></a></li>
                 </ul>
             </nav>
         </div>
