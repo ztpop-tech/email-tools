@@ -1,261 +1,374 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>邮件伪造风险评估器 — 域名仿冒风险检测 · ztpop.net</title>
-<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
-<meta property="og:title" content="邮件伪造风险评估器 — 域名仿冒风险检测 · ztpop.net">
-<meta property="og:description" content="免费在线邮件伪造风险评估工具：查询域名的 SPF（RFC 7208）与 DMARC（RFC 7489）配置，基于 Spoofy 实测判定矩阵评估该域名被仿冒钓鱼的风险等级（完全可伪造 / 高 / 中 / 低 / 不可伪造），并给出加固建议。浏览器端运行，不上传数据。">
-<meta name="description" content="免费在线邮件伪造风险评估工具：查询域名的 SPF（RFC 7208）与 DMARC（RFC 7489）配置，基于 Spoofy 实测判定矩阵评估该域名被仿冒钓鱼的风险等级（完全可伪造 / 高 / 中 / 低 / 不可伪造），并给出加固建议。浏览器端运行，不上传数据。">
-<link rel="canonical" href="https://www.ztpop.net/tools/spoof-risk-checker.html">
-<link rel="stylesheet" href="/css/main.css?v=23">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"邮件技术在线工具箱","item":"https://www.ztpop.net/tools/index.html"},{"@type":"ListItem","position":3,"name":"邮件伪造风险评估器"}]}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "邮件伪造风险评估器", "url": "https://www.ztpop.net/tools/spoof-risk-checker.html", "applicationCategory": "SecurityApplication", "operatingSystem": "Web", "description": "免费在线邮件伪造风险评估工具：查询域名的 SPF（RFC 7208）与 DMARC（RFC 7489）配置，基于 Spoofy 实测判定矩阵评估该域名被仿冒钓鱼的风险等级，并给出加固建议。浏览器端运行，不上传数据。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "如何判断一个域名能否被伪造？", "acceptedAnswer": {"@type": "Answer", "text": "核心看 SPF 与 DMARC 的组合配置：若域名没有 SPF 记录（或 SPF 以 ?all 结束），且没有 DMARC 记录（或 DMARC 策略为 p=none），则任何攻击者都能伪造该域名发信。只有 SPF 硬失败（-all）或 DMARC 强制策略（p=quarantine/reject）才能真正阻止伪造。本工具基于 Spoofy 项目的实测判定矩阵评估风险等级。"}}, {"@type": "Question", "name": "SPF 和 DMARC 分别如何阻止域名伪造？", "acceptedAnswer": {"@type": "Answer", "text": "SPF（RFC 7208）通过 DNS 声明哪些服务器有权以该域名发信，收件方比对发信 IP 是否在允许列表内；DMARC（RFC 7489）则告诉收件方：当 SPF/DKIM 校验失败时如何处理（none 仅报告、quarantine 进垃圾箱、reject 直接拒收），并接收聚合报告。两者配合才能有效阻止伪造：SPF 负责识别、DMARC 负责执行处置。"}}, {"@type": "Question", "name": "为什么 p=none 的 DMARC 不能防伪造？", "acceptedAnswer": {"@type": "Answer", "text": "p=none 是监控模式：DMARC 只生成报告、不执行任何处置。攻击者伪造的邮件虽然 SPF/DKIM 校验失败，但收件方按 p=none 指示不做拦截（不拒收、不进垃圾箱），邮件仍会送达收件人。只有 p=quarantine 或 p=reject 才是强制执行模式，才能真正保护域名不被仿冒。"}}, {"@type": "Question", "name": "域名被伪造有什么危害？", "acceptedAnswer": {"@type": "Answer", "text": "攻击者冒用您的域名发送钓鱼邮件（BEC 商业邮件诈骗、假冒客服、伪造发票等），收件人因信任域名而受骗。FBI 统计 BEC 诈骗全球损失已超 550 亿美元。被伪造还会损害品牌信誉、导致合法邮件被收件方误判为垃圾邮件。"}}, {"@type": "Question", "name": "如何加固域名防止被伪造？", "acceptedAnswer": {"@type": "Answer", "text": "三步：① 配置 SPF 记录并确保以 -all（硬失败）或 ~all（软失败）结束；② 部署 DKIM 签名（RFC 6376）；③ 配置 DMARC 记录，从 p=none 监控逐步过渡到 p=quarantine、最终 p=reject，并接收 rua 聚合报告持续监控。同时配置 MTA-STS（RFC 8461）与 TLS-RPT（RFC 8460）提升传输安全。"}}]}</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>邮件伪造风险评估器 — SPF/DMARC 组合判定 | ztpop.net</title>
+  <meta name="description" content="纯前端分析域名 SPF + DMARC 组合状态，输出四档伪造风险评估（可伪造/SPF对齐/DMARC对齐/完全对齐），参考 NCC Group Spoofy 逻辑。">
+  <link rel="canonical" href="https://ztpop.net/tools/spoof-risk-checker.html">
+  <meta property="og:title" content="邮件伪造风险评估器">
+  <meta property="og:description" content="SPF/DMARC 组合判定四档伪造风险评估，纯前端零服务端依赖。">
+  <meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="/css/main.css?v=23">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; }
+    .tool-wrap { max-width: 860px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden; }
+    .tool-header { background: linear-gradient(135deg, #003366 0%, #004a99 100%); color: #fff; padding: 40px 48px 32px; }
+    .tool-header h1 { font-size: 26px; margin: 0 0 10px; font-weight: 700; }
+    .tool-header p { margin: 0; opacity: 0.85; font-size: 15px; line-height: 1.7; }
+    .tool-body { padding: 36px 48px 40px; }
+    .input-section { margin-bottom: 28px; }
+    .input-section label { display: block; font-weight: 600; color: #003366; margin-bottom: 8px; font-size: 15px; }
+    .input-section textarea { width: 100%; height: 120px; border: 1.5px solid #d0dae8; border-radius: 8px; padding: 14px 16px; font-size: 15px; font-family: 'Courier New', monospace; resize: vertical; box-sizing: border-box; line-height: 1.6; }
+    .input-section textarea:focus { outline: none; border-color: #003366; box-shadow: 0 0 0 3px rgba(0,51,102,0.1); }
+    .input-hint { font-size: 13px; color: #6b7280; margin-top: 6px; }
+    .btn-row { display: flex; gap: 12px; margin-bottom: 28px; }
+    .btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: #003366; color: #fff; }
+    .btn-primary:hover { background: #004a99; transform: translateY(-1px); }
+    .btn-secondary { background: #e8eef6; color: #003366; }
+    .btn-secondary:hover { background: #d0dae8; }
+    .results { display: none; }
+    .results.show { display: block; }
+    .result-card { border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; border-left: 5px solid; }
+    .result-card .dom { font-weight: 700; font-size: 17px; margin-bottom: 8px; color: #1a1a2e; }
+    .result-card .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 10px; color: #fff; }
+    .result-card .reasons { margin: 8px 0; padding: 0; list-style: none; }
+    .result-card .reasons li { padding: 5px 0; font-size: 14px; line-height: 1.6; color: #374151; }
+    .result-card .raw-row { font-size: 13px; color: #6b7280; font-family: 'Courier New', monospace; word-break: break-all; margin-top: 8px; background: #f9fafb; border-radius: 6px; padding: 8px 12px; }
+    .summary-bar { background: #f5f7fa; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 16px; flex-wrap: wrap; }
+    .summary-bar .stat { text-align: center; flex: 1; min-width: 80px; }
+    .summary-bar .stat .num { font-size: 28px; font-weight: 800; color: #003366; }
+    .summary-bar .stat .lbl { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .error-msg { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; color: #b91c1c; font-size: 14px; margin-bottom: 16px; display: none; }
+    .error-msg.show { display: block; }
+    .risk-matrix { background: #f8fafc; border-radius: 10px; padding: 20px 24px; margin-top: 24px; }
+    .risk-matrix h3 { margin: 0 0 14px; font-size: 16px; color: #003366; }
+    .matrix-row { display: flex; align-items: center; padding: 9px 0; border-bottom: 1px solid #e5e7eb; font-size: 14px; gap: 12px; }
+    .matrix-row:last-child { border-bottom: none; }
+    .matrix-icon { font-size: 18px; width: 28px; text-align: center; }
+    .matrix-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; color: #fff; min-width: 80px; text-align: center; }
+    .matrix-desc { color: #4b5563; }
+    .footer-cta { margin-top: 24px; padding: 16px 20px; background: #f0f4f8; border-radius: 8px; font-size: 14px; color: #374151; line-height: 1.7; text-align: center; }
+    .footer-cta a { color: #003366; font-weight: 600; text-decoration: none; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "邮件伪造风险评估器",
+    "description": "纯前端分析域名 SPF + DMARC 组合状态，输出四档邮件伪造风险评估。",
+    "url": "https://ztpop.net/tools/spoof-risk-checker.html",
+    "applicationCategory": "DeveloperToolsApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
+    "provider": { "@type": "Organization", "name": "ztpop.net", "url": "https://ztpop.net" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://ztpop.net/" },
+      { "@type": "ListItem", "position": 2, "name": "工具箱", "item": "https://ztpop.net/tools/" },
+      { "@type": "ListItem", "position": 3, "name": "邮件伪造风险评估器", "item": "https://ztpop.net/tools/spoof-risk-checker.html" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "什么是邮件伪造？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "邮件伪造（Spoofing）指攻击者伪造发件人域名发送邮件，使邮件看起来像来自目标组织。RFC 7208 (SPF)、RFC 6376 (DKIM)、RFC 7489 (DMARC) 共同构成防护体系。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "为什么仅配置 SPF 不够？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "SPF 只验证发件服务器 IP，不能验证发件人域名本身。攻击者可以使用与目标域名同域但不同子域的地址（如 attacker@sub.target.com）绕过 SPF。DMARC 在 SPF 基础上增加了 From 域名与 SPF/DKIM 对齐校验，是对抗伪造的完整方案。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "什么是 DMARC 对齐（alignment）？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "DMARC 对齐要求邮件的 From 域名与 SPF 认证域名（RFC 7208）或 DKIM 签名域名（RFC 6376）完全匹配（strict）或共享同一根域（relaxed，RFC 7489 §6.3）。未对齐的认证结果不视为通过 DMARC 校验。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "DMARC pct 参数有什么影响？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "DMARC pct 参数控制参与 DMARC 校验的邮件比例。pct=50 表示仅 50% 的邮件受 DMARC 策略约束，攻击者可在剩余 50% 中伪造。建议 pct=100 以获得完整保护。"
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
-<header>
-    <div class="mg-header">
-        <div class="mg-header-inner">
-            <a href="/" class="mg-logo"><img src="/img/logo.webp" alt="ztpop.net 邮件技术知识库" style="height:40px"></a>
-            <nav class="mg-nav">
-                <ul class="nav-list">
-                    <li class="nav-li"><a href="/">首页</a></li>
-                    <li class="nav-li"><a href="#">产品和服务</a>
-                        <ul class="sub-nav-list">
-                            <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
-                            <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
-                            <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
-                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
-                <li class="nav-li"><a href="/solution.html">解决方案</a></li>
-                    <li class="nav-li"><a href="/support.html">支持</a></li>
-                    <li class="nav-li"><a href="/kb/">知识库</a></li>
-                
-                    <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
-                    <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
-                    <li class="nav-li"><a href="/search.html"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></a></li>
-                </ul>
-            </nav>
-        </div>
+  <header>
+    <ul class="nav-list">
+      <li class="nav-li"><a href="/">首页</a></li>
+      <li class="nav-li"><a href="#">产品和服务</a>
+        <ul class="sub-nav-list">
+          <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+          <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+          <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+        </ul>
+      </li>
+      <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+      <li class="nav-li"><a href="/support.html">支持</a></li>
+      <li class="nav-li"><a href="/kb/">知识库</a></li>
+      <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+      <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+    </ul>
+  </header>
+
+  <main class="tool-wrap">
+    <div class="tool-header">
+      <h1>邮件伪造风险评估器</h1>
+      <p>输入一个或多个域名（每行一个），纯前端 DoH 查询 SPF + DMARC 记录，输出四档伪造风险评估。零服务端依赖，参考 NCC Group Spoofy 判定逻辑。</p>
     </div>
-</header>
-<main style="max-width:860px;margin:0 auto;padding:20px">
-    <article>
-        <div class="article-body">
-            <div class="article-header">
-                <h1 style="font-size:24px;color:#003366;margin:0 0 10px">邮件伪造风险评估器</h1>
-                <p class="meta" style="color:#888;font-size:14px;margin:0 0 16px">免费在线工具 · 域名仿冒风险检测 · 浏览器端运行，不上传数据</p>
-            </div>
+    <div class="tool-body">
+      <div class="input-section">
+        <label for="domains">输入域名（每行一个）</label>
+        <textarea id="domains" placeholder="example.com&#10;ztpop.net&#10;gmail.com">ztpop.net</textarea>
+        <p class="input-hint">支持单行单域名，也支持一次粘贴多个域名批量分析。域名不含 https:// 前缀。</p>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="runCheck()">🔍 开始评估</button>
+        <button class="btn btn-secondary" onclick="loadExamples()">📋 加载示例</button>
+      </div>
 
-            <p style="font-size:16px;color:#333;line-height:1.8;margin:0 0 16px">攻击者冒用您的域名发送钓鱼邮件（BEC 商业邮件诈骗、假冒客服、伪造发票等），是当前最猖獗的邮件威胁之一。本工具查询目标域名的 <strong>SPF（RFC 7208）</strong>与 <strong>DMARC（RFC 7489）</strong>配置，基于开源项目 <strong>Spoofy</strong>（MattKeeley/Spoofy）经过真实环境验证的判定矩阵，评估该域名「能否被伪造」的风险等级，并给出针对性加固建议。</p>
+      <div class="error-msg" id="errorBox"></div>
 
-            <div style="background:#f8f9fa;border:1px solid #e3e8ef;border-radius:8px;padding:20px;margin:16px 0">
-                <label for="domain-input" style="font-size:14px;color:#555;display:block;margin-bottom:8px">域名（Domain）</label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <div style="flex:1 1 220px"><input type="text" id="domain-input" placeholder="example.com" style="padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:15px;width:100%;box-sizing:border-box"></div>
-                    <button id="check-btn" style="padding:10px 24px;background:#003366;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer">检测伪造风险</button>
-                </div>
-                <p class="hint" style="font-size:13px;color:#888;margin:10px 0 0">输入要评估的域名（如 example.com），工具将通过 DoH 查询其 SPF 与 DMARC 记录并判定风险等级。查询在浏览器端完成，域名信息不会上传。</p>
-            </div>
+      <div class="results" id="results">
+        <div class="summary-bar" id="summaryBar"></div>
+        <div id="resultCards"></div>
+      </div>
 
-            <div id="result" style="margin:16px 0"></div>
-
-            <div style="margin:24px 0 0">
-                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">判定矩阵说明</h2>
-                <p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 12px">本工具的风险判定基于 Spoofy 项目经真实邮箱服务商环境测试验证的组合逻辑（SPF 结果 × DMARC 结果）：</p>
-                <table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
-                    <tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">SPF 状态</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">DMARC 状态</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">风险等级</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">说明</td></tr>
-                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">无 SPF 记录</td><td style="padding:8px 12px;border:1px solid #ddd;">无 DMARC 记录</td><td style="padding:8px 12px;border:1px solid #ddd;color:#c00;font-weight:bold">完全可伪造</td><td style="padding:8px 12px;border:1px solid #ddd;">无任何认证机制，任何来源均可冒用</td></tr>
-                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">无 SPF / ?all</td><td style="padding:8px 12px;border:1px solid #ddd;">p=none / 无</td><td style="padding:8px 12px;border:1px solid #ddd;color:#c00;font-weight:bold">完全可伪造</td><td style="padding:8px 12px;border:1px solid #ddd;">?all 中性结束 = 无防护；p=none 仅报告不处置</td></tr>
-                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">~all（软失败）</td><td style="padding:8px 12px;border:1px solid #ddd;">无 DMARC</td><td style="padding:8px 12px;border:1px solid #ddd;color:#e67e22;font-weight:bold">高</td><td style="padding:8px 12px;border:1px solid #ddd;">SPF 提示但不强拒，无 DMARC 处置兜底</td></tr>
-                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">~all（软失败）</td><td style="padding:8px 12px;border:1px solid #ddd;">p=none</td><td style="padding:8px 12px;border:1px solid #ddd;color:#e67e22;font-weight:bold">高</td><td style="padding:8px 12px;border:1px solid #ddd;">软失败 + 监控模式，伪造邮件仍可送达</td></tr>
-                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">~all / -all</td><td style="padding:8px 12px;border:1px solid #ddd;">p=quarantine</td><td style="padding:8px 12px;border:1px solid #ddd;color:#f0ad4e;font-weight:bold">中</td><td style="padding:8px 12px;border:1px solid #ddd;">伪造邮件被隔离进垃圾箱，风险可控</td></tr>
-                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">-all（硬失败）</td><td style="padding:8px 12px;border:1px solid #ddd;">p=reject</td><td style="padding:8px 12px;border:1px solid #ddd;color:#28a745;font-weight:bold">低</td><td style="padding:8px 12px;border:1px solid #ddd;">伪造邮件被直接拒收，防护到位</td></tr>
-                    <tr><td style="padding:8px 12px;border:1px solid #ddd;">-all（硬失败）</td><td style="padding:8px 12px;border:1px solid #ddd;">p=quarantine / reject</td><td style="padding:8px 12px;border:1px solid #ddd;color:#28a745;font-weight:bold">低</td><td style="padding:8px 12px;border:1px solid #ddd;">SPF 硬失败 + DMARC 强制 = 最佳实践</td></tr>
-                </table>
-                <p style="font-size:13px;color:#888;line-height:1.7;margin:8px 0 0">注：DMARC 需要 SPF 或 DKIM 至少一个通过才视为对齐（RFC 7489 §3）；SPF 为 -all 时攻击者也无法通过 SPF，故 SPF 硬失败本身即是强防护。本矩阵聚焦 SPF × DMARC 组合，DKIM 作为增强项展示。</p>
-            </div>
-
-            <div style="margin:24px 0 0">
-                <h2 style="font-size:20px;color:#003366;margin:0 0 12px">使用方法</h2>
-                <p style="font-size:15px;color:#333;line-height:1.8;margin:0">输入域名点击「检测伪造风险」。工具通过 DoH（DNS over HTTPS，RFC 8484）查询域名的 SPF TXT 记录与 DMARC 记录（_dmarc.域名），解析后按判定矩阵输出风险等级（完全可伪造 / 高 / 中 / 低 / 不可伪造）、各认证项明细与加固建议。适用于：企业自查品牌域名保护状态、安全人员评估仿冒风险、采购前验证供应商邮件安全水平。</p>
-            </div>
-
-            <div class="ref-block" style="background:#f5f7fa;border-left:3px solid #003366;padding:16px 20px;margin:24px 0 0">
-                <h3 style="margin:0 0 10px;font-size:15px;color:#003366">技术标准依据</h3>
-                <p style="font-size:14px;color:#555;margin:0 0 8px">本工具基于以下权威标准与开源项目实现：</p>
-                <ul style="font-size:14px;color:#555;line-height:1.9;padding-left:20px;margin:0">
-                    <li>DNS 查询：RFC 8484（DNS Queries over HTTPS）、RFC 1035（DNS 协议）</li>
-                    <li>SPF：RFC 7208（Sender Policy Framework，版本 1）</li>
-                    <li>DMARC：RFC 7489（Domain-based Message Authentication, Reporting, and Conformance）</li>
-                    <li>判定矩阵：开源项目 Spoofy（github.com/MattKeeley/Spoofy，MIT License，真实环境验证的欺骗逻辑）</li>
-                    <li>DKIM：RFC 6376（DomainKeys Identified Mail Signatures）</li>
-                </ul>
-            </div>
+      <div class="risk-matrix">
+        <h3>📊 风险等级说明</h3>
+        <div class="matrix-row">
+          <span class="matrix-icon">⚠️</span>
+          <span class="matrix-badge" style="background:#d32f2f">高风险</span>
+          <span class="matrix-desc">无 SPF 或无 DMARC，任意伪造均可通过校验</span>
         </div>
-    </article>
-</main>
-<script>
-(function(){
-'use strict';
-var DOH = 'https://dns.alidns.com/resolve';
-function dohQuery(name, type) {
-    return fetch(DOH + '?name=' + encodeURIComponent(name) + '&type=' + type, {
-        headers: { 'accept': 'application/dns-json' }
-    }).then(function(r){ return r.json(); });
-}
-function getTXT(name) {
-    return dohQuery(name, 16).then(function(j){
-        if (!j || j.Status !== 0) return null;
-        var out = [];
-        (j.Answer || []).forEach(function(a){
-            if (a.type === 16 && a.data) {
-                var t = a.data;
-                if (t.charAt(0) === '"' && t.charAt(t.length-1) === '"') t = t.slice(1, -1);
-                out.push(t);
-            }
-        });
-        return out.length ? out : null;
-    });
-}
-function findSPF(txts) {
-    if (!txts) return null;
-    for (var i=0;i<txts.length;i++){
-        if (/^v=spf1\s/i.test(txts[i])) return txts[i];
+        <div class="matrix-row">
+          <span class="matrix-icon">🟡</span>
+          <span class="matrix-badge" style="background:#f57c00">中风险</span>
+          <span class="matrix-desc">仅有 SPF（-all），攻击者可利用子域名或相似域名绕过</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-icon">🟠</span>
+          <span class="matrix-badge" style="background:#f9a825">中风险</span>
+          <span class="matrix-desc">DMARC 软策略（p=none/quarantine），伪造邮件会被标记但不会拒收</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-icon">✅</span>
+          <span class="matrix-badge" style="background:#388e3c">低风险</span>
+          <span class="matrix-desc">SPF（-all）+ DMARC（p=reject），伪造邮件被直接拒收</span>
+        </div>
+      </div>
+
+      <div class="footer-cta">
+        想深入了解邮件伪造攻防？<a href="/kb/espoofer-email-spoofing-protection.html">阅读 espoofer 工具解读</a> ·
+        <a href="/tools/spf-deep-diagnose.html">SPF 深度诊断</a> ·
+        <a href="/tools/domain-health-score.html">域名健康评分</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner" style="max-width:1200px;margin:0 auto;padding:20px 40px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;font-size:14px;color:#8a9bae;">
+      <span>联系我们：售前 13671688786 / 技术支持 021-69753778 / zhangtao@ztpop.net</span>
+      <span>快速导航：<a href="/" style="color:#8a9bae;">首页</a> · <a href="/depth-understand.html" style="color:#8a9bae;">国产邮件系统</a> · <a href="/mailgate.html" style="color:#8a9bae;">邮件安全网关</a> · <a href="/xinchuang_mail.html" style="color:#8a9bae;">信创邮件系统</a> · <a href="/kb/" style="color:#8a9bae;">知识库</a> · <a href="/bulletin/industryInfo.html" style="color:#8a9bae;">行业资讯</a> · <a href="/contact.html" style="color:#8a9bae;">联系我们</a></span>
+    </div>
+    <div style="text-align:center;padding:10px 0;font-size:12px;color:#8a9bae;">© 2018-2026 上海辰童科技有限公司 | 沪ICP备2024053450号 | 专注国产邮件系统与邮件安全</div>
+  </footer>
+
+  <script>
+  const DOH = 'https://dns.alidns.com/resolve';
+
+  async function queryTXT(domain) {
+    const url = `${DOH}?name=${encodeURIComponent(domain)}&type=TXT&timeout=5`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.Answer || null;
+  }
+
+  function findRecord(answers, prefix) {
+    if (!answers) return null;
+    for (const a of answers) {
+      const v = typeof a === 'string' ? a : a.data;
+      if (v && v.toLowerCase().startsWith(prefix)) return v;
     }
     return null;
-}
-function getDMARC(name) {
-    return dohQuery('_dmarc.' + name, 16).then(function(j){
-        if (!j || j.Status !== 0) return null;
-        var out = null;
-        (j.Answer || []).forEach(function(a){
-            if (a.type === 16 && a.data && /^v=DMARC1/i.test(a.data)) {
-                out = a.data.replace(/^"|"$/g, '');
-            }
-        });
-        return out;
-    });
-}
-function parseDMARC(rec) {
-    var r = { p: null, sp: null, pct: 100, rua: null, raw: rec };
-    if (!rec) return r;
-    var parts = rec.split(';');
-    parts.forEach(function(part){
-        var kv = part.trim().split('=', 2);
-        if (kv.length === 2) {
-            var k = kv[0].trim().toLowerCase();
-            var v = kv[1].trim();
-            if (k === 'p') r.p = v;
-            else if (k === 'sp') r.sp = v;
-            else if (k === 'pct') r.pct = parseInt(v, 10) || 100;
-            else if (k === 'rua') r.rua = v;
-        }
-    });
-    return r;
-}
-function spfEnds(spf) {
-    if (!spf) return null;
-    var m = spf.match(/([-~+?])all\s*$/i);
-    if (m) return m[1].toLowerCase();
-    return null; // 无 all 结尾
-}
-function riskLevel(spf, dmarc) {
-    var hasSPF = !!spf;
-    var end = spfEnds(spf);
-    var hasDMARC = !!dmarc;
-    var p = dmarc ? dmarc.p : null;
-    // 完全可伪造
-    if (!hasSPF && !hasDMARC) return { level: 'critical', label: '完全可伪造', desc: '该域名既无 SPF 也无 DMARC 记录，任何攻击者都可以任意冒用该域名发信，收件方无法区分真假。' };
-    if (hasSPF && end === '?' && !hasDMARC) return { level: 'critical', label: '完全可伪造', desc: 'SPF 以 ?all（中性）结束等于没有防护，且无 DMARC 记录，攻击者可任意伪造。' };
-    if (!hasSPF && hasDMARC && (p === 'none' || !p)) return { level: 'critical', label: '完全可伪造', desc: '无 SPF 记录，且 DMARC 为 p=none（仅监控不处置），伪造邮件仍会送达收件人。' };
-    if (hasSPF && end === '?' && p === 'none') return { level: 'critical', label: '完全可伪造', desc: 'SPF 为 ?all（无防护）且 DMARC 为 p=none（不处置），双重无效配置等于裸奔。' };
-    // 高
-    if (hasSPF && (end === '~' || end === null) && !hasDMARC) return { level: 'high', label: '高', desc: 'SPF 软失败（~all）或无 all 结尾，且无 DMARC 处置策略，伪造邮件可能被送达。' };
-    if (hasSPF && (end === '~' || end === null) && hasDMARC && (p === 'none' || !p)) return { level: 'high', label: '高', desc: 'SPF 软失败 + DMARC p=none（监控模式），伪造邮件不会被拦截。' };
-    if (!hasSPF && hasDMARC && (p === 'quarantine' || p === 'reject')) return { level: 'high', label: '高', desc: '无 SPF 记录，虽有 DMARC 强制策略，但 SPF 无法提供发信源验证，防护不完整。' };
-    // 中
-    if (hasSPF && end === '-' && p === 'quarantine') return { level: 'medium', label: '中', desc: 'SPF 硬失败（-all）+ DMARC p=quarantine，伪造邮件会被隔离进垃圾箱，风险可控。' };
-    if (hasSPF && end === '~' && p === 'quarantine') return { level: 'medium', label: '中', desc: 'SPF 软失败（~all）+ DMARC p=quarantine，伪造邮件进垃圾箱，大部分收件人不会点开。' };
-    // 低
-    if (hasSPF && end === '-' && (p === 'reject')) return { level: 'low', label: '低', desc: 'SPF 硬失败（-all）+ DMARC p=reject，伪造邮件被直接拒收，防护到位。' };
-    if (hasSPF && end === '-' && p === 'quarantine') return { level: 'medium', label: '中', desc: 'SPF 硬失败 + DMARC p=quarantine，建议升级到 p=reject。' };
-    if (hasSPF && end === '-' && !p) return { level: 'medium', label: '中', desc: 'SPF 硬失败（-all）提供了强防护，但无 DMARC 记录，无法获得聚合报告与统一处置策略。' };
-    if (hasSPF && (end === '~' || end === null) && p === 'reject') return { level: 'medium', label: '中', desc: 'DMARC p=reject 有强处置，但 SPF 仅软失败，若 DKIM 未签名仍可能被利用（依赖 DKIM 对齐）。' };
-    // 兜底
-    return { level: 'medium', label: '中', desc: '配置组合需进一步人工评估，建议补齐 SPF -all 与 DMARC p=reject 最佳实践。' };
-}
-function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-var btn = document.getElementById('check-btn');
-var input = document.getElementById('domain-input');
-var result = document.getElementById('result');
-btn.addEventListener('click', function(){ run(); });
-input.addEventListener('keydown', function(e){ if (e.key === 'Enter') run(); });
-function run() {
-    var domain = input.value.trim().toLowerCase();
-    if (!domain) { result.innerHTML = '<p style="color:#c00">请输入域名。</p>'; return; }
-    domain = domain.replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-    result.innerHTML = '<p style="color:#666">正在查询 <strong>' + esc(domain) + '</strong> 的 SPF 与 DMARC 记录…</p>';
-    Promise.all([getTXT(domain), getDMARC(domain)]).then(function(res){
-        var spf = findSPF(res[0]);
-        var dmarcRaw = res[1];
-        var dmarc = parseDMARC(dmarcRaw);
-        var risk = riskLevel(spf, dmarc);
-        var color = { critical:'#c00', high:'#e67e22', medium:'#f0ad4e', low:'#28a745' }[risk.level];
-        var h = '';
-        h += '<div style="border:2px solid ' + color + ';border-radius:10px;padding:20px;margin:12px 0;background:#fff">';
-        h += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">';
-        h += '<span style="font-size:20px;font-weight:bold;color:' + color + '">' + esc(risk.label) + '</span>';
-        h += '<span style="font-size:13px;color:#888">' + esc(domain) + '</span></div>';
-        h += '<p style="font-size:15px;color:#333;line-height:1.7;margin:10px 0 0">' + esc(risk.desc) + '</p></div>';
-        // 明细
-        h += '<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">';
-        h += '<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">检查项</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">状态</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">明细</td></tr>';
-        if (spf) {
-            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;">SPF（RFC 7208）</td><td style="padding:8px 12px;border:1px solid #ddd;color:#28a745">存在</td><td style="padding:8px 12px;border:1px solid #ddd;font-family:monospace;font-size:12.5px;word-break:break-all">' + esc(spf) + '</td></tr>';
-        } else {
-            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;">SPF（RFC 7208）</td><td style="padding:8px 12px;border:1px solid #ddd;color:#c00;font-weight:bold">缺失</td><td style="padding:8px 12px;border:1px solid #ddd;">未找到 v=spf1 记录 —— 攻击者可直接伪造</td></tr>';
-        }
-        if (dmarcRaw) {
-            var pLabel = dmarc.p ? dmarc.p.toUpperCase() : '未指定';
-            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;">DMARC（RFC 7489）</td><td style="padding:8px 12px;border:1px solid #ddd;color:#28a745">存在</td><td style="padding:8px 12px;border:1px solid #ddd;">策略 p=' + esc(pLabel) + (dmarc.sp ? '，子域 sp=' + esc(dmarc.sp.toUpperCase()) : '') + (dmarc.pct < 100 ? '，生效比例 pct=' + dmarc.pct + '%' : '') + (dmarc.rua ? '，报告 rua=' + esc(dmarc.rua) : '') + '</td></tr>';
-        } else {
-            h += '<tr><td style="padding:8px 12px;border:1px solid #ddd;">DMARC（RFC 7489）</td><td style="padding:8px 12px;border:1px solid #ddd;color:#c00;font-weight:bold">缺失</td><td style="padding:8px 12px;border:1px solid #ddd;">未找到 _dmarc 记录 —— 无统一处置策略</td></tr>';
-        }
-        h += '</table>';
-        // 加固建议
-        h += '<div style="background:#f5f7fa;border-left:3px solid #003366;padding:14px 18px;margin:12px 0 0">';
-        h += '<h3 style="margin:0 0 8px;font-size:15px;color:#003366">加固建议</h3><ul style="font-size:14px;color:#555;line-height:1.8;padding-left:20px;margin:0">';
-        if (risk.level === 'critical' || risk.level === 'high') {
-            if (!spf) h += '<li>立即添加 SPF 记录：<code>v=spf1 include:发信服务商 ~all</code>，确认发信源后升级为 <code>-all</code></li>';
-            if (spf && spfEnds(spf) === '?') h += '<li>将 SPF 结尾 <code>?all</code> 升级为 <code>~all</code>（软失败）再过渡到 <code>-all</code>（硬失败）</li>';
-            if (!dmarcRaw) h += '<li>添加 DMARC 记录：<code>v=DMARC1; p=none; rua=mailto:dmarc@您的域名</code>，观察 1-2 周后逐步升级 p=quarantine → p=reject</li>';
-            if (dmarcRaw && dmarc.p === 'none') h += '<li>DMARC 处于 p=none 监控模式：确认无合法发信受影响后，升级到 <code>p=quarantine</code>，最终 <code>p=reject</code></li>';
-            h += '<li>部署 DKIM 签名（RFC 6376）并确保 DKIM 对齐，作为 SPF 之外的第二个认证通道</li>';
-        } else if (risk.level === 'medium') {
-            if (!spf) h += '<li>添加 SPF 记录并确保以 <code>-all</code> 结尾</li>';
-            if (!dmarcRaw) h += '<li>添加 DMARC 记录并逐步过渡到 <code>p=reject</code></li>';
-            if (dmarcRaw && dmarc.p === 'quarantine') h += '<li>DMARC 已隔离，建议升级到 <code>p=reject</code> 彻底拒收伪造邮件</li>';
-            h += '<li>配置 MTA-STS（RFC 8461）与 TLS-RPT（RFC 8460）强化传输层安全</li>';
-        } else {
-            h += '<li>当前配置为最佳实践，继续保持 SPF -all 与 DMARC p=reject</li>';
-            h += '<li>建议定期检查 rua 聚合报告，监控异常发信源</li>';
-            h += '<li>配置 MTA-STS（RFC 8461）与 TLS-RPT（RFC 8460）形成完整防护</li>';
-        }
-        h += '</ul></div>';
-        result.innerHTML = h;
-    }).catch(function(err){
-        result.innerHTML = '<p style="color:#c00">查询失败：' + esc(err && err.message ? err.message : String(err)) + '。请检查网络后重试。</p>';
-    });
-}
-})();
-</script>
-<!--#include virtual="/partials/footer.html" -->
+  }
+
+  function parseSPF(txt) {
+    if (!txt) return { has: false };
+    const parts = txt.split(/\s+/);
+    const mechanisms = [];
+    let hasAllFail = false;
+    for (const p of parts) {
+      if (p === '-all') hasAllFail = true;
+      if (!/^(-|\~|\+|\?)all$/.test(p)) mechanisms.push(p);
+    }
+    return { has: true, raw: txt, mechanisms, hasAllFail };
+  }
+
+  function parseDMARC(txt) {
+    if (!txt) return { has: false };
+    const result = { has: true, raw: txt, policy: null, pct: 100, sp: null, adkim: 'r', aspf: 'r' };
+    const parts = txt.split(';').map(s => s.trim()).filter(Boolean);
+    for (const part of parts) {
+      const kv = part.split('=').map(s => s.trim());
+      if (kv.length !== 2) continue;
+      const [k, v] = kv;
+      if (k === 'p') result.policy = v;
+      if (k === 'pct') result.pct = parseInt(v, 10) || 100;
+      if (k === 'sp') result.sp = v;
+      if (k === 'adkim') result.adkim = v;
+      if (k === 'aspf') result.aspf = v;
+    }
+    return result;
+  }
+
+  function assess(domain, spf, dmarc) {
+    const spfInfo = parseSPF(spf);
+    const dmarcInfo = parseDMARC(dmarc);
+    let level = 0;
+    const reasons = [];
+
+    if (!spfInfo.has) {
+      reasons.push('无 SPF 记录：任意发件服务器 IP 均可声称代表此域名发信');
+    } else if (!spfInfo.hasAllFail) {
+      level = Math.max(level, 1);
+      reasons.push('SPF 使用 ~all（软失败）：未授权 IP 发信可能被接受');
+    } else {
+      level = Math.max(level, 2);
+      reasons.push('SPF 使用 -all（硬失败）：未授权 IP 发信被直接拒绝');
+    }
+
+    if (!dmarcInfo.has) {
+      reasons.push('无 DMARC 记录：收件方不校验 From 域名对齐，伪造风险最高');
+    } else if (dmarcInfo.policy === 'reject') {
+      level = Math.max(level, 3);
+      reasons.push(`DMARC p=reject：伪造邮件被直接拒收（最强保护，RFC 7489 §6.4）`);
+    } else if (dmarcInfo.policy === 'quarantine') {
+      level = Math.max(level, 2);
+      reasons.push(`DMARC p=quarantine：伪造邮件被标记为垃圾邮件`);
+    } else {
+      level = Math.max(level, 2);
+      reasons.push(`DMARC p=${dmarcInfo.policy || 'none'}：仅监控，不拦截伪造邮件`);
+    }
+
+    if (dmarcInfo.has && dmarcInfo.pct < 100) {
+      reasons.push(`DMARC pct=${dmarcInfo.pct}：仅 ${dmarcInfo.pct}% 的邮件参与对齐校验`);
+    }
+
+    const configs = [
+      { badge: '高风险 — 可伪造', color: '#d32f2f', bg: '#fef2f2', border: '#fca5a5', icon: '⚠️' },
+      { badge: '中风险 — SPF 对齐', color: '#f57c00', bg: '#fff7ed', border: '#fed7aa', icon: '🟡' },
+      { badge: '中风险 — DMARC 对齐', color: '#f9a825', bg: '#fefce8', border: '#fde68a', icon: '🟠' },
+      { badge: '低风险 — 完全对齐', color: '#388e3c', bg: '#f0fdf4', border: '#bbf7d0', icon: '✅' }
+    ];
+    const cfg = configs[level];
+
+    return { domain, spfInfo, dmarcInfo, level, cfg, reasons };
+  }
+
+  async function runCheck() {
+    const text = document.getElementById('domains').value.trim();
+    if (!text) { showError('请输入至少一个域名'); return; }
+    const domains = text.split('\n').map(d => d.trim()).filter(Boolean);
+    if (domains.length === 0) { showError('请输入至少一个域名'); return; }
+
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('errorBox').classList.remove('show');
+    const cards = document.getElementById('resultCards');
+    const summary = document.getElementById('summaryBar');
+    cards.innerHTML = '<p style="color:#6b7280;text-align:center;padding:40px;">查询中，请稍候...</p>';
+    document.getElementById('results').classList.add('show');
+
+    const results = [];
+    for (const domain of domains) {
+      try {
+        const [spfAns, dmarcAns] = await Promise.all([
+          queryTXT(domain),
+          queryTXT('_dmarc.' + domain)
+        ]);
+        const spf = findRecord(spfAns, 'v=spf1');
+        const dmarc = findRecord(dmarcAns, 'v=dmarc1');
+        results.push({ domain, result: assess(domain, spf, dmarc), error: null });
+      } catch (e) {
+        results.push({ domain, result: null, error: '查询失败：' + e.message });
+      }
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    // Render
+    cards.innerHTML = '';
+    const counts = [0, 0, 0, 0];
+    for (const item of results) {
+      if (item.error) {
+        cards.innerHTML += `<div class="result-card" style="background:#fef2f2;border-color:#fca5a5;">
+          <div class="dom">${item.domain}</div>
+          <div style="color:#b91c1c;font-size:14px;">${item.error}</div>
+        </div>`;
+        continue;
+      }
+      const r = item.result;
+      counts[r.level]++;
+      const spfRaw = r.spfInfo.has ? r.spfInfo.raw : '<未查到 SPF 记录>';
+      const dmarcRaw = r.dmarcInfo.has ? r.dmarcInfo.raw : '<未查到 DMARC 记录>';
+      cards.innerHTML += `<div class="result-card" style="background:${r.cfg.bg};border-color:${r.cfg.border};">
+        <div class="dom">${r.cfg.icon} ${item.domain}</div>
+        <span class="badge" style="background:${r.cfg.color}">${r.cfg.badge}</span>
+        <ul class="reasons">${r.reasons.map(reason => `<li>• ${reason}</li>`).join('')}</ul>
+        <div class="raw-row"><strong>SPF:</strong> ${spfRaw}</div>
+        <div class="raw-row"><strong>DMARC:</strong> ${dmarcRaw}</div>
+      </div>`;
+    }
+
+    summary.innerHTML = `
+      <div class="stat"><div class="num" style="color:#d32f2f">${counts[0]}</div><div class="lbl">高风险</div></div>
+      <div class="stat"><div class="num" style="color:#f57c00">${counts[1]}</div><div class="lbl">SPF对齐</div></div>
+      <div class="stat"><div class="num" style="color:#f9a825">${counts[2]}</div><div class="lbl">DMARC对齐</div></div>
+      <div class="stat"><div class="num" style="color:#388e3c">${counts[3]}</div><div class="lbl">完全对齐</div></div>
+      <div class="stat"><div class="num" style="color:#003366">${results.length}</div><div class="lbl">总域名</div></div>
+    `;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function loadExamples() {
+    document.getElementById('domains').value = 'ztpop.net\nexample.com\nunprotected-domain.xyz\nmail.google.com';
+  }
+
+  // Enter key support
+  document.getElementById('domains').addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') runCheck();
+  });
+  </script>
 </body>
 </html>
