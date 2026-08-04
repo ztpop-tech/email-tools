@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Email Toolbox — Header Parser / DNSBL / SMTP Codes / SPF / DKIM / DMARC Diagnostic · Kunlun Mail</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://dns.google" crossorigin>
+    <link rel="preconnect" href="https://cloudflare-dns.com" crossorigin>
+<meta property="og:site_name" content="ztpop.net Email Knowledge Base">
+<meta property="og:title" content="Email Toolbox · Kunlun Mail">
+<meta property="og:description" content="Free online email toolbox: header parsing, DNSBL blacklist lookup, SMTP error code reference, SPF/DKIM/DMARC deep checks, Base64 encoding, CIDR calculation. Zero backend, runs entirely in the browser.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/tools/mail-tools-en.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="Free online email toolbox: header parsing, DNSBL blacklist lookup, SMTP error code reference, SPF/DKIM/DMARC deep checks, Base64 encoding, CIDR calculation. Zero backend, runs entirely in the browser.">
+<link rel="canonical" href="https://www.ztpop.net/tools/mail-tools-en.html"
+<link rel="alternate" hreflang="zh-CN" href="https://www.ztpop.net/tools/mail-tools-en.html"> />
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Email Toolbox",
+  "description": "Free online email toolbox covering header parsing, DNSBL blacklist lookup, SMTP error code reference, SPF/DKIM/DMARC deep checks, Base64/Quoted-Printable encoding, CIDR calculation and email address syntax validation. Pure frontend, zero backend.",
+  "url": "https://www.ztpop.net/tools/mail-tools.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browser": "Any",
+  "author": {
+    "@type": "Organization",
+    "name": "昆仑邮件系统",
+    "sameAs": [
+      "https://www.ztpop.net",
+      "https://ztpop.net"
+    ]
+  }
+}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"Email Toolbox"}]}</script>
+<style>
+.tool-wrap{max-width:860px;margin:40px auto;padding:0 20px}
+.tool-wrap h1{font-size:24px;color:#003366;margin-bottom:4px}
+.tool-wrap>.subtitle{color:#888;font-size:14px;margin-bottom:24px}
+.tool-tabs{display:flex;gap:2px;overflow-x:auto;margin-bottom:28px;border-bottom:2px solid #e0e0e0;padding-bottom:0;-webkit-overflow-scrolling:touch}
+.tool-tab{flex-shrink:0;padding:10px 14px;white-space:nowrap;cursor:pointer;font-size:13px;color:#666;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-weight:500;transition:color .15s,border-color .15s}
+.tool-tab:hover{color:#003366}
+.tool-tab.active{color:#003366;border-bottom-color:#003366}
+.tool-content{display:none}.tool-content.active{display:block}
+.tool-card{background:#f8f9fb;border-radius:8px;padding:20px 24px;margin-bottom:16px;border-left:4px solid #d0d5dd}
+.tool-card h3{margin:0 0 12px;font-size:16px;color:#003366}
+.tool-card.pass{border-left-color:#16a34a;background:#f0fdf4}
+.tool-card.warn{border-left-color:#f59e0b;background:#fffbeb}
+.tool-card.fail{border-left-color:#dc2626;background:#fef2f2}
+.tool-card.info{border-left-color:#003366;background:#e8f0fe}
+.tool-input-group{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tool-input-group input,.tool-input-group textarea{flex:1;padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:15px;font-family:inherit;min-width:200px;box-sizing:border-box}
+.tool-input-group textarea{min-height:100px;resize:vertical}
+.tool-input-group button{padding:10px 20px;background:#003366;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;transition:background .15s;font-weight:600}
+.tool-input-group button:hover{background:#004488}
+.tool-input-group button:disabled{background:#999;cursor:not-allowed}
+.tool-input-group button.sec{background:#666}
+.tool-input-group button.sec:hover{background:#888}
+.tool-ta{width:100%;min-height:100px;border:2px solid #d0d5dd;border-radius:8px;padding:12px;font-size:13px;font-family:'Courier New',monospace;resize:vertical;margin-bottom:16px;box-sizing:border-box}
+.tool-loading{text-align:center;padding:24px;color:#888;display:none;font-size:15px}
+.tool-result{margin-top:16px}
+.rc-table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+.rc-table th,.rc-table td{padding:8px 12px;border:1px solid #e0e0e0;text-align:left}
+.rc-table th{background:#f0f4f8;font-weight:600;color:#333}
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:700}
+.badge.green{background:#16a34a;color:#fff}
+.badge.red{background:#dc2626;color:#fff}
+.badge.orange{background:#f59e0b;color:#fff}
+.badge.blue{background:#003366;color:#fff}
+.badge.gray{background:#999;color:#fff}
+.hop-card{margin-bottom:12px;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0}
+.hop-card .hop-hdr{padding:10px 16px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f8f9fb}
+.hop-card .hop-hdr:hover{background:#f0f2f5}
+.hop-card .hop-body{padding:12px 16px;font-size:13px;line-height:1.7;color:#555;display:none}
+.hop-card.open .hop-body{display:block}
+.hop-delay{font-size:12px;color:#999;font-weight:400}
+.status-matrix{display:grid;gap:8px;min-width:0}
+.matrix-row{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:6px;font-size:14px}
+.matrix-row .list-name{flex:1;font-weight:500;color:#333}
+.matrix-row .list-status{flex-shrink:0}
+.smtp-search{position:relative;margin-bottom:20px}
+.smtp-filter{display:flex;gap:8px;margin-bottom:16px}
+.smtp-filter button{padding:6px 16px;border:1px solid #d0d5dd;border-radius:16px;background:#fff;cursor:pointer;font-size:13px;transition:all .15s}
+.smtp-filter button.active{background:#003366;color:#fff;border-color:#003366}
+.smtp-item{padding:16px 20px;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:12px}
+.smtp-item .smtp-code{font-size:24px;font-weight:700;font-family:'Courier New',monospace;margin-bottom:4px}
+.smtp-item .smtp-type{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-left:8px;vertical-align:middle;color:#fff}
+.smtp-item .smtp-desc{margin:8px 0;font-size:14px;color:#555;line-height:1.6}
+.smtp-item .smtp-fix{font-size:13px;color:#555;line-height:1.6}
+.smtp-item .smtp-rfc{font-size:12px;color:#999;margin-top:6px}
+.ctrl-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.btn-sm{padding:6px 14px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;transition:background .15s}
+.btn-sm:hover{background:#f0f2f5}
+.btn-sm.active{background:#003366;color:#fff;border-color:#003366}
+@media(max-width:640px){
+  .tool-tab{padding:8px 10px;font-size:12px}
+  .tool-card{padding:16px}
+  .tool-input-group{flex-direction:column}
+  .tool-input-group button{width:100%}
+}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What can the email header parser do?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Paste the raw email header (Received/DKIM-Signature/Authentication-Results etc.) to extract the mail path, authentication results and delivery delays, helping diagnose why mail is rejected or lands in spam."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I use the DNSBL lookup?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Enter a sending server IP or domain to check its listing status across 21 major DNSBLs such as Spamhaus, Barracuda and UCEPROTECT (IP queries automatically match IP lists; domain queries match domain/URI lists). A blacklisted IP causes bulk mail rejection; you must file a delisting request with the relevant organization."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does the SMTP error code reference cover?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Covers 2xx success, 4xx temporary failure (e.g. 450/451/452) and 5xx permanent failure (e.g. 550/552/553/554) with full meanings and remediation advice to quickly pinpoint bounce causes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the CIDR calculator for?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Converts IP addresses and subnet masks to CIDR notation and computes usable host counts. Commonly used to plan ip4: segments in SPF records and mail server IP ranges."
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<header>
+    <div class="mg-header container">
+        <a href="/"><div class="mg-logo"><img src="/images/logo.webp" width="108" height="57" alt="昆仑邮件系统"></div></a>
+        <div class="mg-nav">
+            <ul class="nav-list">
+                <li class="nav-li"><a href="/">首页</a></li>
+                <li class="nav-li"><a href="#">产品和服务</a>
+                    <ul class="sub-nav-list">
+                        <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+                        <li class="sub-nav-li"><a href="/mailgate.html">邮件安全网关</a></li>
+                        <li class="sub-nav-li"><a href="/standards/">标准与工具</a></li>
+                    </ul>
+                </li>
+                <li class="nav-li nav-li-dl"><a href="/ai/">🤖 AI 助手</a></li>
+                <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+                <li class="nav-li"><a href="/support.html">支持</a></li>
+                <li class="nav-li"><a href="/kb/">知识库</a></li>
+                
+                <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+                <li class="nav-li"><a href="/bulletin/industryInfo.html">行业资讯</a></li>
+                <li class="nav-li"><a href="/search.html" class="nav-search-btn" aria-label="搜索"><svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6"/><line x1="13.5" y1="13.5" x2="18" y2="18"/></svg></a></li>
+            </ul>
+        </div>
+    </div>
+</header>
+<nav class="breadcrumb" aria-label="Breadcrumb">
+<ol>
+<li><a href="/">首页</a></li>
+<li><span aria-current="page">Email Toolbox</span></li>
+</ol>
+</nav>
+
+<div class="tool-wrap">
+<h1>🔧 Email Toolbox</h1>
+<p class="subtitle">Pure frontend · Zero backend · Real-time DNS lookup via DoH</p>
+
+<div class="tool-tabs" role="tablist">
+<button class="tool-tab active" data-tab="headerparser" role="tab">📧 Email Header Parser</button>
+<button class="tool-tab" data-tab="dnsbl" role="tab">🚫 DNSBL Lookup</button>
+<button class="tool-tab" data-tab="smtperror" role="tab">🔢 SMTP Codes</button>
+<button class="tool-tab" data-tab="spf" role="tab">📡 SPF Check</button>
+<button class="tool-tab" data-tab="dkim" role="tab">🔑 DKIM Check</button>
+<button class="tool-tab" data-tab="dmarc" role="tab">🛡️ DMARC Analyze</button>
+<button class="tool-tab" data-tab="base64" role="tab">🔐 Base64/QP</button>
+<button class="tool-tab" data-tab="cidr" role="tab">🌐 CIDR Calc</button>
+<button class="tool-tab" data-tab="emailcheck" role="tab">✉️ Syntax Check</button>
+<button class="tool-tab" data-tab="dns" role="tab">🩺 DNS Diagnose</button>
+</div>
+
+<!-- TOOL 1: DNS Diagnostic (link) -->
+<div id="tab-dns" class="tool-content">
+ <div class="tool-card" style="text-align:center;padding:40px;">
+  <h3 style="font-size:20px;">🩺 DNS Comprehensive Diagnostic Tool</h3>
+  <p style="color:#666;margin:16px 0;font-size:15px;">One-click check of MX, SPF, DKIM, DMARC, PTR, BIMI, MTA-STS, TLS-RPT, DNSSEC</p>
+  <a href="/tools/dns-check.html" style="display:inline-block;padding:12px 32px;background:#003366;color:#fff;border-radius:8px;text-decoration:none;font-size:16px;font-weight:600;">→ Go to DNS Diagnostic Tool</a>
+ </div>
+</div>
+
+<!-- TOOL 2: Email Header Parser -->
+<div id="tab-headerparser" class="tool-content active"><a id="header-analyzer"></a>
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">📧 Email Header Parser</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">Paste the raw email header to parse the Received hop chain, Authentication-Results, DKIM-Signature and ARC info</p>
+ <textarea id="hdr-input" class="tool-ta" placeholder="Paste the full raw email header here (Received, DKIM-Signature, Authentication-Results etc.)..."></textarea>
+ <div class="tool-input-group">
+  <button onclick="parseEmailHeaders()">Parse</button>
+  <button class="sec" onclick="document.getElementById('hdr-input').value='';document.getElementById('hdr-result').innerHTML=''">Clear</button>
+ </div>
+ <div id="hdr-loading" class="tool-loading">⏳ Parsing...</div>
+ <div id="hdr-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 3: DNSBL Lookup -->
+<div id="tab-dnsbl" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🚫 DNSBL Blacklist Lookup</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">Enter an IP address or domain to check its status on major DNSBLs in real time</p>
+ <div class="tool-input-group">
+  <input id="dnsbl-input" placeholder="Enter IP (e.g. 1.2.3.4) or domain" onkeydown="if(event.key==='Enter')checkDNSBL()">
+  <button onclick="checkDNSBL()">Query</button>
+ </div>
+ <div id="dnsbl-config" style="margin-bottom:16px;">
+  <div style="font-size:13px;color:#666;margin-bottom:8px;">Select blacklists to query (IP queries use IP lists only; domain queries use domain/URI lists only; filtering is automatic): <button id="dnsbl-all" type="button" style="margin-left:8px;padding:2px 10px;font-size:12px;cursor:pointer;border:1px solid #003366;background:#fff;color:#003366;border-radius:4px">Select All</button> <button id="dnsbl-reset" type="button" style="padding:2px 10px;font-size:12px;cursor:pointer;border:1px solid #ccc;background:#fff;color:#555;border-radius:4px">Reset</button></div>
+  <div id="dnsbl-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:#555;">
+   <div style="width:100%;font-size:12px;color:#888;font-weight:600;">IP Lists (query sending IP)</div>
+   <label><input type="checkbox" checked data-list="zen.spamhaus.org" data-type="ip"> Spamhaus ZEN</label>
+   <label><input type="checkbox" data-list="sbl.spamhaus.org" data-type="ip"> Spamhaus SBL</label>
+   <label><input type="checkbox" data-list="xbl.spamhaus.org" data-type="ip"> Spamhaus XBL</label>
+   <label><input type="checkbox" data-list="pbl.spamhaus.org" data-type="ip"> Spamhaus PBL</label>
+   <label><input type="checkbox" checked data-list="b.barracudacentral.org" data-type="ip"> Barracuda</label>
+   <label><input type="checkbox" checked data-list="bl.spamcop.net" data-type="ip"> SpamCop</label>
+   <label><input type="checkbox" checked data-list="dnsbl.sorbs.net" data-type="ip"> SORBS</label>
+   <label><input type="checkbox" checked data-list="cbl.abuseat.org" data-type="ip"> CBL</label>
+   <label><input type="checkbox" data-list="dnsbl-1.uceprotect.net" data-type="ip"> UCEPROTECT L1</label>
+   <label><input type="checkbox" data-list="dnsbl-2.uceprotect.net" data-type="ip"> UCEPROTECT L2</label>
+   <label><input type="checkbox" data-list="dnsbl-3.uceprotect.net" data-type="ip"> UCEPROTECT L3</label>
+   <label><input type="checkbox" data-list="dnsbl.invaluement.com" data-type="ip"> Invaluement</label>
+   <label><input type="checkbox" data-list="bl.spamrats.com" data-type="ip"> SpamRats</label>
+   <label><input type="checkbox" data-list="justspam.org" data-type="ip"> JustSpam</label>
+   <label><input type="checkbox" data-list="hostkarma.junkemailfilter.com" data-type="ip"> JunkEmailFilter</label>
+   <label><input type="checkbox" data-list="psbl.surriel.com" data-type="ip"> PSBL</label>
+   <label><input type="checkbox" data-list="bl.blocklist.de" data-type="ip"> Blocklist.de</label>
+   <label><input type="checkbox" data-list="dnsbl.dronebl.org" data-type="ip"> DroneBL</label>
+   <div style="width:100%;font-size:12px;color:#888;font-weight:600;">Domain Lists (query sending domain)</div>
+   <label><input type="checkbox" checked data-list="dbl.spamhaus.org" data-type="domain"> Spamhaus DBL</label>
+   <label><input type="checkbox" data-list="dbl.spameatingmonkey.net" data-type="domain"> SpamEatingMonkey DBL</label>
+   <div style="width:100%;font-size:12px;color:#888;font-weight:600;">URI Lists (query link domains in mail)</div>
+   <label><input type="checkbox" checked data-list="multi.surbl.org" data-type="uri"> SURBL</label>
+   <label><input type="checkbox" data-list="uribl.spameatingmonkey.net" data-type="uri"> SpamEatingMonkey URI</label>
+   <div style="width:100%;font-size:12px;color:#888;font-weight:600;">Whitelist (hit = good reputation)</div>
+   <label><input type="checkbox" data-list="list.dnswl.org" data-type="wl"> DNSWL (whitelist)</label>
+  </div>
+ </div>
+ <div id="dnsbl-loading" class="tool-loading">⏳ Querying blacklists...</div>
+ <div id="dnsbl-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 4: SMTP Error Code Reference -->
+<div id="tab-smtperror" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🔢 SMTP Error Code Reference</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">Common SMTP 4xx/5xx error codes: meanings, causes and fixes</p>
+ <div class="smtp-search">
+  <div class="tool-input-group">
+   <input id="smtp-input" placeholder="Enter code like 550 5.7.1 or keyword like relay denied" oninput="filterSMTP()" style="min-width:280px">
+  </div>
+  <div class="smtp-filter">
+   <button class="active" onclick="setSMPTFilter('all',this)">All</button>
+   <button onclick="setSMPTFilter('4xx',this)">4xx</button>
+   <button onclick="setSMPTFilter('5xx',this)">5xx</button>
+  </div>
+ </div>
+ <div id="smtp-result"></div>
+</div>
+
+<!-- TOOL 5: SPF Deep Validation -->
+<div id="tab-spf" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">📡 SPF Deep Validation</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">Query and deeply parse SPF records: mechanism coverage, 10-DNS-lookup limit warning, include recursion tracking</p>
+ <div class="tool-input-group">
+  <input id="spf-input" placeholder="Enter domain like example.com" onkeydown="if(event.key==='Enter')checkSPF()">
+  <button onclick="checkSPF()">Validate</button>
+ </div>
+ <div id="spf-loading" class="tool-loading">⏳ Querying SPF record...</div>
+ <div id="spf-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 6: DKIM Record Checker -->
+<div id="tab-dkim" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🔑 DKIM Record Checker</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">Query and parse DKIM public key records: key type, length, algorithm audit</p>
+ <div class="tool-input-group">
+  <input id="dkim-selector" placeholder="Selector (e.g. default, google)" style="min-width:120px;flex:0 0 auto;max-width:160px">
+  <input id="dkim-domain" placeholder="Domain like example.com" onkeydown="if(event.key==='Enter')checkDKIM()">
+  <button onclick="checkDKIM()">Query</button>
+ </div>
+ <div id="dkim-loading" class="tool-loading">⏳ Querying DKIM record...</div>
+ <div id="dkim-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 7: DMARC Analyzer -->
+<div id="tab-dmarc" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🛡️ DMARC Analyzer</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">Query the _dmarc TXT record, parse policy tags and interpret current protection status</p>
+ <div class="tool-input-group">
+  <input id="dmarc-input" placeholder="Enter domain like example.com" onkeydown="if(event.key==='Enter')checkDMARC()">
+  <button onclick="checkDMARC()">Analyze</button>
+ </div>
+ <div id="dmarc-loading" class="tool-loading">⏳ Querying DMARC record...</div>
+ <div id="dmarc-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 8: Base64 / QP Encoder -->
+<div id="tab-base64" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🔐 Base64 / Quoted-Printable Encode / Decode</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">Email MIME content encode/decode tool</p>
+ <textarea id="b64-input" class="tool-ta" placeholder="Enter text to encode/decode..."></textarea>
+ <div class="ctrl-group">
+  <button class="btn-sm active" id="b64-mode-Base64-Encode" onclick="setB64Mode('Base64 Encode',this)">Base64 Encode</button>
+  <button class="btn-sm" id="b64-mode-Base64-Decode" onclick="setB64Mode('Base64 Decode',this)">Base64 Decode</button>
+  <button class="btn-sm" id="b64-mode-QP-Encode" onclick="setB64Mode('QP Encode',this)">QP Encode</button>
+  <button class="btn-sm" id="b64-mode-QP-Decode" onclick="setB64Mode('QP Decode',this)">QP Decode</button>
+  <button class="btn-sm" onclick="copyB64Output()" style="margin-left:8px;background:#003366;color:#fff;border-color:#003366">📋 Copy Result</button>
+ </div>
+ <textarea id="b64-output" class="tool-ta" readonly placeholder="Result will appear here..." style="background:#f8f9fb;cursor:text"></textarea>
+</div>
+
+<!-- TOOL 9: CIDR Calculator -->
+<div id="tab-cidr" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">🌐 CIDR Calculator</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">IP range calculation, CIDR aggregation, SPF range conversion</p>
+ <div class="tool-input-group">
+  <input id="cidr-input" placeholder="e.g. 192.168.0.0/24 or 10.0.0.0-10.0.0.255" onkeydown="if(event.key==='Enter')calcCIDR()">
+  <button onclick="calcCIDR()">Calculate</button>
+ </div>
+ <div class="ctrl-group" style="margin-bottom:16px">
+  <button class="btn-sm" onclick="document.getElementById('cidr-input').value='192.168.1.0-192.168.1.255';calcCIDR()">SPF ip4 Range to CIDR</button>
+  <button class="btn-sm" onclick="document.getElementById('cidr-input').value='10.0.0.0/24,10.0.0.128/25';calcCIDR()">Merge Ranges</button>
+ </div>
+ <div id="cidr-loading" class="tool-loading" style="display:none;text-align:center;padding:12px;color:#888">⏳ Calculating...</div>
+ <div id="cidr-result" class="tool-result"></div>
+</div>
+
+<!-- TOOL 10: Email Syntax Validator -->
+<div id="tab-emailcheck" class="tool-content">
+ <h2 style="font-size:20px;color:#003366;margin-bottom:6px;">✉️ Email Address Syntax Validator</h2>
+ <p style="color:#888;font-size:14px;margin-bottom:16px;">RFC 5321/5322 compliance check with flagged issues</p>
+ <div class="tool-input-group">
+  <input id="emailcheck-input" placeholder="Enter email like user@example.com" onkeydown="if(event.key==='Enter')checkEmailSyntax()">
+  <button onclick="checkEmailSyntax()">Validate</button>
+ </div>
+ <div id="emailcheck-result" class="tool-result"></div>
+</div>
+
+</div><!-- .tool-wrap -->
+
+<!--#include virtual="/partials/footer.html" -->
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 Authoritative References</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc5322" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 5322 — Internet Message Format (headers)</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc5321" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 5321 — SMTP (error codes)</a></li>
+            <li><a href="https://www.iana.org/" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">IANA DNSBL list</a></li>
+
+        </ul>
+    </div>
+</div>
+
+
+<script>
+// mail-tools.html 功能脚本 — 为 10 个 tab 提供完整 JS 逻辑
+// 设计：与 spf-checker.html 等工具页一致的 IIFE + DoH(dns.alidns.com) 模式
+(function() {
+    'use strict';
+
+    // ========== 通用工具 ==========
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function statusBox(cls, msg) {
+        return '<div style="padding:14px 18px;border-radius:8px;margin-bottom:12px;font-size:14.5px;line-height:1.7;' +
+            (cls === 'err' ? 'background:#fdecea;border:1px solid #f5c6cb;color:#a94442' :
+             cls === 'warn' ? 'background:#fff8e1;border:1px solid #ffe082;color:#8a6d3b' :
+             'background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32') + '">' + msg + '</div>';
+    }
+    function dohQuery(qname, type, cb) {
+        var url = 'https://dns.alidns.com/resolve?name=' + encodeURIComponent(qname) + '&type=' + type;
+        fetch(url, { headers: { 'accept': 'application/dns-json' } })
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(j) { cb(null, j); })
+            .catch(function(e) { cb(e); });
+    }
+    function getTxtRecords(j) {
+        var txts = [];
+        (j.Answer || []).forEach(function(a) { if (a.type === 16) txts.push(a.data); });
+        return txts;
+    }
+
+    // ========== Tab 切换 ==========
+    var tabs = document.querySelectorAll('.tool-tab');
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tool-content').forEach(function(c) { c.classList.remove('active'); });
+            tab.classList.add('active');
+            var target = document.getElementById('tab-' + tab.getAttribute('data-tab'));
+            if (target) target.classList.add('active');
+        });
+    });
+
+    // ========== 邮件头解析 ==========
+    window.parseEmailHeaders = function() {
+        var input = document.getElementById('hdr-input').value;
+        var result = document.getElementById('hdr-result');
+        if (!input.trim()) { result.innerHTML = statusBox('err', 'Please paste the raw email header first.'); return; }
+        var html = '';
+        // Received 链
+        var received = [];
+        var lines = input.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            if (/^Received:/i.test(line) || (/^\s+(by|from|with|for|via|id|using)/i.test(line) && received.length)) {
+                received.push(line.trim());
+            }
+        }
+        if (received.length) {
+            html += '<h3 style="font-size:15px;color:#003366;margin:16px 0 8px">📬 Received Chain</h3>';
+            received.forEach(function(r, idx) {
+                html += '<div style="padding:8px 12px;border-left:3px solid #003366;background:#f5f7fa;border-radius:0 6px 6px 0;margin-bottom:6px;font-size:13px;line-height:1.6">' +
+                    '<div style="color:#888;font-size:12px">#' + (received.length - idx) + '</div>' + esc(r) + '</div>';
+            });
+        }
+        // Authentication-Results
+        var authMatch = input.match(/Authentication-Results:[\s\S]*?(?=\n\S|$)/i);
+        if (authMatch) {
+            html += '<h3 style="font-size:15px;color:#003366;margin:16px 0 8px">🔐 Authentication-Results</h3>';
+            var ar = authMatch[0].replace(/^Authentication-Results:\s*/i, '').trim();
+            var parts = ar.split(/\s+/);
+            var spf = '', dkim = '', dmarc = '', arc = '';
+            for (var j = 0; j < parts.length; j++) {
+                var p = parts[j];
+                if (/^spf=/i.test(p)) spf = p.split('=')[1];
+                else if (/^dkim=/i.test(p)) dkim = p.split('=')[1];
+                else if (/^dmarc=/i.test(p)) dmarc = p.split('=')[1];
+                else if (/^arc=/i.test(p)) arc = p.split('=')[1];
+            }
+            function resultTag(k, v) {
+                if (!v) return '';
+                var cls = /pass/i.test(v) ? '#e8f5e9;color:#2e7d32' : /fail|permerror|temperror/i.test(v) ? '#fdecea;color:#a94442' : '#fff8e1;color:#8a6d3b';
+                return '<span style="display:inline-block;padding:3px 10px;border-radius:12px;background:' + cls + ';font-size:12.5px;margin:2px 4px 2px 0;font-family:monospace">' + esc(k) + '=' + esc(v) + '</span>';
+            }
+            html += '<div style="display:flex;flex-wrap:wrap;gap:4px">' + resultTag('spf', spf) + resultTag('dkim', dkim) + resultTag('dmarc', dmarc) + resultTag('arc', arc) + '</div>';
+        }
+        // DKIM-Signature
+        var dkimSig = input.match(/DKIM-Signature:[\s\S]*?(?=\n\S|$)/i);
+        if (dkimSig) {
+            html += '<h3 style="font-size:15px;color:#003366;margin:16px 0 8px">🔑 DKIM Signature</h3>';
+            html += '<div style="padding:10px 12px;background:#f5f7fa;border-radius:6px;font-family:monospace;font-size:12.5px;line-height:1.6;word-break:break-all">' + esc(dkimSig[0]) + '</div>';
+        }
+        // 时间线
+        var dates = input.match(/Date:\s*(.+)/i);
+        if (dates) {
+            html += '<p style="font-size:13px;color:#666;margin-top:12px">📅 Mail Date: ' + esc(dates[1].trim()) + '</p>';
+        }
+        if (!html) html = statusBox('warn', 'No standard email header fields recognized. Paste the full raw header (copy from "Show original" in your mail client).');
+        result.innerHTML = html;
+    };
+
+    // ========== DNSBL 黑名单查询 ==========
+    window.checkDNSBL = function() {
+        var input = document.getElementById('dnsbl-input').value.trim();
+        var result = document.getElementById('dnsbl-result');
+        if (!input) { result.innerHTML = statusBox('err', 'Please enter an IP address or domain.'); return; }
+        var isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(input);
+        var needType = isIP ? 'ip' : (input.indexOf('.') > 0 ? 'domain' : null);
+        var lists = [];
+        document.querySelectorAll('#dnsbl-checkboxes input[type=checkbox]').forEach(function(c) {
+            if (!c.checked) return;
+            var t = c.getAttribute('data-type');
+            if (needType === 'ip' && (t === 'ip' || t === 'wl')) lists.push({ list: c.getAttribute('data-list'), type: t });
+            else if (needType === 'domain' && (t === 'domain' || t === 'uri' || t === 'wl')) lists.push({ list: c.getAttribute('data-list'), type: t });
+            else if (!needType) lists.push({ list: c.getAttribute('data-list'), type: t });
+        });
+        var skipped = document.querySelectorAll('#dnsbl-checkboxes input[type=checkbox]:checked').length - lists.length;
+        if (!lists.length) { result.innerHTML = statusBox('err', 'The selected blacklists do not apply to this query type (IP queries need IP lists; domain queries need domain/URI lists).'); return; }
+        var base;
+        if (isIP) base = input.split('.').reverse().join('.');
+        else base = input;
+        document.getElementById('dnsbl-loading').style.display = 'block';
+        result.innerHTML = '';
+        var done = 0;
+        lists.forEach(function(item) {
+            var list = item.list;
+            var qname = base + '.' + list;
+            dohQuery(qname, 'A', function(err, j) {
+                done++;
+                var listed = false, aRecord = '';
+                if (!err && j && j.Answer && j.Answer.length) {
+                    listed = true;
+                    aRecord = j.Answer[0].data;
+                }
+                var isWL = item.type === 'wl';
+                var row = document.createElement('div');
+                var hitColor = isWL ? '#0066cc' : '#a94442';
+                var bg = listed ? (isWL ? '#e8f4fd' : '#fdecea') : '#f0fdf4';
+                var bd = listed ? (isWL ? '#b8d4f0' : '#f5c6cb') : '#c8e6c9';
+                row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-radius:6px;margin-bottom:6px;font-size:13.5px;background:' + bg + ';border:1px solid ' + bd;
+                var statusTxt;
+                if (isWL) statusTxt = listed ? '<span style="color:' + hitColor + ';font-weight:600">🟦 Whitelist hit (' + esc(aRecord) + ')</span>' : '<span style="color:#2e7d32">⚪ Not on whitelist</span>';
+                else statusTxt = listed ? '<span style="color:' + hitColor + ';font-weight:600">🔴 Listed (' + esc(aRecord) + ')</span>' : '<span style="color:#2e7d32">🟢 Not listed</span>';
+                row.innerHTML = '<span>' + esc(list) + '</span>' + statusTxt;
+                result.appendChild(row);
+                if (done === lists.length) {
+                    document.getElementById('dnsbl-loading').style.display = 'none';
+                    if (!result.querySelector('.dnsbl-summary')) {
+                        var listedCount = result.querySelectorAll('span[style*="a94442"]').length;
+                        var wlCount = result.querySelectorAll('span[style*="0066cc"]').length;
+                        var sum = document.createElement('div');
+                        sum.className = 'dnsbl-summary';
+                        sum.style.cssText = 'margin-top:10px;font-size:13.5px;color:#666';
+                        var tip = (isIP ? '' : 'Domain queries do not apply to IP lists; ') + (skipped > 0 ? 'auto-skipped ' + skipped + ' inapplicable lists.' : '');
+                        if (listedCount) sum.innerHTML = statusBox('warn', 'Detected ' + listedCount + ' blacklists listing this address.' +
+                            'You must log in to the relevant blacklist site to submit a delisting request (usually effective within 24-72 hours).' + tip);
+                        else sum.innerHTML = statusBox('pass', 'The selected blacklists do not list this address.' + tip + (wlCount ? ' (whitelist hit: ' + wlCount + ', good reputation)' : ''));
+                        result.appendChild(sum);
+                    }
+                }
+            });
+        });
+    };
+    document.getElementById('dnsbl-all') && document.getElementById('dnsbl-all').addEventListener('click', function() {
+        document.querySelectorAll('#dnsbl-checkboxes input[type=checkbox]').forEach(function(c) { c.checked = true; });
+    });
+    document.getElementById('dnsbl-reset') && document.getElementById('dnsbl-reset').addEventListener('click', function() {
+        var def = ['zen.spamhaus.org', 'b.barracudacentral.org', 'bl.spamcop.net', 'dnsbl.sorbs.net', 'cbl.abuseat.org', 'dbl.spamhaus.org', 'multi.surbl.org'];
+        document.querySelectorAll('#dnsbl-checkboxes input[type=checkbox]').forEach(function(c) {
+            c.checked = def.indexOf(c.getAttribute('data-list')) >= 0;
+        });
+    });
+
+// ========== SMTP 错误码速查 ==========
+    var SMTP_CODES = [
+        { code: '220', cls: '2xx', desc: 'Service ready', detail: 'SMTP server is ready to start the session.' },
+        { code: '221', cls: '2xx', desc: 'Service closing transmission channel', detail: 'The server is closing the connection.' },
+        { code: '235', cls: '2xx', desc: 'Authentication successful', detail: 'SMTP AUTH authentication passed.' },
+        { code: '250', cls: '2xx', desc: 'Request completed', detail: 'The requested command completed (e.g. MAIL FROM/RCPT TO accepted, message received after DATA).' },
+        { code: '251', cls: '2xx', desc: 'User not local, will forward', detail: 'Recipient is not on this server; the message will be forwarded.' },
+        { code: '252', cls: '2xx', desc: 'Cannot verify user, will accept delivery', detail: 'The server cannot confirm the recipient exists but will attempt delivery.' },
+        { code: '421', cls: '4xx', desc: 'Service not available, closing channel', detail: 'Server overloaded or under maintenance. Retry later.' },
+        { code: '450', cls: '4xx', desc: 'Mailbox busy, temporarily unavailable', detail: 'Recipient mailbox is locked or busy. Retry later.' },
+        { code: '451', cls: '4xx', desc: 'Local processing error, aborting request', detail: 'Temporary server error (e.g. insufficient resources). Retry later.' },
+        { code: '452', cls: '4xx', desc: 'Insufficient storage', detail: 'Recipient mailbox quota full or server disk full.' },
+        { code: '455', cls: '4xx', desc: 'Server unable to accommodate parameters', detail: 'The parameter cannot be processed at this time.' },
+        { code: '500', cls: '5xx', desc: 'Syntax error, command unrecognized', detail: 'Command format invalid or unknown. Check SMTP client configuration.' },
+        { code: '501', cls: '5xx', desc: 'Parameter syntax error', detail: 'Invalid command parameter format (e.g. malformed email address).' },
+        { code: '502', cls: '5xx', desc: 'Command not implemented', detail: 'The server does not support this command.' },
+        { code: '503', cls: '5xx', desc: 'Bad command sequence', detail: 'Commands sent in the wrong order (e.g. MAIL FROM before HELO).' },
+        { code: '504', cls: '5xx', desc: 'Command parameter not implemented', detail: 'The parameter is not supported.' },
+        { code: '521', cls: '5xx', desc: 'Domain does not accept mail', detail: 'The server explicitly does not accept mail for this domain.' },
+        { code: '530', cls: '5xx', desc: 'Authentication required', detail: 'SMTP AUTH is required before sending (open relay protection). Check your client\'s "outgoing authentication" setting.' },
+        { code: '535', cls: '5xx', desc: 'Authentication failed', detail: 'Wrong username or password. Check your sending account credentials.' },
+        { code: '550', cls: '5xx', desc: 'Mailbox unavailable', detail: 'Recipient does not exist, rejected, or SPF/DKIM/DMARC validation failed. The most common bounce code.' },
+        { code: '551', cls: '5xx', desc: 'User not local, try another path', detail: 'Recipient is not on this server; use a different route.' },
+        { code: '552', cls: '5xx', desc: 'Exceeded storage quota', detail: 'Recipient mailbox is full; the message is rejected.' },
+        { code: '553', cls: '5xx', desc: 'Mailbox name not allowed', detail: 'Email address format is invalid or prohibited.' },
+        { code: '554', cls: '5xx', desc: 'Transaction failed', detail: 'Commonly caused by anti-spam policy rejection (e.g. missing PTR, poor IP reputation, DMARC reject). Check sending IP reputation and authentication config.' },
+        { code: '555', cls: '5xx', desc: 'MAIL FROM/RCPT TO parameters not recognized', detail: 'The parameter is not recognized.' }
+    ];
+
+    function renderSMTP(filter, kw) {
+        var el = document.getElementById('smtp-result');
+        var list = SMTP_CODES.filter(function(c) {
+            var okF = filter === 'all' || c.cls === filter;
+            var okK = !kw || c.code.indexOf(kw) === 0 || c.desc.indexOf(kw) >= 0 || c.detail.indexOf(kw) >= 0 || (c.code + ' ' + c.desc).indexOf(kw) >= 0;
+            return okF && okK;
+        });
+        if (!list.length) { el.innerHTML = statusBox('warn', 'No matching error code found.'); return; }
+        var html = '<div style="font-size:12.5px;color:#888;margin-bottom:8px">' + list.length + ' entries</div>';
+        list.forEach(function(c) {
+            var color = c.cls === '4xx' ? '#8a6d3b' : '#a94442';
+            html += '<div style="display:flex;gap:12px;padding:10px 14px;border-left:3px solid ' + color + ';background:#f8f9fb;border-radius:0 6px 6px 0;margin-bottom:8px;align-items:flex-start">' +
+                '<span style="font-family:monospace;font-weight:600;color:' + color + ';white-space:nowrap">' + c.code + '</span>' +
+                '<div><div style="font-weight:600;font-size:14px">' + esc(c.desc) + '</div>' +
+                '<div style="font-size:13px;color:#666;margin-top:2px">' + esc(c.detail) + '</div></div></div>';
+        });
+        el.innerHTML = html;
+    }
+    window.filterSMTP = function() {
+        renderSMTP(document.querySelector('.smtp-filter .active') ? document.querySelector('.smtp-filter .active').textContent === '4xx' ? '4xx' : document.querySelector('.smtp-filter .active').textContent === '5xx' ? '5xx' : 'all' : 'all',
+            document.getElementById('smtp-input').value.trim());
+    };
+    window.setSMPTFilter = function(f, btn) {
+        document.querySelectorAll('.smtp-filter button').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        renderSMTP(f, document.getElementById('smtp-input').value.trim());
+    };
+
+    // ========== SPF 深度校验 ==========
+    window.checkSPF = function() {
+        var domain = document.getElementById('spf-input').value.trim().toLowerCase();
+        var result = document.getElementById('spf-result');
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', 'Please enter a valid domain, e.g. example.com'); return;
+        }
+        document.getElementById('spf-loading').style.display = 'block';
+        result.innerHTML = '';
+        dohQuery(domain, 'TXT', function(err, j) {
+            document.getElementById('spf-loading').style.display = 'none';
+            if (err) { result.innerHTML = statusBox('err', 'DNS query failed: ' + esc(err.message)); return; }
+            var txts = getTxtRecords(j);
+            var spf = null;
+            txts.forEach(function(t) { if (/^v=spf1\s/i.test(t)) spf = t; });
+            if (!spf) {
+                result.innerHTML = statusBox('warn', 'No SPF record found for (' + esc(domain) + '). Consider publishing SPF to reduce spoofing risk.');
+                return;
+            }
+            var mechs = spf.split(/\s+/).slice(1);
+            var lookupCount = 0;
+            var html = '<div style="padding:12px 14px;background:#f0f4f8;border-radius:6px;font-family:monospace;font-size:13px;word-break:break-all;margin-bottom:12px">' + esc(spf) + '</div>';
+            html += '<h3 style="font-size:14px;color:#003366;margin:12px 0 8px">Mechanism Parsing</h3>';
+            mechs.forEach(function(m) {
+                var qual = m[0];
+                var body = qual === '+' || qual === '-' || qual === '~' || qual === '?' ? m.slice(1) : m;
+                var kind = body.split(':')[0];
+                var val = body.indexOf(':') >= 0 ? body.split(':').slice(1).join(':') : '';
+                var note = '';
+                var cls = 'background:#f5f7fa;border-left:3px solid #d0d5dd';
+                if (kind === 'include' || kind === 'redirect') { lookupCount += 1; note = ' (counts toward DNS lookups)'; }
+                if (kind === 'ptr') { note = '⚠️ ptr mechanism strongly discouraged by RFC 7208'; cls = 'background:#fff8e1;border-left:3px solid #f59e0b'; }
+                if (kind === 'all' && qual !== '-') { note = '⚠️ use -all to strengthen the policy'; cls = 'background:#fff8e1;border-left:3px solid #f59e0b'; }
+                if (kind === 'a' || kind === 'mx') lookupCount += 1;
+                html += '<div style="padding:8px 12px;' + cls + ';border-radius:0 6px 6px 0;margin-bottom:6px;font-size:13.5px">' +
+                    '<span style="font-family:monospace;font-weight:600">' + esc(m) + '</span> ' + esc(note) + '</div>';
+            });
+            var limit = lookupCount > 10;
+            html += '<div style="margin-top:12px">' + statusBox(limit ? 'err' : 'pass',
+                'Estimated DNS lookups: ' + lookupCount + ' (RFC 7208 §4.6.4 limit: 10)' + (limit ? ' — EXCEEDED! Overlong include/redirect chains cause SPF permerror; receivers treat it as SPF fail.' : ' — compliant.')) + '</div>';
+            result.innerHTML = html;
+        });
+    };
+
+    // ========== DKIM 检查 ==========
+    window.checkDKIM = function() {
+        var selector = document.getElementById('dkim-selector').value.trim().toLowerCase() || 'default';
+        var domain = document.getElementById('dkim-domain').value.trim().toLowerCase();
+        var result = document.getElementById('dkim-result');
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', 'Please enter a valid domain.'); return;
+        }
+        document.getElementById('dkim-loading').style.display = 'block';
+        result.innerHTML = '';
+        dohQuery(selector + '._domainkey.' + domain, 'TXT', function(err, j) {
+            document.getElementById('dkim-loading').style.display = 'none';
+            if (err) { result.innerHTML = statusBox('err', 'DNS query failed: ' + esc(err.message)); return; }
+            var txts = getTxtRecords(j);
+            if (!txts.length) {
+                result.innerHTML = statusBox('warn', 'No DKIM record found: ' + esc(selector + '._domainkey.' + domain) + '. ' +
+                    'Check whether the selector is correct, or whether DNS has propagated (TTL wait).');
+                return;
+            }
+            var html = '<div style="padding:12px 14px;background:#f0f4f8;border-radius:6px;font-family:monospace;font-size:12.5px;word-break:break-all;margin-bottom:12px">' + esc(txts[0]) + '</div>';
+            // 解析 k= 与 p=
+            var kMatch = txts[0].match(/\bk=([a-z0-9]+)/i);
+            var pMatch = txts[0].match(/\bp=([A-Za-z0-9+/=]+)/i);
+            if (kMatch) html += '<p style="font-size:13.5px">Key type: <code>' + esc(kMatch[1]) + '</code></p>';
+            if (pMatch) {
+                var keyLen = 0;
+                try {
+                    var der = atob(pMatch[1].replace(/-/g, '+').replace(/_/g, '/'));
+                    // 粗略估算：Base64 长度 * 3/4（公钥位长约 2048/3072）
+                    keyLen = Math.round(der.length * 0.75);
+                } catch (e) {}
+                html += '<p style="font-size:13.5px">Public key length: ~' + keyLen + ' bits' + (keyLen >= 2048 ? ' (✅ recommended ≥2048)' : ' (⚠️ aim for ≥2048)') + '</p>';
+            }
+            result.innerHTML = html;
+        });
+    };
+
+    // ========== DMARC 分析 ==========
+    window.checkDMARC = function() {
+        var domain = document.getElementById('dmarc-input').value.trim().toLowerCase();
+        var result = document.getElementById('dmarc-result');
+        if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
+            result.innerHTML = statusBox('err', 'Please enter a valid domain.'); return;
+        }
+        document.getElementById('dmarc-loading').style.display = 'block';
+        result.innerHTML = '';
+        dohQuery('_dmarc.' + domain, 'TXT', function(err, j) {
+            document.getElementById('dmarc-loading').style.display = 'none';
+            if (err) { result.innerHTML = statusBox('err', 'DNS query failed: ' + esc(err.message)); return; }
+            var txts = getTxtRecords(j);
+            var dmarc = null;
+            txts.forEach(function(t) { if (/^v=DMARC1/i.test(t)) dmarc = t; });
+            if (!dmarc) {
+                result.innerHTML = statusBox('warn', 'No DMARC record configured (_dmarc.' + esc(domain) + '). ' +
+                    'Publish p=none to monitor first, then tighten gradually to quarantine/reject.');
+                return;
+            }
+            var html = '<div style="padding:12px 14px;background:#f0f4f8;border-radius:6px;font-family:monospace;font-size:13px;word-break:break-all;margin-bottom:12px">' + esc(dmarc) + '</div>';
+            var p = (dmarc.match(/\bp=(\w+)/i) || [])[1] || 'unknown';
+            var sp = (dmarc.match(/\bsp=(\w+)/i) || [])[1];
+            var pct = (dmarc.match(/\bpct=(\d+)/i) || [])[1] || '100';
+            var pColor = p === 'reject' ? '#2e7d32' : p === 'quarantine' ? '#8a6d3b' : p === 'none' ? '#a94442' : '#666';
+            var pNote = p === 'reject' ? '✅ Strongest protection: failing mail rejected' : p === 'quarantine' ? '⚠️ Medium protection: failing mail to spam' : p === 'none' ? '❌ Monitor only: failing mail delivered as usual' : '';
+            html += '<div style="display:flex;gap:16px;flex-wrap:wrap;margin:12px 0">' +
+                '<div style="padding:10px 16px;background:#f5f7fa;border-radius:8px"><div style="font-size:12px;color:#888">Policy p=</div><div style="font-size:18px;font-weight:700;color:' + pColor + '">' + esc(p) + '</div></div>' +
+                (sp ? '<div style="padding:10px 16px;background:#f5f7fa;border-radius:8px"><div style="font-size:12px;color:#888">Subdomain sp=</div><div style="font-size:18px;font-weight:700;color:#666">' + esc(sp) + '</div></div>' : '') +
+                '<div style="padding:10px 16px;background:#f5f7fa;border-radius:8px"><div style="font-size:12px;color:#888">Sampling pct=</div><div style="font-size:18px;font-weight:700;color:#666">' + esc(pct) + '%</div></div></div>';
+            html += '<p style="font-size:13.5px">' + pNote + '</p>';
+            result.innerHTML = html;
+        });
+    };
+
+    // ========== Base64 / QP ==========
+    var b64Mode = 'Base64 Encode';
+    window.setB64Mode = function(mode, btn) {
+        b64Mode = mode;
+        document.querySelectorAll('.ctrl-group .btn-sm').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        // 实时转换
+        var v = document.getElementById('b64-input').value;
+        if (v) doB64();
+    };
+    function doB64() {
+        var input = document.getElementById('b64-input').value;
+        var out = document.getElementById('b64-output');
+        try {
+            if (b64Mode === 'Base64 Encode') {
+                out.value = btoa(unescape(encodeURIComponent(input)));
+            } else if (b64Mode === 'Base64 Decode') {
+                out.value = decodeURIComponent(escape(atob(input.trim())));
+            } else if (b64Mode === 'QP Encode') {
+                out.value = encodeURIComponent(input).replace(/%/g, '=').toUpperCase();
+            } else {
+                out.value = decodeURIComponent(input.trim().replace(/=/g, '%'));
+            }
+        } catch (e) {
+            out.value = 'Conversion failed: ' + e.message;
+        }
+    }
+    document.getElementById('b64-input').addEventListener('input', function() { if (this.value) doB64(); });
+    window.copyB64Output = function() {
+        var out = document.getElementById('b64-output');
+        out.select();
+        try { document.execCommand('copy'); } catch (e) {}
+    };
+
+    // ========== CIDR 计算 ==========
+    window.calcCIDR = function() {
+        var input = document.getElementById('cidr-input').value.trim();
+        var result = document.getElementById('cidr-result');
+        if (!input) { result.innerHTML = statusBox('err', 'Please enter a CIDR or IP range.'); return; }
+        function ipToLong(ip) {
+            var p = ip.split('.').map(Number);
+            return ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]) >>> 0;
+        }
+        function longToIp(l) {
+            return [(l >>> 24) & 255, (l >>> 16) & 255, (l >>> 8) & 255, l & 255].join('.');
+        }
+        var html = '';
+        // 处理 CIDR 列表（如 10.0.0.0/24,10.0.0.128/25）
+        var cidrs = input.split(/[,，\s]+/).filter(function(s) { return s; });
+        var merged = [];
+        cidrs.forEach(function(c) {
+            var m = c.match(/^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/);
+            if (m) {
+                var ip = ipToLong(m[1]);
+                var p = parseInt(m[2], 10);
+                if (p < 0 || p > 32) { result.innerHTML = statusBox('err', 'Invalid prefix: ' + esc(c)); return; }
+                var mask = p === 0 ? 0 : (0xffffffff << (32 - p)) >>> 0;
+                var net = (ip & mask) >>> 0;
+                merged.push({ start: net, end: (net | (~mask >>> 0)) >>> 0, prefix: p });
+            } else {
+                var range = c.match(/^(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+\.\d+\.\d+)$/);
+                if (range) {
+                    merged.push({ start: ipToLong(range[1]), end: ipToLong(range[2]), prefix: null });
+                }
+            }
+        });
+        if (!merged.length) { result.innerHTML = statusBox('err', 'Cannot parse input. Supported formats: 192.168.0.0/24 or 10.0.0.0-10.0.0.255.'); return; }
+        // 合并重叠
+        merged.sort(function(a, b) { return a.start - b.start; });
+        var out = [];
+        merged.forEach(function(c) {
+            if (!out.length || c.start > out[out.length - 1].end + 1) out.push(c);
+            else out[out.length - 1].end = Math.max(out[out.length - 1].end, c.end);
+        });
+        html += '<h3 style="font-size:14px;color:#003366;margin:0 0 8px">Result</h3>';
+        out.forEach(function(c) {
+            var hosts = c.end - c.start + 1;
+            var prefix = c.prefix !== null ? c.prefix : (32 - Math.log2(hosts));
+            html += '<div style="padding:8px 12px;background:#f5f7fa;border-radius:6px;margin-bottom:6px;font-size:13.5px">' +
+                '<code>' + esc(longToIp(c.start)) + '</code> ~ <code>' + esc(longToIp(c.end)) + '</code>' +
+                ' | Hosts: ' + hosts.toLocaleString() + ' | <code>' + esc(longToIp(c.start)) + '/' + prefix + '</code></div>';
+        });
+        result.innerHTML = html;
+    };
+
+    // ========== Email 语法验证 ==========
+    window.checkEmailSyntax = function() {
+        var input = document.getElementById('emailcheck-input').value.trim();
+        var result = document.getElementById('emailcheck-result');
+        if (!input) { result.innerHTML = statusBox('err', 'Please enter an email address.'); return; }
+        // RFC 5321 邮箱 = local@domain，支持引号字符串与 IP 字面量
+        var issues = [];
+        var local = '', domain = '';
+        var at = input.lastIndexOf('@');
+        if (at <= 0) {
+            issues.push('Missing @ separator');
+            local = input;
+        } else {
+            local = input.slice(0, at);
+            domain = input.slice(at + 1);
+        }
+        if (local.length > 64) issues.push('Local part exceeds 64 characters (RFC 5321 §4.5.3.1.1)');
+        if (domain.length > 255) issues.push('Domain part exceeds 255 characters');
+        var isIP = /^\[(\d{1,3}\.){3}\d{1,3}\]$/.test(domain) || /^\[IPv6:[\da-fA-F:]+\]$/.test(domain);
+        if (!isIP) {
+            if (!/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/i.test(domain)) issues.push('Domain contains illegal characters');
+            if (!domain.includes('.')) issues.push('Domain missing a top-level domain (e.g. .com)');
+        }
+        var quoted = local.startsWith('"') && local.endsWith('"');
+        if (!quoted) {
+            if (!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(local)) issues.push('Local part contains illegal characters (RFC 5321 dot-atom charset)');
+            if (local.startsWith('.') || local.endsWith('.')) issues.push('Local part cannot start or end with a dot');
+            if (local.includes('..')) issues.push('Local part cannot contain consecutive dots');
+        }
+        var addr = input.split('@').slice(1).join('@');
+        if (issues.length) {
+            result.innerHTML = statusBox('err', '❌ Address invalid: <code>' + esc(input) + '</code>') +
+                '<ul style="font-size:13.5px;color:#a94442;margin:8px 0 0 20px">' + issues.map(function(i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>';
+        } else {
+            result.innerHTML = statusBox('pass', '✅ Address syntax valid: <code>' + esc(input) + '</code> (RFC 5321/5322 compliant)') +
+                '<p style="font-size:13px;color:#666;margin-top:8px">Note: valid syntax does not guarantee the mailbox exists; combine with MX lookup and bounce checks before delivery.</p>';
+        }
+    };
+
+    // 初始化 SMTP 列表
+    if (document.getElementById('smtp-result')) renderSMTP('all', '');
+})();
+
+</script>
+</body>
+</html>
