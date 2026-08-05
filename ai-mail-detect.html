@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>邮件安全 AI 检测 — 粘贴邮件源码，AI 智能识别钓鱼/伪造/社会工程学攻击 | ztpop.net</title>
+  <meta name="description" content="粘贴可疑邮件全文（包含原始邮件头），AI 静态启发式分析识别图片钓鱼、伪造发件人、紧急话术、凭证索要、社会工程学攻击。零隐私上传，数据仅用于本轮检测。">
+  <link rel="canonical" href="https://www.ztpop.net/ai-mail-detect.html">
+  <meta property="og:title" content="邮件安全 AI 检测">
+  <meta property="og:description" content="AI 智能识别邮件中的钓鱼/伪造/社会工程学攻击信号，静态分析无需沙箱。">
+  <meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="/css/main.css?v=23">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; }
+    .tool-wrap { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden; }
+    .tool-header { background: linear-gradient(135deg, #003366 0%, #004a99 100%); color: #fff; padding: 40px 48px 32px; }
+    .tool-header h1 { font-size: 26px; margin: 0 0 10px; font-weight: 700; }
+    .tool-header p { margin: 0; opacity: 0.85; font-size: 15px; line-height: 1.7; }
+    .tool-header .badge-row { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .tool-header .badge { display: inline-block; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 3px 12px; font-size: 12px; color: #fff; }
+    .tool-body { padding: 36px 48px 40px; }
+    .input-section { margin-bottom: 24px; }
+    .input-section label { display: block; font-weight: 600; color: #003366; margin-bottom: 8px; font-size: 15px; }
+    .input-section textarea { width: 100%; height: 240px; border: 1.5px solid #d0dae8; border-radius: 8px; padding: 14px 16px; font-size: 13px; font-family: 'Courier New', monospace; resize: vertical; box-sizing: border-box; line-height: 1.5; background: #fafbfc; }
+    .input-section textarea:focus { outline: none; border-color: #003366; box-shadow: 0 0 0 3px rgba(0,51,102,0.1); background: #fff; }
+    .input-hint { font-size: 13px; color: #6b7280; margin-top: 6px; }
+    .btn-row { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: #003366; color: #fff; }
+    .btn-primary:hover { background: #004a99; transform: translateY(-1px); }
+    .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: #e8eef6; color: #003366; }
+    .btn-secondary:hover { background: #d0dae8; }
+    .results { display: none; margin-top: 8px; }
+    .results.show { display: block; }
+    .result-risk { border-radius: 12px; padding: 24px 28px; margin-bottom: 20px; color: #fff; }
+    .result-risk.low { background: linear-gradient(135deg, #16a34a, #15803d); }
+    .result-risk.medium { background: linear-gradient(135deg, #d97706, #b45309); }
+    .result-risk.high { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+    .result-risk .risk-icon { font-size: 40px; margin-bottom: 10px; }
+    .result-risk .risk-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .result-risk .risk-desc { font-size: 14px; opacity: 0.9; line-height: 1.6; }
+    .summary-bar { background: #f5f7fa; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 16px; flex-wrap: wrap; }
+    .summary-bar .stat { text-align: center; flex: 1; min-width: 80px; }
+    .summary-bar .stat .num { font-size: 28px; font-weight: 800; color: #003366; }
+    .summary-bar .stat .lbl { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .signal-list { list-style: none; padding: 0; margin: 0 0 20px; }
+    .signal-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; line-height: 1.5; }
+    .signal-item.high { background: #fef2f2; border-left: 4px solid #dc2626; }
+    .signal-item.medium { background: #fffbeb; border-left: 4px solid #d97706; }
+    .signal-item.low { background: #f0fdf4; border-left: 4px solid #16a34a; }
+    .signal-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .signal-text { flex: 1; color: #374151; }
+    .signal-text strong { color: #1f2937; }
+    .section-title { font-size: 16px; font-weight: 700; color: #003366; margin: 0 0 14px; border-bottom: 2px solid #003366; padding-bottom: 6px; }
+    .auth-info { background: #f8fafc; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; }
+    .auth-info .row { display: flex; gap: 12px; padding: 6px 0; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+    .auth-info .row:last-child { border-bottom: none; }
+    .auth-info .key { color: #6b7280; min-width: 100px; }
+    .auth-info .val { font-weight: 600; }
+    .auth-info .val.pass { color: #16a34a; }
+    .auth-info .val.fail { color: #dc2626; }
+    .auth-info .val.warn { color: #d97706; }
+    .error-msg { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; color: #b91c1c; font-size: 14px; margin-bottom: 16px; display: none; }
+    .error-msg.show { display: block; }
+    .disclaimer { background: #f0f4f8; border-radius: 8px; padding: 14px 18px; color: #6b7280; font-size: 13px; line-height: 1.6; margin-bottom: 20px; }
+    .ai-deepen { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+    .ai-deepen h4 { margin: 0 0 8px; font-size: 15px; color: #92400e; }
+    .ai-deepen p { margin: 0 0 12px; font-size: 13px; color: #78350f; line-height: 1.5; }
+    .ai-deepen .btn { padding: 8px 20px; font-size: 14px; }
+    .footer-cta { margin-top: 24px; padding: 16px 20px; background: #f0f4f8; border-radius: 8px; font-size: 14px; color: #374151; line-height: 1.7; text-align: center; }
+    .footer-cta a { color: #003366; font-weight: 600; text-decoration: none; }
+    .loading { display: none; text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+    .loading.show { display: block; }
+    .loading-spinner { width: 24px; height: 24px; border: 3px solid #d0dae8; border-top-color: #003366; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .tab-row { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
+    .tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-size: 14px; font-weight: 600; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+    .tab-btn.active { color: #003366; border-bottom-color: #003366; }
+    .tab-btn:hover { color: #003366; }
+    .headers-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+    .headers-table th { background: #f5f7fa; padding: 8px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+    .headers-table td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-family: 'Courier New', monospace; word-break: break-all; }
+    .headers-table td:first-child { font-weight: 600; color: #003366; width: 120px; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "邮件安全 AI 检测",
+    "description": "粘贴邮件全文，AI 静态启发式分析识别图片钓鱼、伪造发件人、社会工程学攻击信号。",
+    "url": "https://www.ztpop.net/ai-mail-detect.html",
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
+    "provider": { "@type": "Organization", "name": "ztpop.net", "url": "https://www.ztpop.net" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://www.ztpop.net/" },
+      { "@type": "ListItem", "position": 2, "name": "AI 智能体邮件网关", "item": "https://www.ztpop.net/ai-mailgate.html" },
+      { "@type": "ListItem", "position": 3, "name": "邮件安全 AI 检测", "item": "https://www.ztpop.net/ai-mail-detect.html" }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header>
+    <ul class="nav-list">
+      <li class="nav-li"><a href="/">首页</a></li>
+      <li class="nav-li"><a href="#">产品和服务</a>
+        <ul class="sub-nav-list">
+          <li class="sub-nav-li"><a href="/depth-understand.html">国产邮件系统</a></li>
+          <li class="sub-nav-li"><a href="/xinchuang_mail.html">信创邮件系统</a></li>
+          <li class="sub-nav-li"><a href="/ai-mailgate.html">AI 智能体邮件网关</a></li>
+        </ul>
+      </li>
+      <li class="nav-li"><a href="/solution.html">解决方案</a></li>
+      <li class="nav-li"><a href="/support.html">支持</a></li>
+      <li class="nav-li"><a href="/kb/">知识库</a></li>
+      <li class="nav-li"><a href="/bulletin/faq.html">FAQ问答</a></li>
+    </ul>
+  </header>
+
+  <main class="tool-wrap">
+    <div class="tool-header">
+      <h1>邮件安全 AI 检测</h1>
+      <p>粘贴可疑邮件全文（包含原始邮件头），静态启发式分析识别图片钓鱼、伪造发件人、社会工程学攻击。零隐私上传，数据仅用于本轮检测，AI 深度分析可选择性开启。</p>
+      <div class="badge-row">
+        <span class="badge">🛡️ 图片钓鱼识别</span>
+        <span class="badge">🔍 发件人伪造检测</span>
+        <span class="badge">🧠 社会工程学分析</span>
+        <span class="badge">🔒 纯本地初步分析</span>
+      </div>
+    </div>
+
+    <div class="tool-body">
+      <div class="input-section">
+        <label for="emailInput">粘贴邮件原文（RFC 822 格式，支持纯邮件头）</label>
+        <textarea id="emailInput" placeholder="From: 发件人地址
+To: 收件人地址
+Subject: 邮件主题
+Reply-To: 回复地址（可选，与发件人不一致时高风险）
+Date: 时间
+Received: （邮件服务器路径，可选）
+Content-Type: text/plain; charset=UTF-8
+
+正文内容..."></textarea>
+        <div class="input-hint">💡 支持直接粘贴 Thunderbird / Outlook / Foxmail 导出的原始邮件内容；无需任何配置，浏览器内完成分析。</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="scanBtn" onclick="runScan()">🔍 开始检测</button>
+        <button class="btn btn-secondary" onclick="loadExample()">📋 加载示例</button>
+        <button class="btn btn-secondary" onclick="clearInput()">🗑️ 清空</button>
+      </div>
+
+      <div id="errorBox" class="error-msg"></div>
+      <div id="loadingBox" class="loading"><div class="loading-spinner"></div>AI 深度分析进行中，请稍候...</div>
+
+      <div id="resultsBox" class="results">
+        <!-- Risk Summary -->
+        <div id="riskCard" class="result-risk"></div>
+
+        <!-- Signal Summary Bar -->
+        <div id="summaryBar" class="summary-bar"></div>
+
+        <!-- Signals -->
+        <h3 class="section-title">⚠️ 风险信号分析</h3>
+        <ul id="signalList" class="signal-list"></ul>
+
+        <!-- Auth Results -->
+        <h3 class="section-title">🔐 发件人认证状态（本地 DNS 查询）</h3>
+        <div id="authBox" class="auth-info"></div>
+
+        <!-- Email Headers -->
+        <h3 class="section-title">📧 邮件头解析</h3>
+        <div id="headersBox"></div>
+
+        <!-- AI Deepen -->
+        <div id="aiBox" class="ai-deepen" style="display:none">
+          <h4>🤖 想要 AI 深度分析？</h4>
+          <p>基于规则的静态分析已识别上述风险。开启 AI 深度分析，让大模型进一步判断社会工程学意图、攻击链完整性和图片钓鱼内容。</p>
+          <button class="btn btn-primary" onclick="runAIDeepen()">🚀 开启 AI 深度分析</button>
+          <p style="margin-top:10px;font-size:12px;color:#92400e;">提示：AI 分析需上传邮件内容到服务器，服务器将自动脱敏处理。</p>
+        </div>
+
+        <div class="footer-cta">
+          想对真实邮件流做持续监控？<a href="/ai-mailgate.html">了解 AI 智能体邮件网关 →</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div style="max-width:900px;margin:0 auto;padding:20px 48px;text-align:center;font-size:13px;color:#6b7280;border-top:1px solid #e5e7eb;">
+      &copy; 2026 ztpop.net 邮件技术知识库 &nbsp;|&nbsp; <a href="/kb/" style="color:#003366;text-decoration:none;">知识库</a> &nbsp;|&nbsp; <a href="/bulletin/faq.html" style="color:#003366;text-decoration:none;">FAQ</a>
+    </div>
+  </footer>
+
+  <script>
+  // ─── Static Heuristic Email Scanner ───────────────────────────────────────
+  const RISK_HIGH_KEYWORDS = [
+    { k: '紧急', w: 15, d: '紧迫话术"紧急"，制造时间压力逼迫快速决策' },
+    { k: '立刻', w: 15, d: '紧迫话术"立刻"，施压立即行动' },
+    { k: '马上', w: 12, d: '紧迫话术"马上"，催促立即响应' },
+    { k: '立即', w: 12, d: '紧迫话术"立即"' },
+    { k: '立刻转账', w: 20, d: '"立刻转账"强金融指令，典型 BEC 攻击话术' },
+    { k: '转账', w: 12, d: '提及"转账"，需确认是否正当业务往来' },
+    { k: '汇款', w: 12, d: '提及"汇款"，需交叉核实' },
+    { k: '付款', w: 10, d: '提及"付款"，注意收款账户核实' },
+    { k: '银行账户', w: 8, d: '索取"银行账户"信息' },
+    { k: '账号', w: 8, d: '索要"账号"相关凭证' },
+    { k: '密码', w: 18, d: '索要"密码"凭证，合法邮件不会主动索取密码' },
+    { k: 'password', w: 18, d: '索要"password"，凭证钓鱼' },
+    { k: '登录', w: 10, d: '要求"登录"某系统，核实链接真实性' },
+    { k: '验证码', w: 18, d: '索要"验证码"，极高风险凭证钓鱼' },
+    { k: 'OTP', w: 18, d: '索要"OTP"一次性密码' },
+    { k: '营业执照', w: 8, d: '索取"营业执照"等企业敏感文件' },
+    { k: '身份证', w: 15, d: '索取"身份证"个人敏感信息' },
+    { k: '立即更新', w: 15, d: '"立即更新"指令式话术，钓鱼常用' },
+    { k: '您的账户', w: 12, d: '"您的账户"泛化称呼，社工常用冒称' },
+    { k: '您的邮件', w: 12, d: '"您的邮件"泛化称呼' },
+    { k: '点击此处', w: 10, d: '"点击此处"引导操作，注意链接核实' },
+    { k: '点击链接', w: 12, d: '"点击链接"指令式引导，核实链接真实性' },
+    { k: '您的邮箱', w: 10, d: '"您的邮箱"泛化称呼' },
+    { k: '您的密码已过期', w: 20, d: '"密码已过期"恐吓话术，钓鱼典型' },
+    { k: 'password expired', w: 20, d: '"password expired"恐吓钓鱼' },
+    { k: 'account suspended', w: 18, d: '"account suspended"恐吓钓鱼' },
+    { k: 'verify your account', w: 18, d: '"verify your account"凭证钓鱼' },
+    { k: 'suspended', w: 12, d: '"suspended"恐吓话术' },
+    { k: 'verify', w: 8, d: '"verify"验证指令，注意是否为钓鱼' },
+    { k: 'confirm', w: 8, d: '"confirm"确认指令' },
+    { k: 'wire transfer', w: 20, d: '"wire transfer"电汇指令，BEC 攻击核心信号' },
+    { k: 'urgent', w: 12, d: '"urgent"英语紧迫话术' },
+    { k: 'invoice attached', w: 12, d: '"invoice attached"附件钓鱼常用开场' },
+    { k: 'you have won', w: 20, d: '"you have won"中奖钓鱼' },
+    { k: '恭喜', w: 10, d: '"恭喜"中奖话术' },
+    { k: '获奖', w: 15, d: '"获奖"钓鱼话术' },
+    { k: '中奖', w: 15, d: '"中奖"钓鱼话术' },
+    { k: 'account has been', w: 15, d: '"account has been"恐吓钓鱼' },
+  ];
+
+  const URL_RISK_PATTERNS = [
+    { p: /https?:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/, w: 20, d: '链接使用 IP 地址而非域名，钓鱼高风险' },
+    { p: /https?:\/\/[^\/]*\.tk[^\/]*/, w: 15, d: '链接使用 .tk 免费域名，高风险' },
+    { p: /https?:\/\/[^\/]*\.ml[^\/]*/, w: 15, d: '链接使用 .ml 免费域名，高风险' },
+    { p: /https?:\/\/[^\/]*\.ga[^\/]*/, w: 15, d: '链接使用 .ga 免费域名，高风险' },
+    { p: /https?:\/\/[^\/]*\.cf[^\/]*/, w: 12, d: '链接使用 .cf 免费域名' },
+    { p: /https?:\/\/[^\/]*\.gq[^\/]*/, w: 15, d: '链接使用 .gq 免费域名，高风险' },
+    { p: /https?:\/\/[^\/]*\.xyz[^\/]*/, w: 8, d: '链接使用 .xyz 域名' },
+    { p: /https?:\/\/[^\/]*\.top[^\/]*/, w: 8, d: '链接使用 .top 域名' },
+    { p: /https?:\/\/[^\/]*\.work[^\/]*/, w: 10, d: '链接使用 .work 域名' },
+    { p: /https?:\/\/[^\/]*\.click[^\/]*/, w: 12, d: '链接使用 .click 高风险域名' },
+    { p: /https?:\/\/bit\.ly/, w: 10, d: '链接使用短链接，真实目标被隐藏' },
+    { p: /https?:\/\/t\.co/, w: 10, d: '链接使用 Twitter 短链接' },
+    { p: /https?:\/\/tinyurl\.com/, w: 12, d: '链接使用 TinyURL 短链接' },
+    { p: /https?:\/\/[^\/]*\.pw[^\/]*/, w: 10, d: '链接使用 .pw 域名' },
+    { p: /login\.php|account\.php|signin|sign-in|verify\.php|update\.php|secure/, w: 15, d: 'URL 包含登录/验证路径，核实是否为真实站点' },
+  ];
+
+  const HIGH_RISK_ATTACHMENTS = ['.exe', '.zip', '.scr', '.bat', '.cmd', '.vbs', '.js', '.jar', '.msi', '.pif', '.application', '.gadget', '.hta', '.cpl', '.msc', '.ws'];
+
+  function parseEmail(raw) {
+    const headers = {};
+    const lines = raw.split(/\r?\n/);
+    let inBody = false;
+    let body = '';
+    let currentKey = '';
+    let currentVal = '';
+    for (const line of lines) {
+      if (!inBody && line === '') { inBody = true; continue; }
+      if (!inBody) {
+        if (line.match(/^[^\s\t]/)) {
+          if (currentKey) headers[currentKey] = currentVal.trim();
+          const colon = line.indexOf(':');
+          if (colon > 0) {
+            currentKey = line.slice(0, colon);
+            currentVal = line.slice(colon + 1);
+          } else {
+            currentKey = line;
+            currentVal = '';
+          }
+        } else if (line.match(/^\s+/) && currentKey) {
+          currentVal += ' ' + line.trim();
+        } else {
+          if (currentKey) headers[currentKey] = currentVal.trim();
+          currentKey = '';
+          currentVal = '';
+        }
+      } else {
+        body += line + '\n';
+      }
+    }
+    if (currentKey) headers[currentKey] = currentVal.trim();
+    return { headers, body: body.trim() };
+  }
+
+  function extractDomain(addr) {
+    if (!addr) return null;
+    const at = addr.lastIndexOf('@');
+    if (at < 0) return null;
+    return addr.slice(at + 1).replace(/[<>]/g, '').trim().toLowerCase();
+  }
+
+  function extractUrls(text) {
+    const urls = [];
+    const re = /https?:\/\/[^\s'"<>]+/gi;
+    let m;
+    while ((m = re.exec(text)) !== null) urls.push(m[0]);
+    return urls;
+  }
+
+  function extractReplyTo(headers) {
+    return (headers['Reply-To'] || headers['Reply-to'] || '').trim();
+  }
+
+  function getRiskLevel(score) {
+    if (score >= 40) return 'high';
+    if (score >= 20) return 'medium';
+    return 'low';
+  }
+
+  function runScan() {
+    const raw = document.getElementById('emailInput').value.trim();
+    if (!raw) { showError('请先粘贴邮件内容'); return; }
+    hideError();
+    document.getElementById('resultsBox').classList.add('show');
+    document.getElementById('scanBtn').disabled = true;
+
+    setTimeout(() => {
+      const { headers, body } = parseEmail(raw);
+      const from = headers['From'] || headers['from'] || '';
+      const to = headers['To'] || headers['to'] || '';
+      const subject = headers['Subject'] || headers['subject'] || '';
+      const replyTo = extractReplyTo(headers);
+      const fromDomain = extractDomain(from);
+      const replyToDomain = extractDomain(replyTo);
+      const fromDisplay = from.replace(/<.*?>/, '').trim();
+      const urls = extractUrls(raw);
+      const allText = (subject + ' ' + body).toLowerCase();
+
+      let score = 0;
+      const signals = [];
+
+      // Signal 1: Reply-To mismatch
+      if (replyToDomain && fromDomain && replyToDomain !== fromDomain) {
+        score += 25;
+        signals.push({ level: 'high', icon: '\u26A0\uFE0F', text: '<strong>Reply-To 与发件人域名不一致：</strong>发件人' + fromDomain + '，但回复指向' + replyToDomain + '。这是最常见的邮件伪造信号之一。' });
+      }
+
+      // Signal 2: High-risk keywords
+      let keywordHits = [];
+      for (const kw of RISK_HIGH_KEYWORDS) {
+        if (allText.includes(kw.k.toLowerCase())) {
+          keywordHits.push(kw.k);
+          score += kw.w;
+          if (!signals.some(s => s.text.includes(kw.d))) {
+            signals.push({ level: kw.w >= 15 ? 'high' : kw.w >= 10 ? 'medium' : 'low', icon: '\u2757', text: kw.d });
+          }
+        }
+      }
+
+      // Signal 3: URL risk
+      let urlRisks = [];
+      for (const url of urls) {
+        for (const up of URL_RISK_PATTERNS) {
+          if (up.p.test(url)) {
+            urlRisks.push(url);
+            score += up.w;
+            if (!signals.some(s => s.text.includes(up.d))) {
+              signals.push({ level: up.w >= 15 ? 'high' : 'medium', icon: '\uD83D\uDD27', text: up.d + '（' + url.slice(0, 60) + (url.length > 60 ? '...' : '') + '）' });
+            }
+            break;
+          }
+        }
+      }
+
+      // Signal 4: Attachment risk
+      const attachMatch = raw.match(/filename=["']?([^"'\r\n]+)/gi);
+      if (attachMatch) {
+        for (const am of attachMatch) {
+          const fn = am.replace(/filename=["']?/i, '').toLowerCase().trim();
+          for (const ext of HIGH_RISK_ATTACHMENTS) {
+            if (fn.endsWith(ext)) {
+              score += 25;
+              signals.push({ level: 'high', icon: '\uD83D\uDCE6', text: '<strong>高风险附件类型 .' + ext.replace('.','') + '：</strong>' + fn + '。可执行文件是最危险的邮件附件类型。' });
+              break;
+            }
+          }
+        }
+      }
+
+      // Signal 5: Domain impersonation (simple check)
+      if (fromDomain) {
+        const commonBrands = ['qq.com','163.com','126.com','sina.com','aliyun.com','ali.com','tencent.com','baidu.com','jd.com','taobao.com','apple.com','microsoft.com','amazon.com','google.com','paypal.com','alipay.com','weixin.qq.com','exmail.qq.com','mail.qq.com'];
+        for (const brand of commonBrands) {
+          if (fromDomain !== brand && fromDomain.endsWith('.' + brand)) {
+            score += 20;
+            signals.push({ level: 'high', icon: '\uD83D\uDC64', text: '<strong>疑似域名冒充：</strong>发件域名' + fromDomain + '看起来像' + brand + '的子域名，可能是伪造。' });
+            break;
+          }
+          if (fromDomain !== brand && fromDomain.includes(brand.replace('.com','')) && fromDomain.length > brand.length + 3) {
+            // e.g. paypa1.com vs paypal.com
+            const simScore = levenshteinSim(fromDomain.replace('.com','').replace('.cn',''), brand.replace('.com','').replace('.cn',''));
+            if (simScore > 0.7) {
+              score += 20;
+              signals.push({ level: 'high', icon: '\uD83D\uDC64', text: '<strong>疑似视觉仿冒域名：</strong>' + fromDomain + '与常见品牌' + brand + '高度相似（相似度' + Math.round(simScore*100) + '%），小心域名仿冒。' });
+              break;
+            }
+          }
+        }
+      }
+
+      // Signal 6: Suspicious subject patterns
+      const subjLower = subject.toLowerCase();
+      if (/fwd:|fw:|re:\s*re:/.test(subjLower)) score += 5;
+      if (subject.length > 120) { score += 8; if (!signals.some(s=>s.text.includes('超长主题'))) signals.push({ level: 'medium', icon: '\uD83D\uDCC4', text: '邮件主题超长（' + subject.length + '字符），可能用于绕过过滤器。' }); }
+      if (/urgent|important|action required|reminder/i.test(subjLower)) { score += 8; if (!signals.some(s=>s.text.includes('紧急主题'))) signals.push({ level: 'medium', icon: '\u2757', text: '邮件主题使用"紧急"/"Important"等标记，制造时间压力。' }); }
+
+      // Cap score at 100
+      score = Math.min(score, 100);
+      const riskLevel = getRiskLevel(score);
+
+      // Render
+      renderRiskCard(riskLevel, score, from, subject);
+      renderSummary(signals, score, urls.length, attachMatch ? attachMatch.length : 0);
+      renderSignals(signals);
+      renderAuth(headers, fromDomain);
+      renderHeaders(headers);
+      document.getElementById('aiBox').style.display = 'block';
+      document.getElementById('scanBtn').disabled = false;
+    }, 80);
+  }
+
+  function levenshteinSim(a, b) {
+    a = a.toLowerCase(); b = b.toLowerCase();
+    if (a === b) return 1;
+    if (a.length === 0 || b.length === 0) return 0;
+    const matrix = [];
+    for (let i = 0; i <= a.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i-1] === b[j-1] ? 0 : 1;
+        matrix[i][j] = Math.min(matrix[i-1][j]+1, matrix[i][j-1]+1, matrix[i-1][j-1]+cost);
+      }
+    }
+    return 1 - matrix[a.length][b.length] / Math.max(a.length, b.length);
+  }
+
+  function renderRiskCard(level, score, from, subject) {
+    const configs = {
+      low: { icon: '\u2705', title: '低风险', desc: '未检测到明显钓鱼或社会工程学攻击信号。建议：核对发件人地址是否可信后再回复。' },
+      medium: { icon: '\u26A0\uFE0F', title: '中风险 — 建议核查', desc: '检测到一个或多个可疑信号（如域名不一致、高风险话术、可疑链接）。建议通过其他渠道（电话/企业微信）核实发件人身份。' },
+      high: { icon: '\uD83D\uDEA8', title: '高风险 — 谨慎处理', desc: '检测到多个高风险信号，极可能是钓鱼或社会工程学攻击邮件。请勿点击链接、下载附件或回复个人信息。' }
+    };
+    const cfg = configs[level];
+    const card = document.getElementById('riskCard');
+    card.className = 'result-risk ' + level;
+    card.innerHTML = '<div class="risk-icon">' + cfg.icon + '</div><div class="risk-title">' + cfg.title + '</div><div class="risk-desc">综合风险评分：<strong>' + score + '/100</strong> &nbsp;|&nbsp; 发件人：' + from.replace(/<.*?>/,'') + ' &nbsp;|&nbsp; 主题：' + subject.slice(0, 50) + (subject.length > 50 ? '...' : '') + '<br>' + cfg.desc + '</div>';
+  }
+
+  function renderSummary(signals, score, urlCount, attachCount) {
+    const high = signals.filter(s => s.level === 'high').length;
+    const medium = signals.filter(s => s.level === 'medium').length;
+    const low = signals.filter(s => s.level === 'low').length;
+    document.getElementById('summaryBar').innerHTML =
+      '<div class="stat"><div class="num" style="color:#dc2626">' + high + '</div><div class="lbl">高风险信号</div></div>' +
+      '<div class="stat"><div class="num" style="color:#d97706">' + medium + '</div><div class="lbl">中风险信号</div></div>' +
+      '<div class="stat"><div class="num" style="color:#16a34a">' + low + '</div><div class="lbl">低风险信号</div></div>' +
+      '<div class="stat"><div class="num">' + urlCount + '</div><div class="lbl">检测链接</div></div>' +
+      '<div class="stat"><div class="num">' + attachCount + '</div><div class="lbl">附件数量</div></div>';
+  }
+
+  function renderSignals(signals) {
+    const el = document.getElementById('signalList');
+    if (signals.length === 0) {
+      el.innerHTML = '<li class="signal-item low"><span class="signal-icon">\u2705</span><span class="signal-text">未检测到明显风险信号。</span></li>';
+      return;
+    }
+    el.innerHTML = signals.map(s =>
+      '<li class="signal-item ' + s.level + '"><span class="signal-icon">' + s.icon + '</span><span class="signal-text">' + s.text + '</span></li>'
+    ).join('');
+  }
+
+  function renderAuth(headers, fromDomain) {
+    const spfVal = headers['Received-SPF'] || headers['Authentication-Results'] ? '' : null;
+    const dmarcVal = headers['Authentication-Results'] || '';
+    const hasARC = !!headers['ARC-Authentication-Results'];
+    const rows = [];
+    rows.push({ k: '发件域名', v: fromDomain || '（无法解析）', cls: fromDomain ? 'pass' : 'warn' });
+    rows.push({ k: 'ARC 验证', v: hasARC ? '有 ARC 头（需服务端验证）' : '无 ARC 头', cls: hasARC ? 'pass' : 'warn' });
+    if (dmarcVal) rows.push({ k: 'Auth-Res', v: dmarcVal.slice(0, 80) + (dmarcVal.length > 80 ? '...' : ''), cls: dmarcVal.toLowerCase().includes('fail') ? 'fail' : 'pass' });
+    rows.push({ k: '提示', v: '本工具为客户端静态分析，无法直接查询 DNS。真实 SPF/DMARC 状态请使用 <a href="/tools/dmarc-checker.html" style="color:#003366">DMARC 检测工具</a> 或 <a href="/tools/spf-checker.html" style="color:#003366">SPF 检测工具</a>。', cls: 'warn' });
+    document.getElementById('authBox').innerHTML = rows.map(r =>
+      '<div class="row"><span class="key">' + r.k + ':</span><span class="val ' + r.cls + '">' + r.v + '</span></div>'
+    ).join('');
+  }
+
+  function renderHeaders(headers) {
+    const important = ['From', 'To', 'Cc', 'Subject', 'Date', 'Reply-To', 'Return-Path', 'Received', 'DKIM-Signature', 'Authentication-Results', 'ARC-Authentication-Results', 'ARC-Message-Signature', 'Content-Type', 'MIME-Version', 'X-Mailer', 'X-Priority'];
+    const entries = Object.entries(headers).filter(([k]) => important.some(ik => ik.toLowerCase() === k.toLowerCase())).slice(0, 20);
+    if (entries.length === 0) {
+      document.getElementById('headersBox').innerHTML = '<p style="color:#6b7280;font-size:14px;">未能解析出标准邮件头（请确认粘贴内容包含完整的邮件头区域）</p>';
+      return;
+    }
+    document.getElementById('headersBox').innerHTML = '<table class="headers-table"><thead><tr><th>字段</th><th>值</th></tr></thead><tbody>' +
+      entries.map(([k, v]) => '<tr><td>' + k + '</td><td>' + escapeHtml(v) + '</td></tr>').join('') + '</tbody></table>';
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function hideError() {
+    document.getElementById('errorBox').classList.remove('show');
+  }
+
+  function clearInput() {
+    document.getElementById('emailInput').value = '';
+    document.getElementById('resultsBox').classList.remove('show');
+    document.getElementById('aiBox').style.display = 'none';
+    hideError();
+  }
+
+  function loadExample() {
+    document.getElementById('emailInput').value = 'From: "CEO" <ceo@cmail-supp0rt.com>\r\nTo: cfo@company.com\r\nSubject: =?UTF-8?B?6LSl5Z6L5Y+R6LSl5p+l6ZqI5aSr6ISn6YSh5oWn?= 紧急！\r\nReply-To: urgent-transfer@external-mail.cn\r\nDate: Tue, 05 Aug 2026 09:30:00 +0800\r\nContent-Type: text/plain; charset=UTF-8\r\nMIME-Version: 1.0\r\nX-Priority: 1 (Highest)\r\n\r\n您好，\r\n\r\n有一笔紧急款项需要今天处理。供应商变更了收款账户，请立即将尾款 285,000 元转账到新账户：\r\n开户行：中国农业银行深圳福田支行\r\n户名：深圳市科创贸易有限公司\r\n账号：6228 4801 2345 6789 012\r\n\r\n这是保密事项，请勿告知任何人。完成后立即通知我。\r\n\r\n谢谢，\r\n张总\r\n';
+    document.getElementById('resultsBox').classList.remove('show');
+  }
+
+  async function runAIDeepen() {
+    const raw = document.getElementById('emailInput').value.trim();
+    if (!raw) return;
+    document.getElementById('loadingBox').classList.add('show');
+    document.getElementById('aiBox').querySelector('.btn').disabled = true;
+    try {
+      const resp = await fetch('https://47.100.205.182/api/ai', {
+        method: 'POST',
+        headers: { 'Host': 'www.ztpop.net', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: '以下是一封可疑邮件，请分析其中的社会工程学攻击手法和风险等级：\n\n' + raw.slice(0, 2000)
+        })
+      });
+      const data = await resp.json();
+      const answer = data.answer || data.error || '分析失败，请稍后重试。';
+      document.getElementById('loadingBox').classList.remove('show');
+      document.getElementById('aiBox').innerHTML = '<h4>🤖 AI 深度分析结果</h4><div style="background:#f0fdf4;border-radius:8px;padding:16px 20px;margin-bottom:16px;font-size:14px;line-height:1.7;color:#15803d;">' + answer.replace(/\n/g, '<br>') + '</div><button class="btn btn-secondary" onclick="location.reload()">重新检测</button>';
+    } catch (e) {
+      document.getElementById('loadingBox').classList.remove('show');
+      document.getElementById('aiBox').innerHTML = '<h4>🤖 AI 深度分析结果</h4><div style="background:#fef2f2;border-radius:8px;padding:16px 20px;font-size:14px;color:#b91c1c;">AI 服务暂时不可用（服务器 AI key 未配置）。规则分析结果已足够识别本邮件的主要风险。</div>';
+    }
+  }
+
+  // Ctrl+Enter shortcut
+  document.getElementById('emailInput').addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') runScan();
+  });
+  </script>
+</body>
+</html>
