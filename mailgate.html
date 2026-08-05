@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI 智能体邮件网关 — Rspamd + 大模型分层防御 · ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<link rel="stylesheet" href="/css/kb-article.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="AI 智能体邮件网关 — Rspamd + 大模型分层防御">
+<meta property="og:description" content="基于 Rspamd 开源规则引擎 + 多模态大模型的分层邮件安全网关：毫秒级拦截已知威胁，LLM 深检图片钓鱼与社会工程学攻击，攻防演练闭环持续进化。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.ztpop.net/mailgate.html">
+<meta name="description" content="AI 智能体邮件网关：Rspamd 高速规则引擎 + 多模态大模型语义/视觉分析的分层防御架构。破解图片钓鱼、社会工程学与 AI 批量生成攻击三大规则盲区，攻防演练闭环让防御持续进化。开源基座、可落地部署。">
+<link rel="canonical" href="https://www.ztpop.net/mailgate.html" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "AI 智能体邮件网关",
+  "description": "基于 Rspamd 开源规则引擎与多模态大模型的分层邮件安全网关，破解图片钓鱼、社会工程学攻击与 AI 批量生成钓鱼三大规则盲区，通过攻防演练闭环持续进化。",
+  "url": "https://www.ztpop.net/mailgate.html",
+  "brand": {
+    "@type": "Organization",
+    "name": "ztpop.net 邮件技术知识库"
+  },
+  "category": "邮件安全网关",
+  "offers": {
+    "@type": "Offer",
+    "availability": "https://schema.org/PreOrder",
+    "price": "0",
+    "priceCurrency": "CNY",
+    "description": "公开检测版本免费开放；托管网关服务按租户/邮箱数计费（规划中）"
+  },
+  "featureList": [
+    "Rspamd 规则引擎毫秒级拦截已知威胁",
+    "多模态 LLM 深检图片钓鱼与社会工程学攻击",
+    "攻防演练闭环：样本沉淀为训练语料，防御持续进化",
+    "SPF/DKIM/DMARC/ARC 全栈认证",
+    "本地优先：数据不出企业边界，可选云端 LLM 增强",
+    "开源基座 Apache 2.0，可商用可自托管"
+  ]
+}
+</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://www.ztpop.net/"},{"@type":"ListItem","position":2,"name":"产品和服务"},{"@type":"ListItem","position":3,"name":"AI 智能体邮件网关"}]}</script>
+<style>
+/* AI Mail Gateway product page — scoped */
+.ai-gw{max-width:860px;margin:40px auto;padding:0 20px}
+.ai-gw h1{font-size:26px;color:#003366;margin-bottom:8px}
+.ai-gw .subtitle{color:#666;font-size:15px;margin-bottom:32px;line-height:1.8}
+.ai-gw h2{font-size:20px;color:#003366;margin:40px 0 16px;padding-bottom:8px;border-bottom:1px solid #e0e0e0}
+.ai-gw h3{font-size:16px;color:#003366;margin:24px 0 10px}
+.ai-gw p,.ai-gw li{font-size:14.5px;color:#444;line-height:1.85}
+.ai-gw .hero{background:linear-gradient(135deg,#003366 0%,#0a4d8c 100%);color:#fff;border-radius:10px;padding:36px 40px;margin-bottom:40px}
+.ai-gw .hero h1{color:#fff;font-size:28px;margin-bottom:12px}
+.ai-gw .hero p{color:#dbeafe;font-size:15px;line-height:1.9}
+.ai-gw .hero .badges{margin-top:20px}
+.ai-gw .badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12.5px;padding:4px 14px;border-radius:20px;margin-right:8px;margin-bottom:6px}
+.ai-gw .layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0}
+.ai-gw .layer{background:#f8f9fb;border-radius:8px;padding:18px 20px;border-top:3px solid #003366}
+.ai-gw .layer .num{font-size:12px;color:#0a4d8c;font-weight:700}
+.ai-gw .layer h3{margin:6px 0 8px;font-size:15px}
+.ai-gw .layer p{font-size:13.5px;color:#555;line-height:1.7;margin:0}
+.ai-gw .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:20px 0}
+.ai-gw .feature{background:#f8f9fb;border-radius:8px;padding:16px 20px}
+.ai-gw .feature h3{margin:0 0 6px;font-size:15px}
+.ai-gw .feature p{font-size:13.5px;color:#555;line-height:1.7;margin:0}
+.ai-gw .cta{background:#e8f0fe;border:1px solid #c5d9f2;border-radius:10px;padding:28px 32px;margin:40px 0;text-align:center}
+.ai-gw .cta h2{border:none;margin:0 0 12px;font-size:20px}
+.ai-gw .cta p{font-size:14px;color:#444;margin:0 0 20px}
+.ai-gw .cta .btn{display:inline-block;background:#003366;color:#fff;padding:10px 32px;border-radius:6px;font-size:15px;text-decoration:none;font-weight:600}
+.ai-gw .cta .btn:hover{background:#0a4d8c}
+.ai-gw .cta .contact{margin-top:14px;font-size:13px;color:#666}
+.ai-gw .note{background:#fff8e6;border-left:4px solid #e6a700;padding:14px 18px;border-radius:0 8px 8px 0;font-size:13.5px;color:#5b4a1a;line-height:1.8;margin:20px 0}
+.ai-gw table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+.ai-gw table th{background:#f0f4fa;color:#003366;padding:10px 12px;border:1px solid #dde5ef;text-align:left;font-weight:600}
+.ai-gw table td{padding:10px 12px;border:1px solid #e5ebf3;color:#444;line-height:1.7}
+.ai-gw .roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0}
+.ai-gw .phase{background:#f8f9fb;border-radius:8px;padding:16px 18px}
+.ai-gw .phase .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:12px;margin-bottom:8px}
+.ai-gw .phase .t0{background:#dcfce7;color:#166534}
+.ai-gw .phase .t1{background:#e8f0fe;color:#0a4d8c}
+.ai-gw .phase .t2{background:#fef3c7;color:#92400e}
+.ai-gw .phase .t3{background:#fee2e2;color:#991b1b}
+.ai-gw .phase h3{margin:0 0 8px;font-size:14.5px}
+.ai-gw .phase p{font-size:13px;color:#555;line-height:1.7;margin:0}
+@media (max-width:600px){.ai-gw .hero{padding:24px 20px}.ai-gw .cta{padding:20px 16px}}
+</style>
+</head>
+<body>
+<!--#include virtual="/partials/header.html" -->
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <ol>
+    <li><a href="/">首页</a></li>
+    <li><span aria-current="page">产品和服务</span></li>
+    <li><span aria-current="page">AI 智能体邮件网关</span></li>
+  </ol>
+</nav>
+
+<div class="ai-gw">
+  <div class="hero">
+    <h1>AI 智能体邮件网关</h1>
+    <p>2026 年，钓鱼攻击已全面转向 AI 驱动：图片化钓鱼绕过文本规则、社会工程学话术绕过关键词检测、大模型批量生成无限变体。传统规则引擎只能拦截「见过的攻击」——AI 智能体邮件网关在 Rspamd 高速规则引擎之上叠加多模态大模型，识别「从未见过的攻击模式」，并在攻防演练中持续进化。</p>
+    <div class="badges">
+      <span class="badge">开源基座 · Apache 2.0</span>
+      <span class="badge">Rspamd 规则引擎</span>
+      <span class="badge">多模态 LLM 深检</span>
+      <span class="badge">攻防演练闭环</span>
+      <span class="badge">本地优先</span>
+    </div>
+  </div>
+
+  <h2>为什么规则引擎挡不住 2026 年的钓鱼攻击</h2>
+  <p>钓鱼攻击的三个新趋势，恰好是规则引擎的三个结构性盲区：</p>
+  <ul>
+    <li><strong>图片化钓鱼</strong>：攻击者将钓鱼内容渲染为图片（PNG/JPEG/PDF 截图），文本规则引擎无法读取图片中的文字，传统 OCR 对模糊、变形、带背景噪声的截图识别率低。</li>
+    <li><strong>社会工程学话术</strong>：利用紧迫感、权威冒充（CEO 诈骗 / BEC）、情感操控的邮件，在词汇层面与正常邮件高度相似，关键词规则无法区分「请尽快转账」的恶意与善意语境。</li>
+    <li><strong>AI 批量生成</strong>：大模型可无限生成语义通顺、无拼写错误的钓鱼变体，指纹/哈希类检测对每次生成的变体完全失效。</li>
+  </ul>
+  <div class="note"><strong>本质差异：</strong>规则引擎是「已知模式匹配」，只能拦截见过的攻击；AI 智能体是「语义与意图理解」，能够识别从未见过的攻击模式——两者必须叠加而非二选一。</div>
+
+  <h2>分层防御架构</h2>
+  <p>核心设计原则：让规则引擎在毫秒级拦截 99% 的已知威胁，让大模型只对可疑的 1% 做深度语义分析——既保证吞吐，又控制 LLM 调用成本与延迟。</p>
+  <div class="layers">
+    <div class="layer">
+      <span class="num">第一层</span>
+      <h3>Rspamd 规则引擎</h3>
+      <p>SPF/DKIM/DMARC/ARC 全栈认证、RBL 查询、贝叶斯/神经网络/模糊哈希评分、内容分析。事件驱动架构，单 worker 50-200ms/封，拦截已知威胁。</p>
+    </div>
+    <div class="layer">
+      <span class="num">第二层</span>
+      <h3>灰色地带触发</h3>
+      <p>得分处于灰色地带（如 3.0-6.0 分）的邮件，由 Lua 插件自动触发外部 LLM 深检。规则层已处理的海量正常邮件不产生任何 AI 调用。</p>
+    </div>
+    <div class="layer">
+      <span class="num">第三层</span>
+      <h3>多模态 LLM 深检</h3>
+      <p>LLM 同时分析邮件文本语义 + 图片附件 OCR 内容 + 发件人意图，输出「钓鱼概率 + 推理依据 + 建议动作」的结构化判定。</p>
+    </div>
+    <div class="layer">
+      <span class="num">第四层</span>
+      <h3>动作决策与审计</h3>
+      <p>LLM 结果作为权重叠加到总分，决定放行/隔离/拒绝。全部决策日志化，输出可解释的推理链，供人工复核与模型迭代。</p>
+    </div>
+  </div>
+
+  <h2>大模型层的三个关键能力</h2>
+  <div class="feature-grid">
+    <div class="feature">
+      <h3>🖼️ 多模态识图</h3>
+      <p>读取图片中的文字、Logo、表单结构，识别「仿冒登录页」「伪造发票」「二维码钓鱼」等模式。传统规则 + 传统 OCR 无法达到。</p>
+    </div>
+    <div class="feature">
+      <h3>🧠 社会工程学语义分析</h3>
+      <p>意图级分析：紧迫感施压（「立即」「24 小时内」）、权威冒充（「CEO 要求」）、异常请求（转账、改收款账户、购买礼品卡）、身份伪装。</p>
+    </div>
+    <div class="feature">
+      <h3>🔍 攻击链推理与证据输出</h3>
+      <p>输出可解释推理链：「邮件声称来自 CEO，但域名与公司域名不同；要求立即转账且收款账户不符；附件为伪造发票图片 → 高置信度 BEC 攻击」。</p>
+    </div>
+  </div>
+
+  <h2>攻防演练闭环：让防御持续成长</h2>
+  <p>AI 智能体邮件网关区别于传统网关的终极价值，在于它能够「在攻防对抗中成长」——每一轮对抗的样本与推理链都是高质量训练语料，防御能力与数据资产同步增长。</p>
+  <ol>
+    <li><strong>采集</strong>：将钓鱼样本（真实攻击 + 公开数据集 + 红队合成样本）归档为带标签语料。</li>
+    <li><strong>演练</strong>：用攻击侧 LLM 持续生成新变体（图片化、话术演化），投喂防御侧 LLM 检测。</li>
+    <li><strong>评估</strong>：每次对抗记录检测结果与推理链，量化漏报/误报。</li>
+    <li><strong>迭代</strong>：用对抗产出微调/蒸馏防御模型，或增强 Rspamd 规则（Lua 插件 + 贝叶斯重训）。</li>
+    <li><strong>沉淀</strong>：每一轮对抗产出可复用的训练语料与防御规则。</li>
+  </ol>
+
+  <h2>产品演进路线</h2>
+  <div class="roadmap">
+    <div class="phase">
+      <span class="tag t0">阶段 0 · 检测工具</span>
+      <h3>邮件安全 AI 检测</h3>
+      <p>公开网页检测：粘贴邮件原文/上传 .eml → 静态分析（SPF/DMARC/URL/附件/话术）+ LLM 深度解读 → 风险报告。免费开放。</p>
+    </div>
+    <div class="phase">
+      <span class="tag t1">阶段 1 · 转发检测</span>
+      <h3>专属检测地址</h3>
+      <p>用户将可疑邮件转发到专属地址，云端解析 + AI 分析，返回检测报告。收集真实样本，验证产品形态。</p>
+    </div>
+    <div class="phase">
+      <span class="tag t2">阶段 2 · 数据飞轮</span>
+      <h3>信念内核进化</h3>
+      <p>检测样本沉淀进信念内核，人工标注 + 模型微调，持续降低误报率，形成高价值训练语料库。</p>
+    </div>
+    <div class="phase">
+      <span class="tag t3">阶段 3 · 托管网关</span>
+      <h3>MX 接管 / API 集成</h3>
+      <p>企业改 MX 指向托管网关或 API 对接，Rspamd + LLM 全量过滤，按租户/邮箱数计费。</p>
+    </div>
+  </div>
+
+  <h2>技术基座与合规</h2>
+  <table>
+    <caption>开源组件全景</caption>
+    <thead>
+      <tr><th scope="col">组件</th><th scope="col">角色</th><th scope="col">许可</th><th scope="col">说明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Rspamd</td><td>规则引擎基座</td><td>Apache 2.0</td><td>评分/认证/插件框架，事件驱动高性能</td></tr>
+      <tr><td>Postfix / Exim</td><td>MTA</td><td>IBM Public License / GPL</td><td>接收与投递，Milter 对接 Rspamd</td></tr>
+      <tr><td>Ollama + 开源多模态模型</td><td>本地 LLM</td><td>MIT（Ollama）</td><td>本地优先：数据不出企业边界</td></tr>
+      <tr><td>Redis</td><td>统计/学习/限速</td><td>BSD</td><td>Rspamd 官方推荐统计存储</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:13px;color:#666">合规依据：GB/T 37002-2026《网络安全技术 电子邮件系统安全技术规范》（TC260 归口，2027-02-01 实施）、《个人信息保护法》。本地优先架构保证邮件数据不出企业边界；云端 LLM 调用仅传输必要特征。</p>
+
+  <div class="cta">
+    <h2>AI 智能体邮件网关 · 公开检测版本即将上线</h2>
+    <p>免费体验邮件安全 AI 检测：粘贴可疑邮件，获取风险判定与推理依据。欢迎预约内测、提交真实钓鱼样本、洽谈企业部署。</p>
+    <a class="btn" href="/tools/">进入在线工具箱</a>
+    <div class="contact">产品咨询与内测申请：<a href="mailto:sales@ztpop.net">sales@ztpop.net</a></div>
+  </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+</body>
+</html>
