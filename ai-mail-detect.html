@@ -553,9 +553,9 @@ Content-Type: text/plain; charset=UTF-8
     document.getElementById('loadingBox').classList.add('show');
     document.getElementById('aiBox').querySelector('.btn').disabled = true;
     try {
-      const resp = await fetch('https://47.100.205.182/api/ai', {
+      const resp = await fetch('https://www.ztpop.net/api/ai', {
         method: 'POST',
-        headers: { 'Host': 'www.ztpop.net', 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: '以下是一封可疑邮件，请分析其中的社会工程学攻击手法和风险等级：\n\n' + raw.slice(0, 2000)
         })
@@ -566,7 +566,7 @@ Content-Type: text/plain; charset=UTF-8
       document.getElementById('aiBox').innerHTML = '<h4>🤖 AI 深度分析结果</h4><div style="background:#f0fdf4;border-radius:8px;padding:16px 20px;margin-bottom:16px;font-size:14px;line-height:1.7;color:#15803d;">' + answer.replace(/\n/g, '<br>') + '</div><button class="btn btn-secondary" onclick="location.reload()">重新检测</button>';
     } catch (e) {
       document.getElementById('loadingBox').classList.remove('show');
-      document.getElementById('aiBox').innerHTML = '<h4>🤖 AI 深度分析结果</h4><div style="background:#fef2f2;border-radius:8px;padding:16px 20px;font-size:14px;color:#b91c1c;">AI 服务暂时不可用（服务器 AI key 未配置）。规则分析结果已足够识别本邮件的主要风险。</div>';
+      document.getElementById('aiBox').innerHTML = '<h4>🤖 AI 深度分析结果</h4><div style="background:#fef2f2;border-radius:8px;padding:16px 20px;font-size:14px;color:#b91c1c;">AI 深度分析暂不可用（服务器 AI 服务未激活或网络不可达）。上方规则分析结果已足够识别本邮件的主要风险。</div>';
     }
   }
 
