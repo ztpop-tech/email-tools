@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+    <link rel="llms-txt" href="/llms.txt">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://dns.google" crossorigin>
+    <link rel="preconnect" href="https://cloudflare-dns.com" crossorigin>
+<title>邮件域名健康分 · 昆仑邮件 · ztpop.net</title>
+<meta name="description" content="一键检测邮件域名 SPF / DKIM / DMARC / BIMI / MX / PTR / MTA-STS / 黑名单，给出 0-100 健康分与修复清单。">
+<style>
+  :root{
+    --bg:#0f172a; --card:#fff; --ink:#0f172a; --sub:#64748b; --line:#e2e8f0;
+    --brand:#2563eb; --brand2:#0ea5e9; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+    --ok-bg:#f0fdf4; --warn-bg:#fffbeb; --bad-bg:#fef2f2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+       background:linear-gradient(180deg,#0f172a 0,#1e293b 320px,#f1f5f9 320px,#f1f5f9 100%);color:var(--ink)}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 18px 60px}
+  header{color:#fff;text-align:center;padding:14px 0 26px}
+  header h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px}
+  header p{margin:0;color:#cbd5e1;font-size:14px}
+  .bar{display:flex;gap:10px;margin:0 auto 26px;max-width:680px}
+  input[type=text]{flex:1;padding:14px 16px;border:0;border-radius:12px;font-size:16px;outline:none;
+    box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  button.go{padding:14px 22px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;font-size:16px;font-weight:600;cursor:pointer;white-space:nowrap}
+  button.go:disabled{opacity:.6;cursor:wait}
+  .score-card{background:#fff;border-radius:18px;padding:26px;box-shadow:0 12px 40px rgba(15,23,42,.18);margin-bottom:20px;
+    display:none;align-items:center;gap:26px;flex-wrap:wrap}
+  .score-card.show{display:flex}
+  .gauge{position:relative;width:150px;height:150px;flex:0 0 auto}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .gauge .num b{font-size:40px;line-height:1}
+  .gauge .num span{font-size:12px;color:var(--sub)}
+  .score-meta{flex:1;min-width:240px}
+  .score-meta h2{margin:0 0 4px;font-size:20px}
+  .score-meta .lv{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:8px}
+  .score-meta p{margin:4px 0;color:var(--sub);font-size:14px}
+  .share{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .share button{padding:8px 14px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;font-size:13px;color:var(--ink)}
+  .share button:hover{border-color:var(--brand);color:var(--brand)}
+  .checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .chk{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+  .chk h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .chk .tag{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:600}
+  .tag.pass{background:var(--ok-bg);color:var(--ok)}
+  .tag.warn{background:var(--warn-bg);color:var(--warn)}
+  .tag.fail{background:var(--bad-bg);color:var(--bad)}
+  .tag.na{background:#f1f5f9;color:var(--sub)}
+  .chk .detail{font-size:13px;color:var(--sub);line-height:1.6;word-break:break-all}
+  .chk .fix{margin-top:8px;font-size:12.5px;color:var(--bad);background:var(--bad-bg);padding:8px 10px;border-radius:8px;display:none}
+  .chk .fix.show{display:block}
+  .loading{text-align:center;color:#fff;padding:30px;font-size:14px;display:none}
+  .loading.show{display:block}
+  .foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:30px;line-height:1.7}
+  .foot a{color:#cbd5e1}
+  .err{background:var(--bad-bg);color:var(--bad);padding:12px 16px;border-radius:10px;display:none;margin-bottom:16px;font-size:14px}
+  .err.show{display:block}
+  @media(max-width:560px){.score-card{padding:18px}.gauge{width:120px;height:120px}}
+</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "邮件域名健康分", "description": "一键检测邮件域名 SPF / DKIM / DMARC / BIMI / MX / PTR / MTA-STS / 黑名单，给出 0-100 健康分与修复清单。", "url": "https://www.ztpop.net/tools/email-health.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CNY"}, "publisher": {"@type": "Organization", "name": "ztpop.net", "url": "https://www.ztpop.net/"}, "inLanguage": "zh-CN"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "首页", "item": "https://www.ztpop.net/"}, {"@type": "ListItem", "position": 2, "name": "邮件域名健康分", "item": "https://www.ztpop.net/tools/email-health.html"}]}</script>
+</head>
+<body>
+<!--#include virtual="/partials/header.html" -->
+
+<div class="wrap">
+  <header>
+    <h1>邮件域名健康分</h1>
+    <p>昆仑邮件 · 一次输入，全面体检 SPF / DKIM / DMARC / BIMI / MX / PTR / MTA-STS / 黑名单</p>
+  </header>
+
+  <div class="bar">
+    <input type="text" id="domain" placeholder="输入邮件域名，如 ztpop.net" autocomplete="off" spellcheck="false">
+    <button class="go" id="run">开始体检</button>
+  </div>
+  <div class="err" id="err"></div>
+  <div class="loading" id="loading">正在通过公共 DNS 实时检测，请稍候…</div>
+
+  <div class="score-card" id="scoreCard">
+    <div class="gauge">
+      <svg width="150" height="150">
+        <circle cx="75" cy="75" r="66" fill="none" stroke="#e2e8f0" stroke-width="14"/>
+        <circle id="arc" cx="75" cy="75" r="66" fill="none" stroke="#16a34a" stroke-width="14"
+                stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="414.7"
+                style="transition:stroke-dashoffset .9s ease, stroke .9s ease"/>
+      </svg>
+      <div class="num"><b id="score">0</b><span>/ 100</span></div>
+    </div>
+    <div class="score-meta">
+      <span class="lv" id="lv">—</span>
+      <h2 id="grade">等待检测</h2>
+      <p id="summary">—</p>
+      <div class="share">
+        <button id="copyUrl">复制分享链接</button>
+        <button id="copyReport">复制检测报告</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="checks" id="checks"></div>
+
+  <div class="foot">
+    数据由浏览器直连公共 DNS-over-HTTPS（Google / Cloudflare）实时查询，不经过本服务器，不留存任何记录。<br>
+    本工具为免费自检参考，不构成专业邮件安全审计。邮件系统建设与信创替换请咨询
+    <a href="https://www.ztpop.net" target="_blank" rel="noopener">昆仑邮件 ztpop.net</a>。
+  </div>
+</div>
+
+<script>
+const DOH = [
+  n => `https://dns.google/resolve?name=${encodeURIComponent(n)}&type=`,
+  n => `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(n)}&type=`
+];
+const PROVIDERS = [
+  {name:'Google', url:n=>`https://dns.google/resolve?name=${encodeURIComponent(n)}&type=`},
+  {name:'Cloudflare', url:n=>`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(n)}&type=`, hdr:true}
+];
+async function doh(name, type){
+  let lastErr;
+  for(const p of PROVIDERS){
+    try{
+      const req = new Request(p.url(name)+type, {headers:p.hdr?{'Accept':'application/dns-json'}:{}});
+      const r = await fetch(req);
+      if(!r.ok) continue;
+      const j = await r.json();
+      if(j.Answer) return j.Answer;
+      return []; // NXDOMAIN / empty
+    }catch(e){ lastErr=e; }
+  }
+  throw lastErr || new Error('DoH failed');
+}
+async function txt(name){
+  const ans = await doh(name,'TXT');
+  return ans.map(a=>{
+    let s=a.data||'';
+    s = s.replace(/^"|"$/g,'');
+    try{ s = s.replace(/\\([0-9]{3})/g,(_,c)=>String.fromCharCode(parseInt(c,8))); }catch(e){}
+    return s.replace(/"/g,'');
+  });
+}
+async function mx(name){
+  const ans = await doh(name,'MX');
+  return ans.map(a=>{
+    const m=(a.data||'').match(/^\s*\d+\s+(.+)$/);
+    return m? m[1].replace(/\.$/,''): (a.data||'');
+  });
+}
+async function aRec(name){
+  const ans = await doh(name,'A');
+  return ans.map(a=>a.data).filter(Boolean);
+}
+async function ptr(ip){
+  const parts = ip.split('.').reverse().join('.');
+  try{ const ans = await doh(parts+'.in-addr.arpa','PTR'); return ans.map(a=>(a.data||'').replace(/\.$/,'')).filter(Boolean); }
+  catch(e){ return []; }
+}
+// 带超时的 DoH（避免个别 RBL/接口拖垮整体）
+function dohT(name,type,ms){
+  return Promise.race([
+    doh(name,type).then(a=>a),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))
+  ]).catch(()=>[]);
+}
+
+const DKIM_SELECTORS = ['default','selector1','selector2','google','k1','dkim','mail','ses','amazonses',
+  's1','s2','dkim1','dkim2','mte','protonmail','cm','ct','d365','bounce','bnc3','mandrill',
+  'sparkpost','sendgrid','emarsys','cheetah','everlytickey1','eversrv'];
+const RBL_LIST = [
+  {name:'zen.spamhaus.org', note:'Spamhaus ZEN'},
+  {name:'bl.spamcop.net', note:'SpamCop'},
+  {name:'dnsbl.sorbs.net', note:'SORBS'},
+  {name:'cbl.abuseat.org', note:'CBL'}
+];
+
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+
+function addCheck(box, id, title, status, detail, fix){
+  const card = el('div','chk');
+  const tagTxt = {pass:'通过',warn:'注意',fail:'风险',na:'未测'}[status]||status;
+  card.appendChild(el('h3',null,`${title} <span class="tag ${status}">${tagTxt}</span>`));
+  card.appendChild(el('div','detail', detail||''));
+  if(fix){ const f=el('div','fix show', '建议：'+fix); card.appendChild(f); }
+  box.appendChild(card);
+}
+
+function scoreColor(s){ return s>=80?'#16a34a': s>=60?'#d97706': '#dc2626'; }
+function levelOf(s){ return s>=90?['优秀','域名邮件配置完善，投递能力与防伪能力强']
+  : s>=75?['良好','配置基本到位，仍有小幅优化空间']
+  : s>=55?['中等','存在明显短板，建议尽快修复']
+  : s>=35?['偏弱','多项关键防护缺失，伪造与进垃圾箱风险高']
+  : ['危险','几乎无邮件安全配置，极易被仿冒与拦截']; }
+
+async function run(){
+  const raw = document.getElementById('domain').value.trim().toLowerCase();
+  const errBox = document.getElementById('err');
+  errBox.classList.remove('show');
+  const domain = raw.replace(/^https?:\/\//,'').replace(/\/.*$/,'').replace(/^www\./,'');
+  if(!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)){
+    errBox.textContent='请输入合法的域名，例如 ztpop.net'; errBox.classList.add('show'); return;
+  }
+  const btn=document.getElementById('run'); btn.disabled=true;
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('scoreCard').classList.remove('show');
+  const box=document.getElementById('checks'); box.innerHTML='';
+
+  const res={};
+  // SPF
+  try{ const t=await txt(domain); const spf=t.find(x=>/^v=spf1/i.test(x));
+    if(spf){ const soft=/\s\+all\b/.test(spf), hard=/\s-all\b/.test(spf), neutral=/\s\?all\b/.test(spf);
+      res.spf={status: hard?'pass': soft?'warn':'fail', detail:'<code>'+escapeHtml(spf)+'</code>',
+        fix: soft?'建议将 +all 改为 -all（硬失败）以彻底阻止伪造': neutral?'建议将 ?all 改为 -all（硬失败）':null};
+    } else res.spf={status:'fail', detail:'未发现 SPF 记录', fix:'添加 TXT 记录：v=spf1 包含你的邮件发送源 -all'};
+  }catch(e){ res.spf={status:'na', detail:'查询失败', fix:null}; }
+
+  // DMARC
+  try{ const t=await txt('_dmarc.'+domain); const dm=t.find(x=>/^v=DMARC1/i.test(x));
+    if(dm){ const p=(dm.match(/p=(\w+)/i)||[])[1]||''; const ruaf=(dm.match(/rua=/i)||[])[0];
+      res.dmarc={status: p==='reject'?'pass': p==='quarantine'?'warn':'fail',
+        detail:'<code>'+escapeHtml(dm)+'</code>',
+        fix: p==='none'?'将 p=none 提升到 quarantine 再到 reject，并加 rua= 接收报告': (p==='quarantine'?'建议最终设为 p=reject 并配置 rua 报告':null)};
+    } else res.dmarc={status:'fail', detail:'未发现 DMARC 记录', fix:'添加 _dmarc 子域 TXT：v=DMARC1 p=none rua=mailto:dmarc@'+domain};
+  }catch(e){ res.dmarc={status:'na', detail:'查询失败', fix:null}; }
+
+  // DKIM
+  try{ let found=[];
+    await Promise.all(DKIM_SELECTORS.map(async sel=>{
+      try{ const t=await txt(sel+'._domainkey.'+domain); if(t.find(x=>/^v=DKIM1/i.test(x))) found.push(sel); }catch(e){}
+    }));
+    if(found.length) res.dkim={status:'pass', detail:'命中选择器：'+found.join(', '), fix:null};
+    else res.dkim={status:'warn', detail:'未在我们试探的 '+DKIM_SELECTORS.length+' 个常见选择器中找到 DKIM', fix:'确认你的邮件系统/服务商 DKIM 选择器，并发布对应 _domainkey TXT 记录'};
+  }catch(e){ res.dkim={status:'na', detail:'查询失败', fix:null}; }
+
+  // BIMI
+  try{ const t=await txt('default._bimi.'+domain); const bm=t.find(x=>/^v=BIMI1/i.test(x));
+    res.bimi = bm? {status:'pass', detail:'<code>'+escapeHtml(bm)+'</code>', fix:null}
+      : {status:'na', detail:'未发现 BIMI 记录（品牌标识，非必需）', fix:'已配置 DMARC p=quarantine/reject 后可加 default._bimi TXT 展示品牌 logo'};
+  }catch(e){ res.bimi={status:'na', detail:'查询失败', fix:null}; }
+
+  // MX
+  let mxList=[];
+  try{ mxList=await mx(domain);
+    res.mx = mxList.length? {status:'pass', detail:mxList.join('<br>'), fix:null}
+      : {status:'fail', detail:'未发现 MX 记录', fix:'添加 MX 记录指向你的邮件服务器'};
+  }catch(e){ res.mx={status:'na', detail:'查询失败', fix:null}; }
+
+  // PTR / FCrDNS
+  try{ let ptrInfo=[], issue=false;
+    for(const m of mxList.slice(0,3)){
+      const ips=await aRec(m).catch(()=>[]);
+      for(const ip of ips.slice(0,2)){
+        const ps=await ptr(ip).catch(()=>[]);
+        ptrInfo.push(m+' ('+ip+') → '+(ps.join(', ')||'无 PTR'));
+        if(!ps.length) issue=true;
+      }
+    }
+    res.ptr = ptrInfo.length? {status: issue?'warn':'pass', detail:ptrInfo.join('<br>'), fix: issue?'为邮件服务器 IP 配置反向 PTR 并使其解析回 MX 主机名（FCrDNS）':null}
+      : {status:'na', detail:'无 MX 或 MX 无 A 记录，跳过', fix:null};
+  }catch(e){ res.ptr={status:'na', detail:'查询失败', fix:null}; }
+
+  // MTA-STS
+  try{
+    const ctrl = new AbortController(); const t=setTimeout(()=>ctrl.abort(),6000);
+    const r = await fetch('https://mta-sts.'+domain+'/.well-known/mta-sts.txt',{mode:'cors',signal:ctrl.signal}).catch(()=>null);
+    clearTimeout(t);
+    if(r && r.ok){ const txt2=await r.text();
+      const mode=(txt2.match(/mode:\s*(\w+)/i)||[])[1]||'';
+      res.mtasts={status:'pass', detail:'mode='+mode, fix:null};
+    } else res.mtasts={status:'warn', detail:'未发布 MTA-STS 策略', fix:'部署 mta-sts.'+domain+'/.well-known/mta-sts.txt 启用 TLS 强制策略'};
+  }catch(e){ res.mtasts={status:'warn', detail:'未发布 MTA-STS 策略', fix:'部署 mta-sts.'+domain+'/.well-known/mta-sts.txt 启用 TLS 强制策略'}; }
+
+  // RBL (best effort, 仅首 IP × 3 库，单条 4s 熔断)
+  try{ let hits=[];
+    const m0=mxList[0];
+    if(m0){
+      const ips=await aRec(m0).catch(()=>[]);
+      const ip0=ips[0];
+      if(ip0){
+        const rev=ip0.split('.').reverse().join('.');
+        for(const rb of RBL_LIST.slice(0,3)){
+          const ans=await dohT(rev+'.'+rb.name,'A',4000);
+          if(ans&&ans.length) hits.push(rb.note+' ('+ip0+')');
+        }
+      }
+    }
+    res.rbl = hits.length? {status:'fail', detail:'命中黑名单：'+hits.join('；'), fix:'按对应黑名单解除流程申诉，并排查是否存在发出垃圾/钓鱼邮件'}
+      : {status:'pass', detail:'抽查的主流黑名单中未发现该域名邮件服务器 IP', fix:null};
+  }catch(e){ res.rbl={status:'na', detail:'黑名单查询失败（部分 RBL 不支持 DoH）', fix:null}; }
+
+  // score
+  const w={spf:20,dmarc:25,dkim:20,mx:10,ptr:10,mtasts:5,bimi:5,rbl:5};
+  let score=0;
+  score += (res.spf.status==='pass'?20: res.spf.status==='warn'?12:0);
+  score += (res.dmarc.status==='pass'?25: res.dmarc.status==='warn'?14:0);
+  score += (res.dkim.status==='pass'?20: res.dkim.status==='warn'?8:0);
+  score += (res.mx.status==='pass'?10:0);
+  score += (res.ptr.status==='pass'?10: res.ptr.status==='warn'?4:0);
+  score += (res.mtasts.status==='pass'?5:0);
+  score += (res.bimi.status==='pass'?5:0);
+  score += (res.rbl.status==='pass'?5:0);
+  score=Math.max(0,Math.min(100,Math.round(score)));
+
+  // render
+  const arc=document.getElementById('arc');
+  arc.style.stroke = scoreColor(score);
+  arc.style.strokeDashoffset = (414.7*(1-score/100)).toFixed(1);
+  document.getElementById('score').textContent=score;
+  const [lv,desc]=levelOf(score);
+  const lvEl=document.getElementById('lv'); lvEl.textContent=lv;
+  lvEl.style.background = score>=75?'var(--ok-bg)': score>=55?'var(--warn-bg)':'var(--bad-bg)';
+  lvEl.style.color = score>=75?'var(--ok)': score>=55?'var(--warn)':'var(--bad)';
+  document.getElementById('grade').textContent='邮件域名健康评估';
+  document.getElementById('summary').innerHTML='综合得分 <b>'+score+'</b> · '+desc;
+  document.getElementById('scoreCard').classList.add('show');
+
+  addCheck(box,'spf','SPF 发件人策略', res.spf.status, res.spf.detail, res.spf.fix);
+  addCheck(box,'dmarc','DMARC 防伪策略', res.dmarc.status, res.dmarc.detail, res.dmarc.fix);
+  addCheck(box,'dkim','DKIM 签名', res.dkim.status, res.dkim.detail, res.dkim.fix);
+  addCheck(box,'bimi','BIMI 品牌标识', res.bimi.status, res.bimi.detail, res.bimi.fix);
+  addCheck(box,'mx','MX 邮件路由', res.mx.status, res.mx.detail, res.mx.fix);
+  addCheck(box,'ptr','PTR / FCrDNS 反向解析', res.ptr.status, res.ptr.detail, res.ptr.fix);
+  addCheck(box,'mtasts','MTA-STS 传输加密', res.mtasts.status, res.mtasts.detail, res.mtasts.fix);
+  addCheck(box,'rbl','黑名单 (RBL)', res.rbl.status, res.rbl.detail, res.rbl.fix);
+
+  document.getElementById('loading').classList.remove('show');
+  btn.disabled=false;
+  window.history.replaceState(null,'', location.pathname+'?domain='+encodeURIComponent(domain));
+}
+
+function escapeHtml(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+document.getElementById('run').addEventListener('click',run);
+document.getElementById('domain').addEventListener('keydown',e=>{if(e.key==='Enter')run();});
+document.getElementById('copyUrl').addEventListener('click',()=>{
+  const u=location.origin+location.pathname+'?domain='+encodeURIComponent(document.getElementById('domain').value.trim());
+  navigator.clipboard.writeText(u).then(()=>alert('分享链接已复制'));
+});
+document.getElementById('copyReport').addEventListener('click',()=>{
+  const d=document.getElementById('domain').value.trim();
+  const s=document.getElementById('score').textContent;
+  let txt='【邮件域名健康分】'+d+' = '+s+'/100\n';
+  document.querySelectorAll('#checks .chk').forEach(c=>{
+    const h=c.querySelector('h3').innerText; const det=c.querySelector('.detail').innerText;
+    txt+='\n• '+h.replace('通过','✅').replace('注意','⚠️').replace('风险','❌').replace('未测','➖')+'\n  '+det+'\n';
+  });
+  txt+='\n检测工具：ztpop.net 邮件域名健康分';
+  navigator.clipboard.writeText(txt).then(()=>alert('检测报告已复制，可粘贴到微信/工单'));
+});
+
+// deep link
+const pm=new URLSearchParams(location.search).get('domain');
+if(pm){ document.getElementById('domain').value=pm; run(); }
+</script>
+<!--#include virtual="/partials/footer.html" -->
+</body>
+</html>

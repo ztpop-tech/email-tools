@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+    <link rel="llms-txt" href="/llms.txt">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>邮件工具汇总大全（B 档：超链接引用层）· ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta name="og:title" content="邮件工具汇总大全 — 全球先进邮件工具导航与本地替代">
+<meta name="description" content="全球先进的网页版邮件小工具汇总（B 档超链接引用层）：DNS 认证、邮件头分析、黑名单与信誉、邮箱校验、反钓鱼、DMARC 报告、临时邮箱、综合扫描、AI/MCP 共 40+ 项，按档位与来源分类，附官方来源出处与 ztpop 本地替代。尽量本地化，让您的数据留在自己站点。">
+<link rel="canonical" href="https://www.ztpop.net/tools/global-mail-tools.html">
+<style>
+  :root{
+    --bg:#f5f7fa; --panel:#ffffff; --ink:#1f2933; --sub:#5b6b7b;
+    --line:#e3e8ef; --brand:#2f6df6; --brand-soft:#eaf1ff;
+    --a:#0f9d6b; --a-soft:#e6f7f0;      /* A 本地嵌入 */
+    --b:#2f6df6; --b-soft:#eaf1ff;      /* B 超链接 */
+    --c:#b06bf0; --c-soft:#f5ecfe;      /* C 代理操练 */
+    --hold:#d9772b; --hold-soft:#fdf0e3;/* 暂挂 */
+    --cn:#d9534f; --cn-soft:#fdeceb;    /* 国内 */
+    --intl:#3a7d44; --intl-soft:#e9f5ec;
+    --warn:#d9772b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6}
+  .gmt-wrap{max-width:1180px;margin:40px auto 0;padding:18px 20px 60px}
+  .gmt-h1{font-size:24px;color:#003366;margin:0 0 4px}
+  .gmt-sub{color:#666;font-size:14px;margin:0 0 8px}
+  .banner{background:var(--cn-soft);border:1px solid #f3c4c0;color:#9a2c28;
+    padding:11px 15px;border-radius:10px;font-size:13px;margin:16px 0}
+  .banner b{color:#9a2c28}
+  .note{background:var(--brand-soft);border:1px solid #cfe0ff;
+    padding:11px 15px;border-radius:10px;font-size:13px;margin:0 0 16px;color:#234}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 18px}
+  .chip{border:1px solid var(--line);background:var(--panel);color:var(--sub);
+    padding:6px 13px;border-radius:999px;font-size:13px;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--brand)}
+  .chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px;display:flex;flex-direction:column;gap:8px}
+  .card h3{margin:0;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .cat{font-size:12px;color:var(--sub)}
+  .desc{font-size:13px;color:var(--sub);min-height:34px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px}
+  .bd{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:600}
+  .bd-A{background:var(--a-soft);color:var(--a)}
+  .bd-B{background:var(--b-soft);color:var(--b)}
+  .bd-C{background:var(--c-soft);color:var(--c)}
+  .bd-H{background:var(--hold-soft);color:var(--hold)}
+  .bd-cn{background:var(--cn-soft);color:var(--cn)}
+  .bd-intl{background:var(--intl-soft);color:var(--intl)}
+  .lic{background:#eef1f5;color:#5b6b7b}
+  .act{margin-top:auto;font-size:13px}
+  .act a{color:var(--brand);text-decoration:none;font-weight:600}
+  .act a:hover{text-decoration:underline}
+  .act.hold{color:var(--hold);font-weight:600}
+  .gmt-foot{max-width:1180px;margin:0 auto;padding:0 20px 40px;color:var(--sub);font-size:12px}
+  code{background:#eef1f5;padding:1px 5px;border-radius:4px;font-size:12px}
+  .local-tip{background:#e6f7f0;border:1px solid #b7e4cd;color:#166534;
+    padding:11px 15px;border-radius:10px;font-size:13px;margin:0 0 16px}
+  .local-tip a{color:#166534;font-weight:600}
+</style>
+</head>
+<body>
+<!--#include virtual="/partials/header.html" -->
+
+<div class="gmt-wrap">
+  <h1 class="gmt-h1">邮件工具汇总大全</h1>
+  <p class="gmt-sub">B 档：超链接引用层 · 本源 2026-08-11 11:02 定名「邮件工具汇总大全」· 数据正本来自朝霞 44 项清单（comm/deliverables/2026-08-11/zhaoxia-share-pkg/）</p>
+
+  <div class="banner">
+    <b>⚠ 铁律 28（国内厂商全面禁止·最高优先级）</b>：国内来源工具（myssl / MeteorMail / Nei-Xin / 24mail）已按铁律 28 <b>暂挂、不提供外链</b>，待本源/麒麟童确认最终处置。其余项来源均为国际（intl）。
+  </div>
+
+  <div class="note">
+    <b>档位说明</b>：A 本地嵌入（小/零依赖，可前端或自托管）· B 超链接引用（本页，只放外链不搬运）· C 代理操练（本地页转发远端、可收集查询数据，已上线生产，见 <a href="/tools/proxy-tools.html">邮件域名深度体检</a>）· 暂挂（铁律 28 / 协议不明 / AGPL 商用）。
+    最终档位以本源拍板为准（08-09 外链优先 vs 10:09 本地化收数据）。铁律 21（邮件界 GitHub）· 铁律 22（内容机器优先·llms.txt 第一服务对象）。
+  </div>
+
+  <div class="local-tip">
+    <b>本地替代优先</b>：能用 ztpop 本地工具完成的诊断（DNS 十项、邮件头解析、DMARC/SPF 检查与生成、RBL 黑名单、AI 邮件检测、邮箱校验等 40+ 页），优先用本地工具——您输入的查询目标仅用于本次诊断，不进入第三方营销库。见 <a href="/tools/index.html">邮件技术在线工具箱</a>。
+  </div>
+
+  <div class="filters" id="filters"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<footer class="gmt-foot">
+  网页邮件小工具 · B 档大全页 · 朝霞（zhaoxia）起草 44 项清单，麒麟童并入线上页（持生产机写权限）· 2026-08-11<br>
+  合规：所有外链仅作导航，不抓取内容、不 hotlink 资源、不冒用商标；国内来源按铁律 28 暂挂。
+</footer>
+
+<script>
+const TOOLS = [
+  // A. DNS 认证
+  {n:"dnschecker",cat:"DNS认证",d:"SPF/DKIM/DMARC 在线检查（React+Vite）",t:"C",o:"intl",l:"MIT",u:"https://github.com/MitchMCSLTD/dnschecker"},
+  {n:"mailgoose",cat:"DNS认证",d:"波兰 CERT 背书 DMARC 校验",t:"A",o:"intl",l:"BSD-3",u:null},
+  {n:"mailcheck (korpo.pro)",cat:"DNS认证",d:"6 协议全查 + 0–100 可投递评分",t:"A",o:"intl",l:"MIT",u:null},
+  {n:"extract-emails SPF/DKIM/DMARC",cat:"DNS认证",d:"浏览器端 DoH 查询，隐私好",t:"B",o:"intl",l:"free-web",u:"https://extract-emails.com/tools/spf-dkim-dmarc-checker"},
+  {n:"MXScan.me",cat:"DNS认证",d:"一键 20+ 项扫描 + DNS 修复",t:"C",o:"intl",l:"free-web",u:"https://mxscan.me"},
+  {n:"kitterman SPF validate",cat:"DNS认证",d:"SPF 官方风格校验器",t:"B",o:"intl",l:"free-web",u:"http://www.kitterman.com/spf/validate.html"},
+  {n:"powerdmarc / dmarcian",cat:"DNS认证",d:"DMARC 记录/报告分析",t:"B",o:"intl",l:"free-web",u:"https://powerdmarc.com"},
+  // B. 邮件头分析
+  {n:"Elyzer",cat:"邮件头分析",d:"邮件头解析 + spoofing 检测",t:"A",o:"intl",l:"MIT",u:null},
+  {n:"mailheader.org",cat:"邮件头分析",d:"可视化 hop 时间线",t:"C",o:"intl",l:"open-source",u:"https://mailheader.org"},
+  {n:"Google Messageheader",cat:"邮件头分析",d:"Gmail/Workspace 首选头分析",t:"B",o:"intl",l:"free-web",u:"https://toolbox.googleapps.com/apps/messageheader/"},
+  {n:"email-header-analyzer",cat:"邮件头分析",d:"协议不明，避让",t:"H",o:"intl",l:"UNKNOWN",u:null},
+  {n:"Email-Forensics",cat:"邮件头分析",d:"协议不明，避让",t:"H",o:"intl",l:"UNKNOWN",u:null},
+  // C. 黑名单/信誉
+  {n:"Spamhaus lookup",cat:"黑名单/信誉",d:"最权威 RBL",t:"C",o:"intl",l:"free-web",u:"https://www.spamhaus.org/lookup/"},
+  {n:"MultiRBL.valli.org",cat:"黑名单/信誉",d:"一次扫数十 blocklist",t:"C",o:"intl",l:"free-web",u:"https://multirbl.valli.org/"},
+  {n:"MXToolbox SuperTool",cat:"黑名单/信誉",d:"DNS+黑名单+SMTP 全能标杆",t:"C",o:"intl",l:"free-web",u:"https://mxtoolbox.com/"},
+  {n:"Google Postmaster Tools",cat:"黑名单/信誉",d:"Gmail 信誉真相源",t:"B",o:"intl",l:"free-web",u:"https://postmaster.google.com/"},
+  {n:"Microsoft SNDS",cat:"黑名单/信誉",d:"Outlook 侧信誉",t:"B",o:"intl",l:"free-web",u:"https://sendersupport.olc.protection.outlook.com/snds/"},
+  {n:"Cisco Talos",cat:"黑名单/信誉",d:"企业网关信誉",t:"B",o:"intl",l:"free-web",u:"https://talosintelligence.com/"},
+  {n:"Sender Score",cat:"黑名单/信誉",d:"0–100 IP 信誉",t:"B",o:"intl",l:"free-web",u:"https://www.senderscore.org/"},
+  {n:"Yahoo Sender Hub",cat:"黑名单/信誉",d:"Yahoo/AOL 流量",t:"B",o:"intl",l:"free-web",u:"https://sendersupport.yahooinc.com/"},
+  {n:"EasyDMARC 信誉",cat:"黑名单/信誉",d:"IP/域名信誉",t:"B",o:"intl",l:"free-web",u:"https://easydmarc.com/"},
+  {n:"myssl.com",cat:"黑名单/信誉",d:"中文 SSL 检测",t:"H",o:"cn",l:"free-web",u:null},
+  {n:"immuniweb",cat:"黑名单/信誉",d:"SSL/应用安全",t:"B",o:"intl",l:"free-web",u:"https://www.immuniweb.com/ssl/"},
+  // D. 邮箱校验
+  {n:"AfterShip/email-verifier",cat:"邮箱校验",d:"语法/DNS/MX/SMTP 校验",t:"A",o:"intl",l:"MIT",u:null},
+  {n:"free-email-verifier",cat:"邮箱校验",d:"单文件 Python SMTP 校验（极简例外）",t:"A",o:"intl",l:"MIT",u:null},
+  {n:"Reacher",cat:"邮箱校验",d:"最火校验器（AGPL 商用需授权）",t:"H",o:"intl",l:"AGPL-3.0",u:null},
+  {n:"email-validator (JoshData)",cat:"邮箱校验",d:"语法/IDNA/MX 库，可前端化",t:"A",o:"intl",l:"open-source",u:null},
+  {n:"validator.js",cat:"邮箱校验",d:"纯前端可嵌入 isEmail()",t:"A",o:"intl",l:"MIT",u:null},
+  {n:"verify-email.org",cat:"邮箱校验",d:"邮箱是否存在检测",t:"B",o:"intl",l:"free-web",u:"http://verify-email.org/"},
+  // E. 反钓鱼
+  {n:"spoofy",cat:"反钓鱼",d:"判定域名可否被伪造（极简例外）",t:"A",o:"intl",l:"open-source",u:null},
+  {n:"phishguard-ai",cat:"反钓鱼",d:"离线钓鱼检测，零依赖",t:"A",o:"intl",l:"open-source",u:null},
+  {n:"verdictmail",cat:"反钓鱼",d:"AI 邮件安全分类守护进程",t:"A",o:"intl",l:"open-source",u:null},
+  {n:"sublime-rules",cat:"反钓鱼",d:"邮件攻击检测规则即代码",t:"A",o:"intl",l:"open-source",u:null},
+  // F. DMARC 报告
+  {n:"dmarcguard",cat:"DMARC报告",d:"单二进制 + Vue 仪表盘",t:"A",o:"intl",l:"open-source",u:null},
+  {n:"trustymail (CISA)",cat:"DMARC报告",d:"CISA 扫域名可信邮件实践",t:"A",o:"intl",l:"open-source",u:null},
+  // G. 临时邮箱
+  {n:"MeteorMail",cat:"临时邮箱",d:"中文临时邮箱（国内开源）",t:"H",o:"cn",l:"open-source",u:null},
+  {n:"Nei-Xin/temp_mail",cat:"临时邮箱",d:"内置 SMTP+Web+API（国内开源）",t:"H",o:"cn",l:"open-source",u:null},
+  {n:"Forsaken-Mail",cat:"临时邮箱",d:"老牌自托管一次性邮箱",t:"A",o:"intl",l:"open-source",u:null},
+  {n:"addy.io",cat:"临时邮箱",d:"匿名别名转发 + GPG",t:"A",o:"intl",l:"open-source",u:null},
+  {n:"24mail.chacuo.net",cat:"临时邮箱",d:"中文临时邮箱服务（国内）",t:"H",o:"cn",l:"free-web",u:null},
+  {n:"mail.tm",cat:"临时邮箱",d:"国际临时邮箱",t:"B",o:"intl",l:"free-web",u:"https://mail.tm/"},
+  // H. 综合扫描
+  {n:"mxchecksec",cat:"综合扫描",d:"SPF/DKIM/DMARC 结构化报告",t:"A",o:"intl",l:"open-source",u:null},
+  {n:"Mail-Tester",cat:"综合扫描",d:"单封邮件 0–10 垃圾分",t:"B",o:"intl",l:"free-web",u:"https://www.mail-tester.com/"},
+  {n:"AsyncMailChecker",cat:"综合扫描",d:"无 LICENSE，避让",t:"H",o:"intl",l:"UNKNOWN",u:null},
+  // I. AI/MCP
+  {n:"intodns-mcp-server",cat:"AI/MCP",d:"37 个确定性工具给 agent 调（建议自建对标 MCP）",t:"B",o:"intl",l:"free-api",u:"https://www.intodns.ai/"}
+];
+
+const CATS = ["全部",...Array.from(new Set(TOOLS.map(t=>t.cat)))];
+const TIER = {A:["bd-A","A·本地嵌入"],B:["bd-B","B·超链接"],C:["bd-C","C·代理"],H:["bd-H","暂挂"]};
+const ORIG = {intl:["bd-intl","国际"],cn:["bd-cn","国内"]};
+
+const flt = document.getElementById('filters');
+const grid = document.getElementById('grid');
+let cur = "全部";
+
+CATS.forEach(c=>{
+  const b=document.createElement('div');
+  b.className='chip'+(c==="全部"?' on':'');
+  b.textContent=c; b.onclick=()=>{cur=c;[...flt.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');render();};
+  flt.appendChild(b);
+});
+
+function render(){
+  grid.innerHTML='';
+  TOOLS.filter(t=>cur==="全部"||t.cat===cur).forEach(t=>{
+    const [tc,tn]=TIER[t.t]; const [oc,on]=ORIG[t.o];
+    const card=document.createElement('div'); card.className='card';
+    const hold = (t.t==="H") || (t.o==="cn");
+    const act = hold
+      ? `<div class="act hold">⚠ 暂挂${t.o==="cn"?" · 铁律28":""}（不挂外链）</div>`
+      : (t.u?`<div class="act"><a href="${t.u}" target="_blank" rel="noopener">前往工具 ↗</a></div>`:`<div class="act">本地嵌入 / 自托管</div>`);
+    card.innerHTML=`<h3>${t.n}</h3>
+      <div class="cat">${t.cat}</div>
+      <div class="desc">${t.d}</div>
+      <div class="badges">
+        <span class="bd ${tc}">${tn}</span>
+        <span class="bd ${oc}">${on}</span>
+        <span class="bd lic">${t.l}</span>
+      </div>${act}`;
+    grid.appendChild(card);
+  });
+}
+render();
+</script>
+</body>
+</html>

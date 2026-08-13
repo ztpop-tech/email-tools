@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <link rel="llms-txt" href="/llms.txt">
+<title>Email DNS Diagnostic Tool — SPF/DKIM/DMARC/MX One-Click Check | ztpop.net</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net Email Knowledge Base">
+<meta property="og:title" content="Email DNS Diagnostic Tool — SPF/DKIM/DMARC/MX One-Click Check">
+<meta name="description" content="Free online email DNS diagnostic tool: enter a domain to check SPF, DKIM, DMARC, MX, PTR, BIMI, MTA-STS, TLS-RPT, DNSSEC and other email-related DNS records in one click. Based on RFC standards with authoritative fix suggestions.">
+<meta property="og:description" content="Free online email DNS diagnostic tool: one-click check of SPF/DKIM/DMARC/MX/PTR/BIMI/MTA-STS/TLS-RPT/DNSSEC for your domain. Based on RFC standards with authoritative fix suggestions.">
+<link rel="canonical" href="https://www.ztpop.net/tools/dns-check-en.html">
+<meta property="og:url" content="https://www.ztpop.net/tools/dns-check-en.html">>
+<style>
+/* Tool-specific styles scoped to .dns-tool */
+.dns-tool { max-width: 860px; margin: 60px auto 40px; padding: 0 20px; }
+.dns-tool h1 { font-size: 24px; color: #003366; margin-bottom: 8px; }
+.dns-tool .subtitle { color: #666; font-size: 14px; margin-bottom: 32px; }
+.dns-tool .input-group { display: flex; gap: 12px; margin-bottom: 32px; }
+.dns-tool .input-group input { flex: 1; padding: 12px 16px; border: 2px solid #d0d5dd; border-radius: 8px; font-size: 16px; outline: none; transition: border-color .2s; }
+.dns-tool .input-group input:focus { border-color: #003366; }
+.dns-tool .input-group button { padding: 12px 32px; background: #003366; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; transition: background .2s; }
+.dns-tool .input-group button:hover { background: #004488; }
+.dns-tool .input-group button:disabled { background: #999; cursor: not-allowed; }
+.dns-tool .quick-examples { margin-bottom: 32px; font-size: 14px; color: #888; }
+.dns-tool .quick-examples a { color: #003366; cursor: pointer; text-decoration: underline; margin-right: 12px; }
+.dns-tool .result-card { background: #f8f9fb; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px; border-left: 4px solid #d0d5dd; }
+.dns-tool .result-card.pass { border-left-color: #16a34a; background: #f0fdf4; }
+.dns-tool .result-card.warn { border-left-color: #f59e0b; background: #fffbeb; }
+.dns-tool .result-card.fail { border-left-color: #dc2626; background: #fef2f2; }
+.dns-tool .result-card .rc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.dns-tool .result-card .rc-label { font-size: 16px; font-weight: 700; color: #003366; }
+.dns-tool .result-card .rc-badge { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; white-space: nowrap; }
+.dns-tool .result-card .rc-badge.ok { background: #16a34a; color: #fff; }
+.dns-tool .result-card .rc-badge.caution { background: #f59e0b; color: #fff; }
+.dns-tool .result-card .rc-badge.err { background: #dc2626; color: #fff; }
+.dns-tool .result-card .rc-detail { font-size: 14px; color: #555; line-height: 1.7; word-break: break-all; }
+.dns-tool .result-card .rc-detail code { background: rgba(0,0,0,.06); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+.dns-tool .result-card .rc-rfc { font-size: 12px; color: #999; margin-top: 8px; }
+.dns-tool .status-msg { text-align: center; padding: 48px; color: #888; font-size: 16px; }
+.dns-tool .error-msg { text-align: center; padding: 24px; color: #dc2626; font-size: 14px; background: #fef2f2; border-radius: 8px; margin-bottom: 24px; }
+.dns-tool .summary-bar { background: #003366; color: #fff; border-radius: 8px; padding: 16px 24px; margin-bottom: 24px; display: none; }
+.dns-tool .summary-bar .ss { font-size: 14px; opacity: .85; }
+.dns-tool .summary-bar .sb { font-size: 24px; font-weight: 700; margin-top: 4px; }
+.dns-tool .summary-bar .sp { font-size: 13px; opacity: .7; margin-top: 4px; }
+.dns-tool .dkim-selectors { margin-top: 8px; }
+.dns-tool .dkim-selectors input { padding: 8px 12px; border: 1px solid #d0d5dd; border-radius: 6px; font-size: 13px; width: 180px; }
+.dns-tool .dkim-selectors label { font-size: 13px; color: #666; margin-right: 8px; }
+.dns-tool .info-box { background: #e8f0fe; border-radius: 8px; padding: 20px 24px; margin-top: 40px; font-size: 14px; color: #444; line-height: 1.8; }
+.dns-tool .info-box h3 { font-size: 16px; color: #003366; margin-bottom: 12px; }
+@media (max-width: 600px) {
+  .dns-tool .input-group { flex-direction: column; }
+  .dns-tool .input-group button { width: 100%; }
+}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What items does the email DNS check cover?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It covers 10 email-related DNS records: SPF, DKIM, DMARC, MX, PTR, BIMI, MTA-STS, TLS-RPT, DNSSEC and DANE, queried in real time via DNS-over-HTTPS (DoH), to determine whether each configuration is complete and compliant."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why check the PTR record?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The PTR reverse-DNS record is an important basis for mail server reputation evaluation. Major recipients (Gmail, Outlook, etc.) require the sending server IP to have a correct PTR record matching the EHLO hostname; missing it leads to rejection or spam-folder delivery."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What problems does the SPF check flag?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Common issues: missing SPF record, multiple SPF records (only one allowed), DNS lookups exceeding the 10-lookup limit (RFC 7208 §4.6.4), a permissive +all policy, and missing -all or ~all terminator."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What problems does the DMARC check flag?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Common issues: missing _dmarc record, p=none policy (monitoring only), missing rua reporting address (no aggregate reports), and SPF/DKIM not configured so DMARC cannot take effect."
+      }
+    }
+  ]
+}</script>
+</head>
+<body>
+<!--#include virtual="/partials/header.html" -->
+
+
+<div class="dns-tool">
+    <h1>Email DNS Diagnostic Tool</h1>
+    <p class="subtitle">Enter a domain to check SPF, DKIM, DMARC, MX, PTR, BIMI, MTA-STS, TLS-RPT, DNSSEC and other email-related DNS records in one click. Based on the RFC standard system with authoritative fix suggestions.</p>
+
+    <div class="input-group">
+        <input type="text" id="domainInput" placeholder="Enter a domain, e.g. example.com" autocomplete="off" autofocus>
+        <button id="checkBtn" onclick="runCheck()">Start Check</button>
+    </div>
+    <div class="quick-examples">
+        Quick demo: 
+        <a onclick="quickCheck('google.com')">google.com</a>
+        <a onclick="quickCheck('qq.com')">qq.com</a>
+        <a onclick="quickCheck('ztpop.net')">ztpop.net</a>
+    </div>
+    <div class="dkim-selectors" style="margin-bottom:24px">
+        <label>DKIM Selector (optional, comma-separated):</label>
+        <input type="text" id="dkimSelectors" placeholder="default,google" value="default,google,s1,s2">
+    </div>
+
+    <div class="error-msg" id="errorMsg" style="display:none"></div>
+    <div class="summary-bar" id="summaryBar">
+        <div class="ss">Check Report</div>
+        <div class="sb" id="summaryScore"></div>
+        <div class="sp" id="summaryDomain"></div>
+    </div>
+    <div id="results"></div>
+
+    <div class="info-box">
+        <h3>About This Tool</h3>
+        <p>This tool queries email-related DNS records of a domain in real time via DNS-over-HTTPS (DoH). All queries run in your browser; no query data is recorded or stored.</p>
+        <p>Checks cover <strong>SPF</strong> (RFC 7208), <strong>DKIM</strong> (RFC 6376), <strong>DMARC</strong> (RFC 7489), <strong>MX</strong> (RFC 5321 §5), <strong>PTR</strong> (RFC 1912 §2.1), <strong>BIMI</strong> (RFC 9608), <strong>MTA-STS</strong> (RFC 8461), <strong>TLS-RPT</strong> (RFC 8460), <strong>DNSSEC</strong> (RFC 9364) and <strong>DANE</strong> (RFC 7672).</p>
+        <p>For deeper system-level diagnostics or mail system architecture optimization, please see the <a href="/kb/">Knowledge Base</a> or contact us via the footer.</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+// DNS-over-HTTPS via Google
+const DOH_URL = 'https://dns.alidns.com/resolve';
+const CACHE_TIME = 0; // Always fresh queries
+
+async function dnsQuery(name, type) {
+    const url = `${DOH_URL}?name=${encodeURIComponent(name)}&type=${type}&cd=1`;
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (data.Status !== 0) {
+            // NXDOMAIN or other error
+            return { status: data.Status, answers: [], authority: data.Authority || [] };
+        }
+        return { status: 0, answers: data.Answer || [], authority: data.Authority || [] };
+    } catch (e) {
+        return { status: -1, answers: [], error: e.message };
+    }
+}
+
+function checkResult(result, checkType) {
+    if (result.status === -1) return { level: 'fail', msg: 'DNS query failed: ' + result.error };
+    if (result.status === 3) return { level: 'fail', msg: 'Domain does not exist (NXDOMAIN)' };
+    if (result.answers.length === 0) {
+        if (result.status === 0) return { level: 'warn', msg: 'Not configured (query succeeded but no record)' };
+        return { level: 'warn', msg: 'DNS query returned abnormal status: ' + result.status };
+    }
+    return { level: 'pass', msg: '', answers: result.answers };
+}
+
+function getDataStr(answer) {
+    return answer.data || '';
+}
+
+async function checkSPF(domain) {
+    const r = await dnsQuery(domain, 'TXT');
+    const cr = checkResult(r, 'SPF');
+    if (cr.level !== 'pass') return { ...cr, label: 'SPF Sender Policy Framework', rfc: 'RFC 7208' };
+    const spfRecords = cr.answers.filter(a => getDataStr(a).toLowerCase().includes('v=spf1'));
+    if (spfRecords.length === 0) return { level: 'fail', label: 'SPF Sender Policy Framework', rfc: 'RFC 7208',
+        msg: 'No SPF record found (no v=spf1 tag in TXT records). SPF is the foundation of email authentication; without it, mail is easily rejected or delivered to spam.',
+        detail: '<p>Add a TXT record in DNS: <code>v=spf1 mx ~all</code> (minimal) or <code>v=spf1 ip4:YOUR_IP ~all</code></p>' };
+    if (spfRecords.length > 1) return { level: 'warn', label: 'SPF Sender Policy Framework', rfc: 'RFC 7208',
+        msg: `Detected ${spfRecords.length} SPF records (RFC 7208 §3.2 allows at most one SPF record per domain; multiple records cause permerror)`,
+        detail: spfRecords.map(a => `<code class="spf-code">${getDataStr(a).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>`).join('<br>') };
+    const spf = getDataStr(spfRecords[0]);
+    const escaped = spf.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let notes = [];
+    let level = 'pass';
+    if (spf.includes('+all')) { level = 'fail'; notes.push('⚠️ <code>+all</code> allows any host to send, equivalent to no SPF protection'); }
+    else if (spf.includes('?all')) notes.push('⚠️ <code>?all</code> is a neutral policy, consider <code>~all</code> (softfail) or <code>-all</code> (hardfail)');
+    else if (spf.includes('~all')) notes.push('💡 <code>~all</code> (softfail) is the recommended gradual policy; before switching to <code>-all</code>, verify all legitimate senders are included');
+    else if (spf.includes('-all')) notes.push('✅ <code>-all</code> (hardfail) strict policy; ensure all legitimate senders are correctly configured');
+    const hasMX = spf.includes(' mx') || spf.includes(':mx');
+    const hasA = spf.includes(' a') || spf.includes(':a');
+    if (spf.split(' ').length > 10) notes.push('⚠️ SPF record contains more than 10 mechanisms/modifiers; note the DNS lookup limit (RFC 7208 §4.6.4: max 10 lookups). Exceeding it triggers permerror');
+    return { level, label: 'SPF Sender Policy Framework', rfc: 'RFC 7208',
+        msg: `SPF record configured${notes.length ? ': ' + notes.join('; ') : ' (healthy)'}`,
+        detail: `<code class="spf-code">${escaped}</code>` };
+}
+
+async function checkDKIM(domain, selectors) {
+    const results = [];
+    for (const sel of selectors) {
+        const name = `${sel}._domainkey.${domain}`;
+        const r = await dnsQuery(name, 'TXT');
+        const cr = checkResult(r, 'DKIM');
+        if (cr.level === 'pass') {
+            const data = getDataStr(cr.answers[0]);
+            if (data.includes('v=DKIM1') || data.includes('k=rsa') || data.includes('p=')) {
+                const p = data.match(/p=([^;]+)/);
+                const keyLen = p ? p[1].length : 0;
+                const note = keyLen < 270 ? ' (key too short, recommend ≥2048-bit RSA)' : (keyLen >= 392 ? ' (recommended length)' : '');
+                results.push({ level: 'pass', selector: sel, data: data, keyLen: keyLen, note });
+            } else {
+                results.push({ level: 'warn', selector: sel, msg: 'Record exists but malformed; may not be a DKIM public key record' });
+            }
+        } else if (cr.level === 'warn') {
+            results.push({ level: 'warn', selector: sel, msg: 'This selector is not configured' });
+        } else {
+            results.push({ level: 'warn', selector: sel, msg: 'Query failed' });
+        }
+    }
+    // Also try common selectors if not found
+    const found = results.filter(r => r.level === 'pass');
+    if (results.length === 0) {
+        return { level: 'warn', label: 'DKIM DomainKeys Identified Mail', rfc: 'RFC 6376',
+            msg: 'No DKIM selector configured. Ask your MTA administrator for the selector name (usually default), then query the corresponding TXT record.',
+            detail: '<p>DKIM public key format:<br><code>v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG...</code><br>Stored in the TXT record at <code>&lt;selector&gt;._domainkey.&lt;domain&gt;</code> (RFC 6376 §3.6.2.2）</p>' };
+    }
+    return { level: 'pass', label: 'DKIM DomainKeys Identified Mail', rfc: 'RFC 6376',
+        msg: `Detected ${found.length} DKIM selector(s)`,
+        selectors: results };
+}
+
+async function checkDMARC(domain) {
+    const r = await dnsQuery(`_dmarc.${domain}`, 'TXT');
+    const cr = checkResult(r, 'DMARC');
+    if (cr.level !== 'pass') return { level: 'fail', label: 'DMARC Domain-based Message Authentication', rfc: 'RFC 7489',
+        msg: 'No DMARC record configured. Without DMARC you cannot prove authentication status to Gmail/Yahoo; since 2024 Gmail and Yahoo require senders to configure DMARC (minimum p=none).',
+        detail: '<p>Add a TXT record in DNS (name <code>_dmarc</code>):<br><code>v=DMARC1; p=none; rua=mailto:dmarc@' + domain + '</code></p>' };
+    const data = getDataStr(cr.answers[0]);
+    if (!data.includes('v=DMARC1')) return { level: 'fail', label: 'DMARC Domain-based Message Authentication', rfc: 'RFC 7489',
+        msg: 'Malformed DMARC record: missing v=DMARC1 tag',
+        detail: `<code>${data.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>` };
+    const pMatch = data.match(/p=(\w+)/);
+    const pctMatch = data.match(/pct=(\d+)/);
+    const ruaMatch = data.match(/rua=([^;]+)/);
+    const policy = pMatch ? pMatch[1] : 'unknown';
+    let level = 'pass';
+    let notes = [];
+    if (policy === 'none') notes.push('💡 Current policy is <code>p=none</code> (monitoring only); upgrade to <code>p=quarantine</code> or <code>p=reject</code> after verifying reports');
+    else if (policy === 'quarantine') notes.push('✅ <code>p=quarantine</code> quarantine policy');
+    else if (policy === 'reject') notes.push('✅ <code>p=reject</code> strict rejection policy');
+    if (!ruaMatch) notes.push('⚠️ No <code>rua</code> aggregate report address configured; DMARC daily reports will not be received');
+    const pct = pctMatch ? parseInt(pctMatch[1]) : 100;
+    if (pct < 100) notes.push(`⚠️ <code>pct=${pct}</code>: policy applies to only ${pct}% of mail`);
+    return { level, label: 'DMARC Domain-based Message Authentication', rfc: 'RFC 7489',
+        msg: `DMARC configured (policy: ${policy})${notes.length ? ': ' + notes.join('; ') : ''}`,
+        detail: `<code>${data.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>` };
+}
+
+async function checkMX(domain) {
+    const r = await dnsQuery(domain, 'MX');
+    const cr = checkResult(r, 'MX');
+    if (cr.level !== 'pass') return { level: 'fail', label: 'MX Mail Exchange Record', rfc: 'RFC 5321 §5',
+        msg: 'No MX record configured. Without MX records the domain cannot receive external mail.',
+        detail: '<p>Add an MX record in DNS pointing to your mail server A record or hostname.</p>' };
+    const mxs = cr.answers.filter(a => a.type === 15); // MX type
+    const sorted = [...mxs].sort((a,b) => (a.preference||99) - (b.preference||99));
+    const detail = sorted.map(a => `MX ${a.preference} → ${a.data.replace(/</g,'&lt;').replace(/>/g,'&gt;')}`).join('<br>');
+    let level = 'pass';
+    if (mxs.length === 1) level = 'warn';
+    return { level,
+        label: 'MX Mail Exchange Record', rfc: 'RFC 5321 §5',
+        msg: `Detected ${mxs.length} MX record(s)${mxs.length === 1 ? ' (only 1; configure ≥2 for redundancy)' : ''}`,
+        detail };
+}
+
+async function checkPTR(domain, mxHosts) {
+    // PTR is for the mail server IP, not the domain. Try to resolve MX hosts' IPs then check PTR.
+    if (!mxHosts || mxHosts.length === 0) {
+        return { level: 'warn', label: 'PTR Reverse DNS', rfc: 'RFC 1912 §2.1',
+            msg: 'Cannot check PTR (no MX configured or MX host unresolvable). PTR records are critical for sending reputation; missing PTR leads to rejection or spam classification by most receiving servers.',
+            detail: '<p>Your ISP or cloud provider configures PTR records (usually via a ticket). PTR should point to the mail server hostname, not the bare domain. E.g. <code>1.2.3.4 → mail.example.com</code> (RFC 1912 §2.1).</p>' };
+    }
+    // Try to resolve first MX host's IP, then check PTR
+    try {
+        const firstMX = mxHosts[0];
+        const aResult = await dnsQuery(firstMX, 'A');
+        if (aResult.status === 0 && aResult.answers.length > 0) {
+            const ip = aResult.answers[0].data;
+            // Google DoH doesn't natively do PTR via /resolve, use reverse lookup
+            const ptrName = ip.split('.').reverse().join('.') + '.in-addr.arpa';
+            const ptrResult = await dnsQuery(ptrName, 'PTR');
+            if (ptrResult.status === 0 && ptrResult.answers.length > 0) {
+                const ptrData = ptrResult.answers[0].data.replace(/\.$/, '');
+                return {
+                    level: 'pass', label: 'PTR Reverse DNS', rfc: 'RFC 1912 §2.1',
+                    msg: `PTR record: ${ptrData}`,
+                    detail: `IP ${ip} → ${ptrData}`
+                };
+            }
+            return {
+                level: 'fail', label: 'PTR Reverse DNS', rfc: 'RFC 1912 §2.1',
+                msg: `MX host ${firstMX} (IP: ${ip}) has no PTR record. Many mail servers reject connections from IPs without PTR records.`,
+                detail: `<p>Contact your cloud/ISP provider to add PTR reverse DNS for IP <code>${ip}</code>, pointing to <code>${firstMX}</code> (RFC 1912 §2.1).</p>`
+            };
+        }
+    } catch(e) {}
+    return { level: 'warn', label: 'PTR Reverse DNS', rfc: 'RFC 1912 §2.1',
+        msg: 'Cannot resolve MX host A record to check PTR' };
+}
+
+async function checkBIMI(domain) {
+    const r = await dnsQuery(`default._bimi.${domain}`, 'TXT');
+    const cr = checkResult(r, 'BIMI');
+    if (cr.level !== 'pass') return { level: 'warn', label: 'BIMI Brand Indicators for Message Identification', rfc: 'RFC 9608',
+        msg: 'No BIMI configured (optional). BIMI displays your brand logo in the inbox; requires DMARC p=quarantine/reject as a prerequisite.',
+        detail: '<p>Requires DMARC policy quarantine/reject + a verified VMC certificate. Format:<br><code>v=BIMI1; l=https://example.com/logo.svg; a=https://example.com/vmc.pem</code></p>' };
+    const data = getDataStr(cr.answers[0]);
+    if (data.includes('v=BIMI1')) {
+        return { level: 'pass', label: 'BIMI Brand Indicators for Message Identification', rfc: 'RFC 9608',
+            msg: 'BIMI configured',
+            detail: `<code>${data.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>` };
+    }
+    return { level: 'warn', label: 'BIMI Brand Indicators for Message Identification', rfc: 'RFC 9608',
+        msg: 'Record exists but malformed',
+        detail: `<code>${data.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>` };
+}
+
+async function checkMTASTS(domain) {
+    const r = await dnsQuery(`_mta-sts.${domain}`, 'TXT');
+    const cr = checkResult(r, 'MTA-STS');
+    if (cr.level !== 'pass') return { level: 'warn', label: 'MTA-STS SMTP MTA Strict Transport Security', rfc: 'RFC 8461',
+        msg: 'No MTA-STS configured (SMTP TLS strict policy). Recommended to prevent downgrade attacks.',
+        detail: '<p>DNS TXT record (<code>_mta-sts</code>):<br><code>v=STSv1; id=2026072101</code><br>Also publish on the web server at <code>https://mta-sts.' + domain + '/.well-known/mta-sts.txt</code> with the policy file.</p>' };
+    const data = getDataStr(cr.answers[0]);
+    if (data.includes('v=STSv1')) {
+        return { level: 'pass', label: 'MTA-STS SMTP MTA Strict Transport Security', rfc: 'RFC 8461',
+            msg: 'MTA-STS DNS record configured',
+            detail: `<code>${data.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>` };
+    }
+    return { level: 'warn', label: 'MTA-STS', rfc: 'RFC 8461',
+        msg: 'Record exists but malformed', detail: `<code>${data.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>` };
+}
+
+async function checkTLSRPT(domain) {
+    const subDom = `_smtp._tls.${domain}`;
+    const r = await dnsQuery(subDom, 'TXT');
+    const cr = checkResult(r, 'TLS-RPT');
+    // Also try alternate location
+    if (cr.level !== 'pass') {
+        const r2 = await dnsQuery(domain, 'TXT');
+        // Actually TLS-RPT is always at _smtp._tls.domain
+        return { level: 'warn', label: 'TLS-RPT SMTP TLS reporting', rfc: 'RFC 8460',
+            msg: 'No TLS-RPT configured (SMTP TLS reporting). Configure it together with MTA-STS to monitor TLS connection issues.',
+            detail: `<p>DNS TXT record (<code>_smtp._tls</code>):<br><code>v=TLSRPTv1; rua=mailto:tls@${domain}</code></p>` };
+    }
+    const data = getDataStr(cr.answers[0]);
+    if (data.includes('v=TLSRPTv1')) {
+        return { level: 'pass', label: 'TLS-RPT SMTP TLS reporting', rfc: 'RFC 8460',
+            msg: 'TLS-RPT configured',
+            detail: `<code>${data.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>` };
+    }
+    return { level: 'warn', label: 'TLS-RPT', rfc: 'RFC 8460',
+        msg: 'Record exists but malformed', detail: `<code>${data.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>` };
+}
+
+async function checkDNSSEC(domain) {
+    // Check DS records at parent (approximate via DNSKEY at domain)
+    const r = await dnsQuery(domain, 'DNSKEY');
+    const cr = checkResult(r, 'DNSSEC');
+    // Actually, we can't easily check DNSSEC via DoH for the parent DS. Better to check DNSKEY + RRSIG.
+    // Or check via Cloudflare DoH with dnssec CD flag
+    const cfUrl = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=DNSKEY&do=1`;
+    try {
+        const resp = await fetch(cfUrl, { headers: { 'Accept': 'application/dns-json' } });
+        if (!resp.ok) {
+            return { level: 'warn', label: 'DNSSEC Domain Name System Security Extensions', rfc: 'RFC 9364 (BCP 237)',
+                msg: 'Cannot determine DNSSEC status (query failed)' };
+        }
+        const data = await resp.json();
+        if (data.AD === true || data.AuthenticatedData === true) {
+            return { level: 'pass', label: 'DNSSEC Domain Name System Security Extensions', rfc: 'RFC 9364 (BCP 237)',
+                msg: 'DNSSEC enabled (AD flag set)',
+                detail: '<p>DNSSEC provides cryptographic signature verification for DNS records, preventing DNS hijacking and cache poisoning. DANE (RFC 7672) depends on DNSSEC.</p>' };
+        }
+        if (data.Status === 0 && data.Answer && data.Answer.length > 0) {
+            return { level: 'pass', label: 'DNSSEC Domain Name System Security Extensions', rfc: 'RFC 9364 (BCP 237)',
+                msg: 'DNSKEY record exists (DNSSEC configured)',
+                detail: '<p>DNSKEY record detected. Full DNSSEC validation requires checking the parent DS record and the RRSIG signature chain.</p>' };
+        }
+        return { level: 'warn', label: 'DNSSEC Domain Name System Security Extensions', rfc: 'RFC 9364 (BCP 237)',
+            msg: 'DNSSEC not configured. Enable it at your registrar/DNS provider.',
+            detail: '<p>DNSSEC is the foundation of DANE (RFC 7672) and DNS security, critical for email security.</p>' };
+    } catch(e) {
+        return { level: 'warn', label: 'DNSSEC', rfc: 'RFC 9364', msg: 'Query failed: ' + e.message };
+    }
+}
+
+async function checkDANE(domain, mxHosts) {
+    if (!mxHosts || mxHosts.length === 0) {
+        return { level: 'warn', label: 'DANE DNS-based Authentication of Named Entities', rfc: 'RFC 7672',
+            msg: 'Cannot check DANE (no MX host configured). DANE binds TLS certificates to domains via TLSA records and requires DNSSEC.',
+            detail: '<p>If enabled: add a TLSA record at <code>_25._tcp.&lt;mx-host&gt;</code> (RFC 7672 §3)</p>' };
+    }
+    const firstMX = mxHosts[0];
+    const r = await dnsQuery(`_25._tcp.${firstMX}`, 'TLSA');
+    const cr = checkResult(r, 'DANE TLSA');
+    if (cr.level === 'pass') {
+        return { level: 'pass', label: 'DANE DNS-based Authentication of Named Entities', rfc: 'RFC 7672',
+            msg: `${firstMX} has DANE TLSA records configured`,
+            detail: cr.answers.map(a => `<code>${getDataStr(a).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>`).join('<br>') };
+    }
+    return { level: 'warn', label: 'DANE DNS-based Authentication of Named Entities', rfc: 'RFC 7672',
+        msg: `MX host ${firstMX} has no DANE TLSA records (requires DNSSEC)`,
+        detail: '<p>DANE publishes TLS certificate fingerprints as TLSA records in DNSSEC-signed DNS, preventing man-in-the-middle attacks. Config:<br><code>_25._tcp.&lt;mx-host&gt;  IN  TLSA  3 1 1 &lt;certSHA256-hash&gt;</code> (RFC 7672 §3.1)</p>' };
+}
+
+function renderResult(r) {
+    const levelClass = r.level === 'pass' ? 'pass' : (r.level === 'warn' ? 'warn' : 'fail');
+    const badge = r.level === 'pass' ? '<span class="rc-badge ok">✅ OK</span>'
+        : (r.level === 'warn' ? '<span class="rc-badge caution">⚠️ Warning</span>'
+        : '<span class="rc-badge err">❌ Error</span>');
+    let detail = r.detail || '';
+    if (r.selectors) {
+        detail += '<div style="margin-top:8px;">';
+        for (const s of r.selectors) {
+            const sBadge = s.level === 'pass' ? '✅' : '⚠️';
+            detail += `<div style="margin-bottom:6px;">${sBadge} <strong>${s.selector}._domainkey</strong>: `;
+            if (s.data) {
+                const escaped = s.data.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                detail += `<code style="font-size:12px;word-break:break-all;">${escaped.substring(0,100)}${escaped.length > 100 ? '...' : ''}</code>`;
+                if (s.note) detail += ` <span style="color:#888;font-size:12px;">${s.note}</span>`;
+            } else {
+                detail += `<span style="color:#f59e0b;">${s.msg}</span>`;
+            }
+            detail += '</div>';
+        }
+        detail += '</div>';
+    }
+    return `<div class="result-card ${levelClass}">
+        <div class="rc-header">
+            <span class="rc-label">${r.label}</span>${badge}
+        </div>
+        <div class="rc-detail">${r.msg || ''}${detail}</div>
+        <div class="rc-rfc">📚 ${r.rfc}</div>
+    </div>`;
+}
+
+function renderSummary(domain, results) {
+    const total = results.length;
+    const pass = results.filter(r => r.level === 'pass').length;
+    const warn = results.filter(r => r.level === 'warn').length;
+    const fail = results.filter(r => r.level === 'fail').length;
+    const score = total > 0 ? Math.round(pass / total * 100) : 0;
+
+    let scoreText = '';
+    if (score >= 80) scoreText = `🟢 ${pass}/${total} passed (good)`;
+    else if (score >= 50) scoreText = `🟡 ${pass}/${total} passed (needs improvement)`;
+    else scoreText = `🔴 ${pass}/${total} passed (needs urgent fix)`;
+
+    const bar = document.getElementById('summaryBar');
+    bar.style.display = 'block';
+    document.getElementById('summaryScore').textContent = scoreText;
+    document.getElementById('summaryDomain').textContent = `Domain: ${domain} | ✅ ${pass} | ⚠️ ${warn} | ❌ ${fail}`;
+}
+
+async function runCheck() {
+    const domain = document.getElementById('domainInput').value.trim();
+    if (!domain) return;
+
+    const btn = document.getElementById('checkBtn');
+    const resultsDiv = document.getElementById('results');
+    const errorDiv = document.getElementById('errorMsg');
+
+    btn.disabled = true;
+    btn.textContent = 'Checking...';
+    errorDiv.style.display = 'none';
+    resultsDiv.innerHTML = '<div class="status-msg">🔄 Querying DNS records...</div>';
+    document.getElementById('summaryBar').style.display = 'none';
+
+    try {
+        // Normalize domain
+        let cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/.*/, '').replace(/^www\./, '').toLowerCase();
+
+        // Get DKIM selectors
+        const selectorInput = document.getElementById('dkimSelectors').value.trim();
+        const selectors = selectorInput ? selectorInput.split(',').map(s => s.trim()).filter(Boolean) : ['default', 'google'];
+
+        const results = [];
+
+        // Run MX first (to get hosts for PTR/DANE)
+        const mxResult = await checkMX(cleanDomain);
+        results.push(mxResult);
+
+        // Extract MX hostnames
+        let mxHosts = [];
+        if (mxResult.detail) {
+            const matches = mxResult.detail.match(/→\s*([^\s<]+)/g);
+            if (matches) mxHosts = matches.map(m => m.replace(/→\s*/, '').replace(/\.$/, ''));
+        }
+
+        // Run remaining checks in parallel batches
+        const [spf, dkim, dmarc, ptr, bimi, mtasts, tlsrpt, dnssec] = await Promise.all([
+            checkSPF(cleanDomain),
+            checkDKIM(cleanDomain, selectors),
+            checkDMARC(cleanDomain),
+            checkPTR(cleanDomain, mxHosts),
+            checkBIMI(cleanDomain),
+            checkMTASTS(cleanDomain),
+            checkTLSRPT(cleanDomain),
+            checkDNSSEC(cleanDomain)
+        ]);
+
+        results.push(spf, dkim, dmarc, ptr, bimi, mtasts, tlsrpt, dnssec);
+
+        // DANE (depends on MX result)
+        if (mxHosts.length > 0) {
+            const dane = await checkDANE(cleanDomain, mxHosts);
+            results.push(dane);
+        }
+
+        // Render
+        resultsDiv.innerHTML = results.map(renderResult).join('');
+        renderSummary(cleanDomain, results);
+    } catch (e) {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = 'Check failed: ' + e.message;
+        resultsDiv.innerHTML = '';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Start Check';
+    }
+}
+
+function quickCheck(domain) {
+    document.getElementById('domainInput').value = domain;
+    runCheck();
+}
+
+// Allow Enter key to trigger check
+document.getElementById('domainInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') runCheck();
+});
+</script>
+
+<div class="ref-docs" style="max-width:860px;margin:36px auto 0;padding:0 20px">
+    <div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Why Run Regular Checks</h2>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">A mail system DNS configuration is a combination punch: MX decides delivery routing, SPF/DKIM/DMARC decide authentication trust, MTA-STS/DANE decide transport encryption, PTR reverse DNS affects some anti-spam policies, and DNSSEC guarantees the integrity of all the DNS queries above.</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">Any missing or broken piece can cause delivery failure, spam-folder placement, or man-in-the-middle attacks. DNS troubleshooting is often the most time-consuming, because errors hide in details like TTL, record types, and even case sensitivity.</p>
+<p style="font-size:15px;color:#333;line-height:1.8;margin:0 0 10px">This tool queries 10 categories of critical records in one pass and gives a combined diagnosis across three dimensions — authentication, transport and delivery — helping you locate the problem area quickly before digging deeper.</p>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Interpreting Results</h2>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 8px">
+<tr style="background:#f0f4f8"><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Check</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Purpose</td><td style="padding:8px 12px;border:1px solid #ddd;font-weight:bold">Impact if missing/broken</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">MX</td><td style="padding:8px 12px;border:1px solid #ddd;">Mail routing</td><td style="padding:8px 12px;border:1px solid #ddd;">Delivery fails or goes to the wrong server</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">SPF</td><td style="padding:8px 12px;border:1px solid #ddd;">Sending authorization</td><td style="padding:8px 12px;border:1px solid #ddd;">Authentication fails, mail rejected</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">DKIM</td><td style="padding:8px 12px;border:1px solid #ddd;">Content signing</td><td style="padding:8px 12px;border:1px solid #ddd;">Integrity cannot be verified, reputation drops</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">DMARC</td><td style="padding:8px 12px;border:1px solid #ddd;">Authentication policy</td><td style="padding:8px 12px;border:1px solid #ddd;">Forged mail cannot be handled uniformly</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">PTR</td><td style="padding:8px 12px;border:1px solid #ddd;">Reverse DNS</td><td style="padding:8px 12px;border:1px solid #ddd;">Some anti-spam policies reject IPs without PTR</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">MTA-STS</td><td style="padding:8px 12px;border:1px solid #ddd;">TLS enforcement</td><td style="padding:8px 12px;border:1px solid #ddd;">Transport can be downgraded to plaintext</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">TLS-RPT</td><td style="padding:8px 12px;border:1px solid #ddd;">TLS reporting</td><td style="padding:8px 12px;border:1px solid #ddd;">TLS failures go unnoticed</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">DANE</td><td style="padding:8px 12px;border:1px solid #ddd;">Certificate pinning</td><td style="padding:8px 12px;border:1px solid #ddd;">Certificates can be forged</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">DNSSEC</td><td style="padding:8px 12px;border:1px solid #ddd;">DNS integrity</td><td style="padding:8px 12px;border:1px solid #ddd;">The queries above could be tampered with</td></tr>
+<tr style=""><td style="padding:8px 12px;border:1px solid #ddd;">BIMI</td><td style="padding:8px 12px;border:1px solid #ddd;">Brand identity</td><td style="padding:8px 12px;border:1px solid #ddd;">Authenticated mail cannot show the brand logo</td></tr>
+</table>
+</div>
+<div style="margin:24px 0 0">
+<h2 style="font-size:20px;color:#003366;margin:0 0 12px">Common Configuration Errors & Fixes</h2>
+<ul style="font-size:15px;color:#333;line-height:1.8;padding-left:22px;margin:0">
+<li><strong>Missing MX</strong>: add an MX record pointing to your mail server, starting with priority 10</li>
+<li><strong>Missing SPF</strong>: add v=spf1 mx ~all or extend per your sending architecture</li>
+<li><strong>Missing DMARC</strong>: start with p=none, observe reports, then upgrade gradually</li>
+<li><strong>Missing PTR</strong>: contact the ISP owning the IP to add reverse DNS; it must match forward resolution</li>
+<li><strong>DNSSEC disabled</strong>: enable DNSSEC at your registrar/host, watch DS record synchronization</li>
+</ul>
+</div>
+
+            <div style="background:#f5f7fa;border-left:3px solid #003366;border-radius:0 8px 8px 0;padding:16px 20px">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#003366">📚 Authoritative References</h3>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:#555;line-height:1.9">
+            <li><a href="https://www.rfc-editor.org/rfc/rfc1035" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 1035 — Domain Names (DNS fundamentals)</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc4033" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 4033 — DNS Security Introduction and Requirements</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc6698" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">RFC 6698 — DNS-Based Authentication of Named Entities (DANE) TLSA</a></li>
+            <li><a href="https://www.ietf.org/rfc/rfc8499.txt" rel="noopener" target="_blank" style="color:#0066cc;text-decoration:none">IETF DNS Terminology</a></li>
+
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

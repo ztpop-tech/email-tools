@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+    <link rel="llms-txt" href="/llms.txt">
+<title>邮件域名深度体检 — WHOIS 查询 / 黑名单检测 / MX 端口探测 · 昆仑邮件系统</title>
+<link rel="stylesheet" href="/css/main.css?v=23">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:site_name" content="ztpop.net 邮件技术知识库">
+<meta property="og:title" content="邮件域名深度体检 — WHOIS 查询 / RBL 黑名单检测 / MX 端口探测">
+<meta name="description" content="免费在线邮件域名深度体检工具：WHOIS 域名注册信息查询（RDAP）、RBL 多源黑名单实时检测（Spamhaus/Barracuda/SpamCop/SORBS）、MX 邮件服务器 25/465/587 端口连通探测。三合一代理操练工具，数据经 ztpop 服务器转发，输入留档用于持续改进。">
+<meta property="og:description" content="邮件域名深度体检：WHOIS 查询 / RBL 黑名单检测 / MX 端口探测 三合一。免费在线使用。">
+<link rel="canonical" href="https://www.ztpop.net/tools/proxy-tools.html">
+<style>
+/* 复用 .dns-tool 风格族，新增 tab 样式 */
+.proxy-tool { max-width: 860px; margin: 60px auto 40px; padding: 0 20px; }
+.proxy-tool h1 { font-size: 24px; color: #003366; margin-bottom: 8px; }
+.proxy-tool .subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
+.proxy-tool .tabs { display: flex; gap: 8px; border-bottom: 2px solid #e5e7eb; margin-bottom: 24px; }
+.proxy-tool .tabs button { padding: 10px 20px; border: none; background: none; font-size: 15px; font-weight: 600; color: #666; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: color .2s, border-color .2s; }
+.proxy-tool .tabs button.active { color: #003366; border-bottom-color: #003366; }
+.proxy-tool .tab-panel { display: none; }
+.proxy-tool .tab-panel.active { display: block; }
+.proxy-tool .input-group { display: flex; gap: 12px; margin-bottom: 16px; }
+.proxy-tool .input-group input { flex: 1; padding: 12px 16px; border: 2px solid #d0d5dd; border-radius: 8px; font-size: 16px; outline: none; transition: border-color .2s; }
+.proxy-tool .input-group input:focus { border-color: #003366; }
+.proxy-tool .input-group button { padding: 12px 32px; background: #003366; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; transition: background .2s; }
+.proxy-tool .input-group button:hover { background: #004488; }
+.proxy-tool .input-group button:disabled { background: #999; cursor: not-allowed; }
+.proxy-tool .quick-examples { margin-bottom: 24px; font-size: 14px; color: #888; }
+.proxy-tool .quick-examples a { color: #003366; cursor: pointer; text-decoration: underline; margin-right: 12px; }
+.proxy-tool .result-card { background: #f8f9fb; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px; border-left: 4px solid #d0d5dd; }
+.proxy-tool .result-card.pass { border-left-color: #16a34a; background: #f0fdf4; }
+.proxy-tool .result-card.warn { border-left-color: #f59e0b; background: #fffbeb; }
+.proxy-tool .result-card.fail { border-left-color: #dc2626; background: #fef2f2; }
+.proxy-tool .result-card .rc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.proxy-tool .result-card .rc-label { font-size: 16px; font-weight: 700; color: #003366; }
+.proxy-tool .result-card .rc-badge { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; white-space: nowrap; }
+.proxy-tool .result-card .rc-badge.ok { background: #16a34a; color: #fff; }
+.proxy-tool .result-card .rc-badge.caution { background: #f59e0b; color: #fff; }
+.proxy-tool .result-card .rc-badge.err { background: #dc2626; color: #fff; }
+.proxy-tool .result-card .rc-detail { font-size: 14px; color: #555; line-height: 1.7; word-break: break-all; }
+.proxy-tool .result-card .rc-detail code { background: rgba(0,0,0,.06); padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+.proxy-tool .status-msg { text-align: center; padding: 40px; color: #888; font-size: 15px; }
+.proxy-tool .error-msg { text-align: center; padding: 20px; color: #dc2626; font-size: 14px; background: #fef2f2; border-radius: 8px; margin-bottom: 20px; display: none; }
+.proxy-tool table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.proxy-tool table th, .proxy-tool table td { padding: 10px 12px; border-bottom: 1px solid #eef0f3; text-align: left; }
+.proxy-tool table th { color: #003366; font-weight: 700; background: #f8f9fb; }
+.proxy-tool .info-box { background: #e8f0fe; border-radius: 8px; padding: 20px 24px; margin-top: 40px; font-size: 14px; color: #444; line-height: 1.8; }
+.proxy-tool .info-box h3 { font-size: 16px; color: #003366; margin-bottom: 12px; }
+@media (max-width: 600px) {
+  .proxy-tool .input-group { flex-direction: column; }
+  .proxy-tool .input-group button { width: 100%; }
+  .proxy-tool .tabs { flex-wrap: wrap; }
+}
+</style>
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "WHOIS 查询能查到什么？",
+      "acceptedAnswer": {"@type": "Answer", "text": "通过 RDAP 公开协议查询域名的注册商、注册/到期时间、状态、名称服务器等公开注册信息，帮助确认域名归属与 DNS 配置归属。"}
+    },
+    {
+      "@type": "Question",
+      "name": "RBL 黑名单检测查哪些源？",
+      "acceptedAnswer": {"@type": "Answer", "text": "并发查询 Spamhaus ZEN/PBL/SBL、Barracuda、SpamCop、SORBS 六个主流反垃圾邮件黑名单源，任一命中即提示风险。"}
+    },
+    {
+      "@type": "Question",
+      "name": "MX 端口探测有什么用？",
+      "acceptedAnswer": {"@type": "Answer", "text": "解析域名 MX 记录后对每个邮件服务器探测 25/465/587 端口的连通性，帮助判断邮件服务器是否可达、是否支持 TLS 提交。"}
+    }
+  ]
+}</script>
+</head>
+<body>
+<!--#include virtual="/partials/header.html" -->
+
+<div class="proxy-tool">
+    <h1>邮件域名深度体检</h1>
+    <p class="subtitle">WHOIS 注册信息查询 · RBL 多源黑名单检测 · MX 邮件服务器端口探测 — 三合一。数据经服务器转发处理，输入留档用于服务改进。</p>
+
+    <div class="tabs">
+        <button class="active" data-tab="whois" onclick="switchTab('whois')">WHOIS 查询</button>
+        <button data-tab="rbl" onclick="switchTab('rbl')">黑名单检测</button>
+        <button data-tab="mxprobe" onclick="switchTab('mxprobe')">MX 端口探测</button>
+    </div>
+
+    <!-- WHOIS -->
+    <div class="tab-panel active" id="panel-whois">
+        <div class="input-group">
+            <input type="text" id="whoisInput" placeholder="输入域名，如 example.com" autocomplete="off">
+            <button onclick="runWhois()">查询</button>
+        </div>
+        <div class="quick-examples">
+            快速体验：
+            <a onclick="quickFill('whois','qq.com')">qq.com</a>
+            <a onclick="quickFill('whois','ztpop.net')">ztpop.net</a>
+        </div>
+        <div class="error-msg" id="whoisErr"></div>
+        <div id="whoisResult"></div>
+    </div>
+
+    <!-- RBL -->
+    <div class="tab-panel" id="panel-rbl">
+        <div class="input-group">
+            <input type="text" id="rblInput" placeholder="输入 IP 或域名，如 8.8.8.8 或 example.com" autocomplete="off">
+            <button onclick="runRbl()">检测</button>
+        </div>
+        <div class="quick-examples">
+            快速体验：
+            <a onclick="quickFill('rbl','8.8.8.8')">8.8.8.8</a>
+            <a onclick="quickFill('rbl','qq.com')">qq.com</a>
+        </div>
+        <div class="error-msg" id="rblErr"></div>
+        <div id="rblResult"></div>
+    </div>
+
+    <!-- MXPROBE -->
+    <div class="tab-panel" id="panel-mxprobe">
+        <div class="input-group">
+            <input type="text" id="mxprobeInput" placeholder="输入域名，如 example.com" autocomplete="off">
+            <button onclick="runMxprobe()">探测</button>
+        </div>
+        <div class="quick-examples">
+            快速体验：
+            <a onclick="quickFill('mxprobe','qq.com')">qq.com</a>
+            <a onclick="quickFill('mxprobe','ztpop.net')">ztpop.net</a>
+        </div>
+        <div class="error-msg" id="mxprobeErr"></div>
+        <div id="mxprobeResult"></div>
+    </div>
+
+    <div class="info-box">
+        <h3>关于此工具</h3>
+        <p>本页三个工具均为「代理操练」模式：您在浏览器输入查询目标，ztpop 服务器代为转发到权威数据源（IANA RDAP、各 DNSBL 源、目标 MX 服务器）并返回结果。相较纯浏览器端工具，此类查询需要服务器出网能力，因此采用本模式。</p>
+        <p>查询目标会记录用于服务质量改进与安全分析，不记录查询结果正文。涉及标准：RDAP (RFC 7480/9082/9083)、DNSBL (RFC 5782)、SMTP 端口 (RFC 5321 §3.1)。</p>
+        <p>需要更深入的系统级诊断，欢迎查阅 <a href="/kb/">知识库</a> 或通过页脚联系方式咨询。</p>
+    </div>
+</div>
+
+<!--#include virtual="/partials/footer.html" -->
+
+<script>
+function switchTab(name) {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+}
+function quickFill(tab, val) {
+    document.getElementById(tab + 'Input').value = val;
+    if (tab === 'whois') runWhois();
+    else if (tab === 'rbl') runRbl();
+    else runMxprobe();
+}
+function showErr(el, msg) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function badge(st) {
+    if (st === 'ok' || st === 'clean' || st === 'pass' || st === 'open' || st === 'listed') return 'err';
+    if (st === 'partial' || st === 'timeout' || st === 'unknown' || st === 'warn') return 'caution';
+    return 'ok';
+}
+function badgeText(st) {
+    const map = {ok:'正常', clean:'未命中', pass:'通过', open:'开放', listed:'命中!', partial:'部分', timeout:'超时', unknown:'未知', closed:'关闭', unreachable:'不可达'};
+    return map[st] || st;
+}
+
+// WHOIS
+async function runWhois() {
+    const dom = document.getElementById('whoisInput').value.trim();
+    const box = document.getElementById('whoisResult');
+    const err = document.getElementById('whoisErr');
+    if (!dom) return showErr(err, '请输入域名');
+    showErr(err, '');
+    box.innerHTML = '<div class="status-msg">查询中…</div>';
+    try {
+        const r = await fetch('/api/whois', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({domain:dom})});
+        const j = await r.json();
+        if (!j.ok) return showErr(err, j.error || '查询失败');
+        const d = j.data || {};
+        if (d.error) return showErr(err, d.error);
+        let ev = (d.events || []).map(e => '<tr><td>' + esc(e.action) + '</td><td>' + esc(e.date || '') + '</td></tr>').join('');
+        box.innerHTML =
+            '<div class="result-card pass"><div class="rc-header"><div class="rc-label">' + esc(d.domain) + ' · 注册信息</div>' +
+            '<div class="rc-badge ok">已获取</div></div>' +
+            '<div class="rc-detail"><table>' +
+            '<tr><th style="width:120px">注册商</th><td>' + esc(d.registrar || '—') + '</td></tr>' +
+            '<tr><th>名称服务器</th><td>' + esc((d.nameservers || []).join(', ') || '—') + '</td></tr>' +
+            '<tr><th>状态</th><td>' + esc((d.status || []).join('; ') || '—') + '</td></tr>' +
+            '</table></div></div>' +
+            (ev ? '<div class="result-card"><div class="rc-header"><div class="rc-label">关键事件</div></div><div class="rc-detail"><table><tr><th>事件</th><th>时间</th></tr>' + ev + '</table></div></div>' : '');
+    } catch (e) {
+        showErr(err, '请求失败: ' + e.message);
+    }
+}
+
+// RBL
+async function runRbl() {
+    const tgt = document.getElementById('rblInput').value.trim();
+    const box = document.getElementById('rblResult');
+    const err = document.getElementById('rblErr');
+    if (!tgt) return showErr(err, '请输入 IP 或域名');
+    showErr(err, '');
+    box.innerHTML = '<div class="status-msg">检测中（并发查询 6 个黑名单源）…</div>';
+    try {
+        const r = await fetch('/api/rbl', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({target:tgt})});
+        const j = await r.json();
+        if (!j.ok) return showErr(err, j.error || '检测失败');
+        const d = j.data || {};
+        if (d.error) return showErr(err, d.error);
+        const rows = (d.results || []).map(x => '<tr><td>' + esc(x.source) + '</td><td><span class="rc-badge ' + badge(x.status) + '">' + badgeText(x.status) + '</span></td></tr>').join('');
+        const vBadge = d.verdict === 'clean' ? 'ok' : (d.verdict === 'listed' ? 'err' : 'caution');
+        box.innerHTML =
+            '<div class="result-card ' + (d.verdict === 'clean' ? 'pass' : d.verdict === 'listed' ? 'fail' : 'warn') + '">' +
+            '<div class="rc-header"><div class="rc-label">' + esc(d.target) + (d.ip && d.ip !== d.target ? ' (' + esc(d.ip) + ')' : '') + '</div>' +
+            '<div class="rc-badge ' + vBadge + '">' + (d.verdict === 'clean' ? '未命中黑名单' : d.verdict === 'listed' ? '已命中黑名单' : '部分结果') + '</div></div>' +
+            '<div class="rc-detail"><table><tr><th>黑名单源</th><th style="width:120px">状态</th></tr>' + rows + '</table></div></div>';
+    } catch (e) {
+        showErr(err, '请求失败: ' + e.message);
+    }
+}
+
+// MXPROBE
+async function runMxprobe() {
+    const dom = document.getElementById('mxprobeInput').value.trim();
+    const box = document.getElementById('mxprobeResult');
+    const err = document.getElementById('mxprobeErr');
+    if (!dom) return showErr(err, '请输入域名');
+    showErr(err, '');
+    box.innerHTML = '<div class="status-msg">探测中（解析 MX 并测试端口）…</div>';
+    try {
+        const r = await fetch('/api/mxprobe', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({domain:dom})});
+        const j = await r.json();
+        if (!j.ok) return showErr(err, j.error || '探测失败');
+        const d = j.data || {};
+        if (d.error) return showErr(err, d.error);
+        const rows = (d.results || []).map(x => '<tr><td>' + x.priority + '</td><td>' + esc(x.mx) + '</td><td>' + x.port + '</td><td><span class="rc-badge ' + badge(x.status) + '">' + badgeText(x.status) + '</span></td></tr>').join('');
+        const vBadge = d.verdict === 'ok' ? 'ok' : (d.verdict === 'unreachable' ? 'err' : 'caution');
+        box.innerHTML =
+            '<div class="result-card ' + (d.verdict === 'ok' ? 'pass' : d.verdict === 'unreachable' ? 'fail' : 'warn') + '">' +
+            '<div class="rc-header"><div class="rc-label">' + esc(d.domain) + ' · 共 ' + (d.mx_count || 0) + ' 个 MX</div>' +
+            '<div class="rc-badge ' + vBadge + '">' + (d.verdict === 'ok' ? '邮件端口可达' : d.verdict === 'unreachable' ? '不可达' : '部分可达') + '</div></div>' +
+            '<div class="rc-detail"><table><tr><th>优先级</th><th>MX 服务器</th><th>端口</th><th style="width:110px">状态</th></tr>' + rows + '</table>' +
+            '<p style="font-size:12px;color:#999;margin-top:10px">提示：部分云平台会拦截出站 25 端口，若 25 超时但 465/587 正常，通常不影响使用。</p></div></div>';
+    } catch (e) {
+        showErr(err, '请求失败: ' + e.message);
+    }
+}
+</script>
+</body>
+</html>
